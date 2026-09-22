@@ -277,7 +277,7 @@ INSERT INTO colaborador_atendimento (
 -- =====================================================
 
 INSERT INTO pagamento (
-    id_atendimento,
+    id_agendamento,
     data_pagamento,
     valor,
     forma_pagamento,

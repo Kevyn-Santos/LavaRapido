@@ -139,27 +139,38 @@ CREATE TABLE colaborador_atendimento (
 );
 CREATE TABLE pagamento (
 	id_pagamento INT AUTO_INCREMENT PRIMARY KEY,
-    id_atendimento INT NOT NULL UNIQUE,
+    id_agendamento INT NOT NULL UNIQUE,
     data_pagamento DATETIME,
     valor DECIMAL(10,2) NOT NULL,
+
     forma_pagamento ENUM(
 		'DINHEIRO',
         'PIX',
         'CREDITO',
         'DEBITO'        
-	) NOT NULL,
+	),
+
     status_pagamento ENUM(
 		'PENDENTE',
         'PAGO',
         'CANCELADO'
 	) NOT NULL DEFAULT 'PENDENTE',
     
-    CONSTRAINT fk_pagamento_atendimento
-		FOREIGN KEY (id_atendimento)
-        REFERENCES atendimento(id_atendimento)
+    CONSTRAINT fk_pagamento_agendamento
+		FOREIGN KEY (id_agendamento)
+        REFERENCES agendamento(id_agendamento)
         ON UPDATE CASCADE
         ON DELETE RESTRICT,
         
 	CONSTRAINT chk_pagamento_valor
-		CHECK (valor >= 0)
+		CHECK (valor >= 0),
+
+    CONSTRAINT chk_pagamento_pago
+        CHECK (
+            status_pagamento <> 'PAGO'
+            OR (
+                data_pagamento IS NOT NULL
+                AND forma_pagamento IS NOT NULL
+            )
+        )
 );
