@@ -35,7 +35,7 @@ public class DAO {
         String sql = "INSERT INTO cliente (nome, cpf, telefone, email, senha_hash) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, cliente.getNome());
+            stmt.setString(1, cliente.getName());
             stmt.setString(2, cliente.getCpf());
             stmt.setString(3, cliente.getTelefone());
             stmt.setString(4, cliente.getEmail());
@@ -47,7 +47,7 @@ public class DAO {
     }
 
     public List<Cliente> getUsuarios() throws SQLException {
-        String sql = "SELECT id, nome, cpf, telefone, email FROM cliente";
+        String sql = "SELECT id_cliente, nome, cpf, telefone, email FROM cliente";
         List<Cliente> listaclientes = new ArrayList<>();
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -55,8 +55,8 @@ public class DAO {
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 Cliente client = new Cliente();
-                client.setId(rs.getInt("id_cliente"));
-                client.setNome(rs.getString("nome"));
+                client.setId_cliente(rs.getInt("id_cliente"));
+                client.setName(rs.getString("nome"));
                 client.setCpf(rs.getString("cpf"));
                 client.setTelefone(rs.getString("telefone"));
                 client.setEmail(rs.getString("email"));

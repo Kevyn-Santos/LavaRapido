@@ -21,7 +21,7 @@ public class Cadastro extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
 
         try {
-            cliente.setNome(request.getParameter("nome"));
+            cliente.setName(request.getParameter("nome"));
             cliente.setCpf(request.getParameter("cpf"));
             cliente.setTelefone(request.getParameter("telefone"));
             cliente.setEmail(request.getParameter("email"));
@@ -35,7 +35,7 @@ public class Cadastro extends HttpServlet {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-            request.getRequestDispatcher("/WEB-INF/views/cadastro.jsp").forward(request, response);
+            request.getRequestDispatcher("/mostrarCadastros").forward(request, response);
     }
 
 

@@ -1,27 +1,27 @@
 package com.splash.web.model;
 
 public class Cliente {
-    private int id;
-    private String nome;
+    private int id_cliente;
+    private String name;
     private String telefone;
     private String email;
     private String senha;
     private String cpf;
 
-    public int getId() {
-        return id;
+    public int getId_cliente() {
+        return id_cliente;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setId_cliente(int id) {
+        this.id_cliente = id;
     }
 
-    public String getNome() {
-        return nome;
+    public String getName() {
+        return name;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setName(String nome) {
+        this.name = nome;
     }
 
     public String getTelefone() {
