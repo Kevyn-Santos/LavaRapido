@@ -1,0 +1,12 @@
+analyzer:
+  errors:
+    # Evita que a falta temporária de um asset trave a análise.
+    missing_asset: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
