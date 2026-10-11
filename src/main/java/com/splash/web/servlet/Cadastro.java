@@ -1,24 +1,27 @@
 package com.splash.web.servlet;
 
+import com.splash.web.db.DAOCliente;
+import com.splash.web.model.Cliente;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import com.splash.web.db.DAO;
-import com.splash.web.model.Cliente;
-
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 
 @WebServlet("/cadastro")
 public class Cadastro extends HttpServlet {
-    DAO dao = new DAO();
+    DAOCliente daoCliente = new DAOCliente();
     Cliente cliente = new Cliente();
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType("text/plain; charset=UTF-8");
+        PrintWriter out = response.getWriter();
 
         try {
             cliente.setName(request.getParameter("nome"));
@@ -26,17 +29,23 @@ public class Cadastro extends HttpServlet {
             cliente.setTelefone(request.getParameter("telefone"));
             cliente.setEmail(request.getParameter("email"));
             cliente.setSenha(request.getParameter("senha"));
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
-        }
-
-        try {
-            dao.insertUsuario(cliente);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+            daoCliente.insertUsuario(cliente);
             request.getRequestDispatcher("/mostrarCadastros").forward(request, response);
+
+        } catch (IllegalArgumentException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            request.setAttribute("erro", e.getMessage());
+            request.getRequestDispatcher("/index.jsp").forward(request, response);
+        }catch (SQLIntegrityConstraintViolationException e){
+            response.setStatus(HttpServletResponse.SC_CONFLICT);
+            request.setAttribute("erro", e.getMessage());
+            request.getRequestDispatcher("/index.jsp").forward(request, response);
+        }catch (SQLException e){
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            request.setAttribute("erro", e.getMessage());
+            request.getRequestDispatcher("/index.jsp").forward(request, response);
+        }
+
+
     }
-
-
 }
