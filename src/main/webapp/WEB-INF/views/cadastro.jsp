@@ -22,7 +22,7 @@
                 <!-- Iterate over the list passed from the servlet -->
                 <c:forEach var="users" items="${queryUsers}">
                     <tr>
-                        <td>${users.id_cliente}</td>
+                        <td>${users.id}</td>
                         <td>${users.name}</td>
                         <td>${users.cpf}</td>
                         <td>${users.telefone}</td>

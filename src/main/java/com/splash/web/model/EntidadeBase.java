@@ -1,6 +1,7 @@
 package com.splash.web.model;
 
-/*Base de todas as entidades que possuem chave primária gerada pelo banco O id fica nulo até a entidade ser persistida e só pode ser definido uma vez.*/
+/*Base de todas as entidades que possuem chave primária gerada pelo banco.
+O id fica nulo até a entidade ser persistida e só pode ser definido uma vez.*/
 public abstract class EntidadeBase {
 
     private Integer id;

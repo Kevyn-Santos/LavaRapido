@@ -1,22 +1,31 @@
 package com.splash.web.model;
 
-<<<<<<< HEAD
-public class Cliente {
-    private int id_cliente;
-    private String name;
-=======
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+
+//public class Cliente {
+//    private int id_cliente;
+//    private String name;
+
 public class Cliente extends Pessoa {
 
-    private final String cpf;
->>>>>>> cf40a05 (feat: adiciona modelos do domínio)
+    private int id_cliente;
+    private String cpf;
     private String telefone;
     private final List<Veiculo> veiculos = new ArrayList<>();
 
-<<<<<<< HEAD
+    public Cliente(String nome, String cpf, String telefone, String email, String senhaHash) {
+        super(nome, email, senhaHash);
+        this.cpf = Validacao.cpf(cpf);
+        this.telefone = Validacao.telefone(telefone);
+    }
+
+    public Cliente() {
+        super();
+    }
+
     public int getId_cliente() {
         return id_cliente;
     }
@@ -25,22 +34,12 @@ public class Cliente extends Pessoa {
         this.id_cliente = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String nome) {
-        this.name = nome;
-=======
-    public Cliente(String nome, String cpf, String telefone, String email, String senhaHash) {
-        super(nome, email, senhaHash);
-        this.cpf = Validacao.cpf(cpf);
-        this.telefone = Validacao.telefone(telefone);
+    public void setCPF(String cpf) {
+        this.cpf = cpf;
     }
 
     public String getCpf() {
         return cpf;
->>>>>>> cf40a05 (feat: adiciona modelos do domínio)
     }
 
     public String getTelefone() {

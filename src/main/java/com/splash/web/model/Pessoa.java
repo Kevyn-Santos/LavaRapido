@@ -9,10 +9,13 @@ public abstract class Pessoa extends EntidadeBase {
     private String senhaHash;
 
     protected Pessoa(String nome, String email, String senhaHash) {
+        int id_cliente = super.getId();
         setNome(nome);
         setEmail(email);
         setSenhaHash(senhaHash);
     }
+
+    public Pessoa() {}
 
     public String getNome() {
         return nome;

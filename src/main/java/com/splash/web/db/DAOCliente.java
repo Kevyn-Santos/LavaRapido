@@ -52,8 +52,8 @@ public class DAOCliente {
             while (rs.next()) {
                 Cliente client = new Cliente();
                 client.setId_cliente(rs.getInt("id_cliente"));
-                client.setName(rs.getString("nome"));
-                client.setCpf(rs.getString("cpf"));
+                client.setNome(rs.getString("nome"));
+                client.setCPF(rs.getString("cpf"));
                 client.setTelefone(rs.getString("telefone"));
                 client.setEmail(rs.getString("email"));
                 listaclientes.add(client);
@@ -69,8 +69,8 @@ public class DAOCliente {
 
             Cliente client = new Cliente();
             client.setId_cliente(rs.getInt("id_cliente"));
-            client.setName(rs.getString("nome"));
-            client.setCpf(rs.getString("cpf"));
+            client.setNome(rs.getString("nome"));
+            client.setCPF(rs.getString("cpf"));
             client.setTelefone(rs.getString("telefone"));
             client.setEmail(rs.getString("email"));
             return client;
@@ -85,11 +85,11 @@ public class DAOCliente {
     public void insertUsuario(Cliente cliente) throws SQLException {
         String sql = "INSERT INTO cliente (nome, cpf, telefone, email, senha_hash) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, cliente.getName());
+            stmt.setString(1, cliente.getNome());
             stmt.setString(2, cliente.getCpf());
             stmt.setString(3, cliente.getTelefone());
             stmt.setString(4, cliente.getEmail());
-            stmt.setString(5, cliente.getSenha());
+            stmt.setString(5, cliente.getSenhaHash());
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new SQLException(e);

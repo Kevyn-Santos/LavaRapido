@@ -17,7 +17,7 @@
             <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="11">
 
             <label for="telefone">Telefone:</label>
-            <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" maxlength="12">
+            <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" maxlength="11">
 
             <label for="email">Email:</label>
             <input type="email" id="email" name="email">

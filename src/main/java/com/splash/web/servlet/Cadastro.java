@@ -21,20 +21,18 @@ public class Cadastro extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/plain; charset=UTF-8");
-        PrintWriter out = response.getWriter();
 
         try {
-            cliente.setName(request.getParameter("nome"));
-            cliente.setCpf(request.getParameter("cpf"));
+            cliente.setNome(request.getParameter("nome"));
+            cliente.setCPF(request.getParameter("cpf"));
             cliente.setTelefone(request.getParameter("telefone"));
             cliente.setEmail(request.getParameter("email"));
-            cliente.setSenha(request.getParameter("senha"));
+            cliente.setSenhaHash(request.getParameter("senha"));
             daoCliente.insertUsuario(cliente);
-            request.getRequestDispatcher("/mostrarCadastros").forward(request, response);
-
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro", e.getMessage());
+            e.printStackTrace();
             request.getRequestDispatcher("/index.jsp").forward(request, response);
         }catch (SQLIntegrityConstraintViolationException e){
             response.setStatus(HttpServletResponse.SC_CONFLICT);
@@ -45,6 +43,7 @@ public class Cadastro extends HttpServlet {
             request.setAttribute("erro", e.getMessage());
             request.getRequestDispatcher("/index.jsp").forward(request, response);
         }
+        request.getRequestDispatcher("/mostrarCadastros").forward(request, response);
 
 
     }
