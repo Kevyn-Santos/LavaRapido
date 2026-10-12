@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
  * Todas lançam IllegalArgumentException quando o dado é inválido
  * e devolvem o valor já normalizado.
  */
-final class Validacao {
+public class Validacao {
 
     private static final Pattern EMAIL = Pattern.compile("^[\\w.%+-]+@[\\w-]+(\\.[\\w-]+)+$");
     // Padrão antigo (ABC1234) e Mercosul (ABC1D23)
@@ -43,7 +43,7 @@ final class Validacao {
         return textoObrigatorio(valor, campo, max);
     }
 
-    static String email(String valor) {
+    public static String email(String valor) {
         String limpo = textoObrigatorio(valor, "E-mail", 150).toLowerCase();
         if (!EMAIL.matcher(limpo).matches()) {
             throw new IllegalArgumentException("E-mail inválido.");
@@ -60,7 +60,7 @@ final class Validacao {
         return digitos;
     }
 
-    static String telefone(String valor) {
+    public static String telefone(String valor) {
         String digitos = somenteDigitos(valor);
         if (digitos.length() < 10 || digitos.length() > 11) {
             throw new IllegalArgumentException("Telefone deve ter 10 ou 11 dígitos (DDD + número).");
@@ -68,7 +68,7 @@ final class Validacao {
         return digitos;
     }
 
-    static String placa(String valor) {
+    public static String placa(String valor) {
         String limpa = textoObrigatorio(valor, "Placa", 10).replace("-", "").toUpperCase();
         if (!PLACA.matcher(limpa).matches()) {
             throw new IllegalArgumentException("Placa inválida.");

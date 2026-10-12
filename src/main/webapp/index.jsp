@@ -14,10 +14,10 @@
             <input type="text" id="nome" name="nome">
 
             <label for="cpf">CPF:</label>
-            <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="11">
+            <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14">
 
             <label for="telefone">Telefone:</label>
-            <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" maxlength="11">
+            <input type="text" id="telefone" name="telefone" placeholder="(00)00000-0000" maxlength="15">
 
             <label for="email">Email:</label>
             <input type="email" id="email" name="email">
@@ -32,7 +32,7 @@
         <c:if test="${not empty erro}"><p style="color:red">${erro}</p></c:if>
     </div>
         <div>
-            <a href="${pageContext.request.contextPath}/listarExclusão" hidden>Exclusão de cadastro</a>
+            <a href="${pageContext.request.contextPath}/listarCadastrosExclusao" hidden>Exclusão de cadastro</a>
         </div>
 
         <div>

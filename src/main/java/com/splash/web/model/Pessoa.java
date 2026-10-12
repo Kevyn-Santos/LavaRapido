@@ -9,13 +9,19 @@ public abstract class Pessoa extends EntidadeBase {
     private String senhaHash;
 
     protected Pessoa(String nome, String email, String senhaHash) {
-        int id = super.getId();
         setNome(nome);
         setEmail(email);
         setSenhaHash(senhaHash);
     }
 
     public Pessoa() {}
+
+    /* Usado só ao reconstruir uma entidade já persistida (os dados foram validados na gravação). Não valida.
+       protected: visível apenas para subclasses e para o pacote model, nunca para DAOs ou servlets. */
+    protected void carregarDadosPessoa(String nome, String email) {
+        this.nome = nome;
+        this.email = email;
+    }
 
     public String getNome() {
         return nome;

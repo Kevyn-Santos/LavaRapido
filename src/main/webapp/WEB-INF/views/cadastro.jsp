@@ -22,8 +22,8 @@
                 <!-- Iterate over the list passed from the servlet -->
                 <c:forEach var="users" items="${queryUsers}">
                     <tr>
-                        <td>${users.id}</td>
-                        <td>${users.name}</td>
+                        <td>${users.id_cliente}</td>
+                        <td>${users.nome}</td>
                         <td>${users.cpf}</td>
                         <td>${users.telefone}</td>
                         <td>${users.email}</td>

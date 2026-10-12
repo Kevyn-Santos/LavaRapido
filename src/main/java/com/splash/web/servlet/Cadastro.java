@@ -15,11 +15,11 @@ import java.sql.SQLIntegrityConstraintViolationException;
 
 @WebServlet("/cadastro")
 public class Cadastro extends HttpServlet {
-    DAOCliente daoCliente = new DAOCliente();
-    Cliente cliente = new Cliente();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        DAOCliente daoCliente = new DAOCliente();
+        Cliente cliente = new Cliente();
         response.setContentType("text/plain; charset=UTF-8");
 
         try {
@@ -34,14 +34,17 @@ public class Cadastro extends HttpServlet {
             request.setAttribute("erro", e.getMessage());
             e.printStackTrace();
             request.getRequestDispatcher("/index.jsp").forward(request, response);
+            return;
         }catch (SQLIntegrityConstraintViolationException e){
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             request.setAttribute("erro", e.getMessage());
             request.getRequestDispatcher("/index.jsp").forward(request, response);
+            return;
         }catch (SQLException e){
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             request.setAttribute("erro", e.getMessage());
             request.getRequestDispatcher("/index.jsp").forward(request, response);
+            return;
         }
         request.getRequestDispatcher("/mostrarCadastros").forward(request, response);
 

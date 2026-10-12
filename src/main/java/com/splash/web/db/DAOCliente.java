@@ -50,13 +50,7 @@ public class DAOCliente {
 
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                Cliente client = new Cliente();
-                client.setId_cliente(rs.getInt("id_cliente"));
-                client.setNome(rs.getString("nome"));
-                client.setCPF(rs.getString("cpf"));
-                client.setTelefone(rs.getString("telefone"));
-                client.setEmail(rs.getString("email"));
-                listaclientes.add(client);
+                listaclientes.add(mapearCliente(rs));
             }
         }
         return listaclientes;
@@ -65,16 +59,24 @@ public class DAOCliente {
     public Cliente getusuario(int id) throws SQLException{
         String sql = "SELECT id_cliente, nome, cpf, telefone, email FROM cliente WHERE id_cliente=?";
         try(Connection conn  = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()){
+            PreparedStatement stmt = conn.prepareStatement(sql);){
+            stmt.setInt(1, id);
 
-            Cliente client = new Cliente();
-            client.setId_cliente(rs.getInt("id_cliente"));
-            client.setNome(rs.getString("nome"));
-            client.setCPF(rs.getString("cpf"));
-            client.setTelefone(rs.getString("telefone"));
-            client.setEmail(rs.getString("email"));
-            return client;
+            try(ResultSet rs = stmt.executeQuery()){
+                if(!rs.next()) throw new IllegalArgumentException("nenhum usuario encontrado com este ID");;
+                return mapearCliente(rs);
+            }
         }
+    }
+
+    // Converte a linha atual do ResultSet em Cliente sem revalidar (ver Cliente.carregar)
+    private Cliente mapearCliente(ResultSet rs) throws SQLException {
+        return Cliente.carregar(
+                rs.getInt("id_cliente"),
+                rs.getString("nome"),
+                rs.getString("cpf"),
+                rs.getString("telefone"),
+                rs.getString("email"));
     }
 
     /*--------------------------------------
@@ -91,8 +93,6 @@ public class DAOCliente {
             stmt.setString(4, cliente.getEmail());
             stmt.setString(5, cliente.getSenhaHash());
             stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new SQLException(e);
         }
     }
 

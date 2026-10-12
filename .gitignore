@@ -43,3 +43,4 @@ build/
 miscelaneous/*
 /src/main/java/com/splash/web/servlet/
 /src/main/webapp/WEB-INF/views/
+/src/test/
