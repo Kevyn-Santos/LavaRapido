@@ -19,7 +19,7 @@ CREATE TABLE veiculo (
     marca VARCHAR(60) NOT NULL,
     modelo VARCHAR(60) NOT NULL,
     cor VARCHAR(30),
-    
+
     CONSTRAINT fk_veiculo_cliente
 		FOREIGN KEY (id_cliente)
         REFERENCES cliente(id_cliente)

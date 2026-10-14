@@ -32,11 +32,23 @@
         <c:if test="${not empty erro}"><p style="color:red">${erro}</p></c:if>
     </div>
         <div>
-            <a href="${pageContext.request.contextPath}/listarCadastrosExclusao" hidden>Exclusão de cadastro</a>
+            <a href="${pageContext.request.contextPath}/listarCadastrosExclusao">Exclusão de cadastro</a>
         </div>
 
         <div>
             <a href="${pageContext.request.contextPath}/listarCadastros">Edição de cadastro</a>
+        </div>
+
+        <div>
+            <a href="${pageContext.request.contextPath}/listarCadastrosConsulta">Consulta de cadastro</a>
+        </div>
+
+        <div>
+            <a href="${pageContext.request.contextPath}/listarClientesVeiculos">Listagem de clientes e veículos</a>
+        </div>
+
+        <div>
+            <a href="${pageContext.request.contextPath}/listarClienteVeiculoConsulta">Consulta de cliente e veículos</a>
         </div>
 
 
