@@ -44,7 +44,8 @@ public class VeiculoServlet extends HttpServlet {
                     doGet(request, response);
                     return;
                 }
-            } else if ("adicionar".equals(acao)) {
+            } else if ("adicionar".equals(acao) || "atualizar".equals(acao)) {
+                Integer idVeiculo = WebSupport.inteiro(WebSupport.campo(request, "idVeiculo"));
                 String placa = WebSupport.campo(request, "placa").toUpperCase();
                 String marca = WebSupport.campo(request, "marca");
                 String modelo = WebSupport.campo(request, "modelo");
@@ -56,7 +57,16 @@ public class VeiculoServlet extends HttpServlet {
                     doGet(request, response);
                     return;
                 }
-                LavaRapidoRepository.adicionarVeiculo(idCliente, placa, marca, modelo, cor);
+                if ("atualizar".equals(acao) && (idVeiculo == null || !LavaRapidoRepository.atualizarVeiculo(idCliente, idVeiculo,
+                        placa, marca, modelo, cor))) {
+                    response.setStatus(HttpServletResponse.SC_CONFLICT);
+                    request.setAttribute("erro", "Veículo não encontrado ou não pertence à sua conta.");
+                    doGet(request, response);
+                    return;
+                }
+                if ("adicionar".equals(acao)) {
+                    LavaRapidoRepository.adicionarVeiculo(idCliente, placa, marca, modelo, cor);
+                }
             } else {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Ação inválida.");
                 return;

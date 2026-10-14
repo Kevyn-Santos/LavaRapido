@@ -28,11 +28,24 @@
                 <tbody>
                     <c:forEach var="veiculo" items="${veiculos}">
                         <tr>
-                            <td><c:out value="${veiculo.placa}"/></td>
-                            <td><c:out value="${veiculo.marca}"/></td>
-                            <td><c:out value="${veiculo.modelo}"/></td>
-                            <td><c:out value="${veiculo.cor}"/></td>
                             <td>
+                                <form method="post" action="${pageContext.request.contextPath}/veiculos">
+                                    <input type="hidden" name="acao" value="atualizar">
+                                    <input type="hidden" name="idVeiculo" value="${veiculo.id}">
+                                    <input name="placa" maxlength="10" value="<c:out value='${veiculo.placa}'/>" required>
+                            </td>
+                            <td>
+                                    <input name="marca" maxlength="60" value="<c:out value='${veiculo.marca}'/>" required>
+                            </td>
+                            <td>
+                                    <input name="modelo" maxlength="60" value="<c:out value='${veiculo.modelo}'/>" required>
+                            </td>
+                            <td>
+                                    <input name="cor" maxlength="30" value="<c:out value='${veiculo.cor}'/>">
+                            </td>
+                            <td>
+                                    <button type="submit">Salvar</button>
+                                </form>
                                 <form method="post" action="${pageContext.request.contextPath}/veiculos">
                                     <input type="hidden" name="acao" value="remover">
                                     <input type="hidden" name="idVeiculo" value="${veiculo.id}">

@@ -15,9 +15,10 @@ import java.util.Set;
 
 public final class LavaRapidoRepository {
 
-    public record Cliente(int id, String nome, String email) {
+    public record Cliente(int id, String nome, String telefone, String email) {
         public int getId() { return id; }
         public String getNome() { return nome; }
+        public String getTelefone() { return telefone; }
         public String getEmail() { return email; }
     }
 
@@ -102,15 +103,89 @@ public final class LavaRapidoRepository {
         }
     }
 
+    static Cliente obterClientePorId(int idCliente) throws SQLException {
+        String sql = "SELECT id_cliente, nome, telefone, email FROM cliente WHERE id_cliente = ?";
+        try (Connection connection = Database.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, idCliente);
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return new Cliente(result.getInt("id_cliente"), result.getString("nome"),
+                            result.getString("telefone"), result.getString("email"));
+                }
+                return null;
+            }
+        }
+    }
+
+    static void atualizarCliente(int idCliente, String nome, String telefone, String email,
+            String novaSenha) throws SQLException {
+        String sql = novaSenha == null || novaSenha.isBlank()
+                ? "UPDATE cliente SET nome = ?, telefone = ?, email = ? WHERE id_cliente = ?"
+                : "UPDATE cliente SET nome = ?, telefone = ?, email = ?, senha_hash = ? WHERE id_cliente = ?";
+        try (Connection connection = Database.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, nome.trim());
+            statement.setString(2, telefone.trim());
+            statement.setString(3, email.trim().toLowerCase());
+            if (novaSenha != null && !novaSenha.isBlank()) {
+                statement.setString(4, Passwords.hash(novaSenha));
+                statement.setInt(5, idCliente);
+            } else {
+                statement.setInt(4, idCliente);
+            }
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("Cliente não encontrado para atualização.");
+            }
+        }
+    }
+
+    static boolean clientePossuiAgendamentoPendente(int idCliente) throws SQLException {
+        String sql = "SELECT 1 FROM agendamento a "
+                + "JOIN veiculo v ON v.id_veiculo = a.id_veiculo "
+                + "WHERE v.id_cliente = ? AND a.status = 'AGENDADO' LIMIT 1";
+        try (Connection connection = Database.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, idCliente);
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next();
+            }
+        }
+    }
+
+    static boolean excluirCliente(int idCliente, String senha) throws SQLException {
+        if (clientePossuiAgendamentoPendente(idCliente)) {
+            return false;
+        }
+
+        String sql = "SELECT senha_hash FROM cliente WHERE id_cliente = ?";
+        try (Connection connection = Database.getConnection();
+                PreparedStatement select = connection.prepareStatement(sql)) {
+            select.setInt(1, idCliente);
+            try (ResultSet result = select.executeQuery()) {
+                if (!result.next() || !Passwords.matches(senha, result.getString("senha_hash"))) {
+                    return false;
+                }
+            }
+        }
+
+        String deleteSql = "DELETE FROM cliente WHERE id_cliente = ?";
+        try (Connection connection = Database.getConnection();
+                PreparedStatement statement = connection.prepareStatement(deleteSql)) {
+            statement.setInt(1, idCliente);
+            return statement.executeUpdate() == 1;
+        }
+    }
+
     static Cliente autenticarCliente(String email, String senha) throws SQLException {
-        String sql = "SELECT id_cliente, nome, email, senha_hash FROM cliente WHERE email = ?";
+        String sql = "SELECT id_cliente, nome, telefone, email, senha_hash FROM cliente WHERE email = ?";
         try (Connection connection = Database.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email.trim().toLowerCase());
             try (ResultSet result = statement.executeQuery()) {
                 if (result.next() && Passwords.matches(senha, result.getString("senha_hash"))) {
                     return new Cliente(result.getInt("id_cliente"), result.getString("nome"),
-                            result.getString("email"));
+                            result.getString("telefone"), result.getString("email"));
                 }
                 return null;
             }
@@ -162,6 +237,22 @@ public final class LavaRapidoRepository {
             statement.setString(4, modelo.trim());
             statement.setString(5, cor == null || cor.isBlank() ? null : cor.trim());
             statement.executeUpdate();
+        }
+    }
+
+    static boolean atualizarVeiculo(int idCliente, int idVeiculo, String placa, String marca,
+            String modelo, String cor) throws SQLException {
+        String sql = "UPDATE veiculo SET placa = ?, marca = ?, modelo = ?, cor = ? "
+                + "WHERE id_cliente = ? AND id_veiculo = ?";
+        try (Connection connection = Database.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, placa.trim().toUpperCase());
+            statement.setString(2, marca.trim());
+            statement.setString(3, modelo.trim());
+            statement.setString(4, cor == null || cor.isBlank() ? null : cor.trim());
+            statement.setInt(5, idCliente);
+            statement.setInt(6, idVeiculo);
+            return statement.executeUpdate() == 1;
         }
     }
 
@@ -358,16 +449,44 @@ public final class LavaRapidoRepository {
 
     static void cadastrarColaborador(String nome, String cargo, String nivelAcesso, String email,
             String senha) throws SQLException {
-        String sql = "INSERT INTO colaborador (nome, cargo, nivel_acesso, email, senha_hash) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        salvarColaborador(null, nome, cargo, nivelAcesso, email, senha);
+    }
+
+    static void salvarColaborador(Integer idColaborador, String nome, String cargo, String nivelAcesso,
+            String email, String senha) throws SQLException {
+        boolean atualizar = idColaborador != null;
+        String sql = atualizar
+                ? "UPDATE colaborador SET nome = ?, cargo = ?, nivel_acesso = ?, email = ?"
+                        + (senha != null && !senha.isBlank() ? ", senha_hash = ?" : "")
+                        + " WHERE id_colaborador = ?"
+                : "INSERT INTO colaborador (nome, cargo, nivel_acesso, email, senha_hash) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = Database.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, nome.trim());
-            statement.setString(2, cargo.trim());
-            statement.setString(3, nivelAcesso);
-            statement.setString(4, email.trim().toLowerCase());
-            statement.setString(5, Passwords.hash(senha));
-            statement.executeUpdate();
+            int index = 1;
+            statement.setString(index++, nome.trim());
+            statement.setString(index++, cargo.trim());
+            statement.setString(index++, nivelAcesso);
+            statement.setString(index++, email.trim().toLowerCase());
+            if (atualizar) {
+                if (senha != null && !senha.isBlank()) {
+                    statement.setString(index++, Passwords.hash(senha));
+                }
+                statement.setInt(index, idColaborador);
+            } else {
+                statement.setString(index++, Passwords.hash(senha));
+            }
+            if (statement.executeUpdate() != 1) {
+                throw new SQLException("O colaborador não foi encontrado para atualização.");
+            }
+        }
+    }
+
+    static boolean removerColaborador(int idColaborador) throws SQLException {
+        String sql = "DELETE FROM colaborador WHERE id_colaborador = ?";
+        try (Connection connection = Database.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, idColaborador);
+            return statement.executeUpdate() == 1;
         }
     }
 

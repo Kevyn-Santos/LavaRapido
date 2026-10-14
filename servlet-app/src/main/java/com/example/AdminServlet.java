@@ -120,18 +120,33 @@ public class AdminServlet extends HttpServlet {
     }
 
     private void processarColaborador(HttpServletRequest request) throws SQLException {
+        String acao = WebSupport.campo(request, "acao");
+        Integer id = WebSupport.inteiro(WebSupport.campo(request, "idColaborador"));
+        if ("remover".equals(acao)) {
+            if (id == null || !LavaRapidoRepository.removerColaborador(id)) {
+                throw new IllegalArgumentException("Colaborador não encontrado.");
+            }
+            return;
+        }
+        if (!"salvar".equals(acao)) {
+            throw new IllegalArgumentException("Ação de colaborador inválida.");
+        }
         String nome = WebSupport.campo(request, "nome");
         String cargo = WebSupport.campo(request, "cargo");
         String email = WebSupport.campo(request, "email");
         String senha = request.getParameter("senha");
         String nivel = WebSupport.campo(request, "nivelAcesso");
-        if (!WebSupport.preenchidos(nome, cargo, email, senha) || nome.length() > 100
-                || cargo.length() > 60 || email.length() > 150 || senha.length() < 8
-                || !Set.of("ADMINISTRADOR", "ATENDENTE", "OPERACIONAL").contains(nivel)) {
+        boolean atualizar = id != null;
+        if (!WebSupport.preenchidos(nome, cargo, email) || nome.length() > 100 || cargo.length() > 60
+                || email.length() > 150 || !Set.of("ADMINISTRADOR", "ATENDENTE", "OPERACIONAL").contains(nivel)
+                || (!atualizar && (senha == null || senha.isBlank() || senha.length() < 8))) {
             throw new IllegalArgumentException(
-                    "Confira os dados do colaborador; a senha deve ter ao menos 8 caracteres.");
+                    atualizar ? "Confira os dados do colaborador." : "Confira os dados do colaborador; a senha deve ter ao menos 8 caracteres.");
         }
-        LavaRapidoRepository.cadastrarColaborador(nome, cargo, nivel, email, senha);
+        if (atualizar && senha != null && !senha.isBlank() && senha.length() < 8) {
+            throw new IllegalArgumentException("A senha nova deve ter ao menos 8 caracteres.");
+        }
+        LavaRapidoRepository.salvarColaborador(id, nome, cargo, nivel, email, senha);
     }
 
     private void processarAtendimento(HttpServletRequest request) throws SQLException {

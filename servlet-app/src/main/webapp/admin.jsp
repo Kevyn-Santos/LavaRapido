@@ -60,6 +60,7 @@
     <c:if test="${secao == 'colaboradores'}">
         <h2>Cadastrar colaborador</h2>
         <form method="post" action="${pageContext.request.contextPath}/admin/colaboradores">
+            <input type="hidden" name="acao" value="salvar">
             <label>Nome: <input name="nome" maxlength="100" required></label><br><br>
             <label>Cargo: <input name="cargo" maxlength="60" required></label><br><br>
             <label>E-mail: <input type="email" name="email" maxlength="150" required></label><br><br>
@@ -75,14 +76,39 @@
         </form>
         <h2>Equipe</h2>
         <table border="1" cellpadding="6">
-            <thead><tr><th>Nome</th><th>Cargo</th><th>Nível</th><th>E-mail</th></tr></thead>
+            <thead><tr><th>Nome</th><th>Cargo</th><th>Nível</th><th>E-mail</th><th>Ações</th></tr></thead>
             <tbody>
                 <c:forEach var="colaborador" items="${colaboradores}">
                     <tr>
-                        <td><c:out value="${colaborador.nome}"/></td>
-                        <td><c:out value="${colaborador.cargo}"/></td>
-                        <td><c:out value="${colaborador.nivelAcesso}"/></td>
-                        <td><c:out value="${colaborador.email}"/></td>
+                        <td>
+                            <form method="post" action="${pageContext.request.contextPath}/admin/colaboradores">
+                                <input type="hidden" name="acao" value="salvar">
+                                <input type="hidden" name="idColaborador" value="${colaborador.id}">
+                                <input name="nome" maxlength="100" value="<c:out value='${colaborador.nome}'/>" required>
+                        </td>
+                        <td>
+                                <input name="cargo" maxlength="60" value="<c:out value='${colaborador.cargo}'/>" required>
+                        </td>
+                        <td>
+                                <select name="nivelAcesso">
+                                    <option value="OPERACIONAL" ${colaborador.nivelAcesso == 'OPERACIONAL' ? 'selected' : ''}>Operacional</option>
+                                    <option value="ATENDENTE" ${colaborador.nivelAcesso == 'ATENDENTE' ? 'selected' : ''}>Atendente</option>
+                                    <option value="ADMINISTRADOR" ${colaborador.nivelAcesso == 'ADMINISTRADOR' ? 'selected' : ''}>Administrador</option>
+                                </select>
+                        </td>
+                        <td>
+                                <input type="email" name="email" maxlength="150" value="<c:out value='${colaborador.email}'/>" required>
+                        </td>
+                        <td>
+                                <input type="password" name="senha" minlength="8" placeholder="Nova senha (opcional)">
+                                <button type="submit">Salvar</button>
+                            </form>
+                            <form method="post" action="${pageContext.request.contextPath}/admin/colaboradores">
+                                <input type="hidden" name="acao" value="remover">
+                                <input type="hidden" name="idColaborador" value="${colaborador.id}">
+                                <button type="submit">Remover</button>
+                            </form>
+                        </td>
                     </tr>
                 </c:forEach>
             </tbody>

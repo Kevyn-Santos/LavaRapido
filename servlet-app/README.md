@@ -25,6 +25,6 @@ mvn clean package
 mvn jetty:run
 ```
 
-Abra `http://localhost:8080/`. Clientes podem criar conta, cadastrar veículos e agendar serviços. A equipe entra em `/colaborador/login`; administradores podem cadastrar serviços e colaboradores, enquanto atendentes administram pagamentos e a equipe operacional atualiza os atendimentos.
+Abra `http://localhost:8080/`. Clientes podem criar conta, cadastrar, editar e remover veículos e agendar serviços. A equipe entra em `/colaborador/login`; administradores podem cadastrar, editar e remover serviços e colaboradores, enquanto atendentes administram pagamentos e a equipe operacional atualiza os atendimentos.
 
 O pagamento é registrado manualmente no sistema; não há integração com adquirente ou processamento de cartão/PIX.
