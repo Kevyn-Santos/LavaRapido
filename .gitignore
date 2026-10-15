@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-/target/
-=======
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
@@ -47,4 +44,3 @@ miscelaneous/*
 /src/main/java/com/splash/web/servlet/
 /src/main/webapp/WEB-INF/views/
 /src/test/
->>>>>>> d470ecfd2bf0bb4f5695b82be139a2887ae00727

@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!doctype html>
 <html lang="pt-BR">
@@ -162,62 +162,3 @@
       <a class="lantern" href="acesso.jsp"><i aria-hidden="true"></i>Acesso da equipe</a>
     </div>
   </footer>
-=======
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %><!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Formulário de cadastro</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/Assets/CSS/style.css">
-</head>
-<body>
-    <div>
-        <h1>Cadastro</h1>
-        <form action="cadastro" method="post">
-            <label for="nome">Nome:</label>
-            <input type="text" id="nome" name="nome">
-
-            <label for="cpf">CPF:</label>
-            <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14">
-
-            <label for="telefone">Telefone:</label>
-            <input type="text" id="telefone" name="telefone" placeholder="(00)00000-0000" maxlength="15">
-
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email">
-
-            <label for="senha">Senha:</label>
-            <input type="password" id="senha" name="senha" maxlength="10">
-
-            <button type="submit">Enviar</button>
-        </form>
-    </div>
-    <div>
-        <c:if test="${not empty erro}"><p style="color:red">${erro}</p></c:if>
-    </div>
-        <div>
-            <a href="${pageContext.request.contextPath}/listarCadastrosExclusao">Exclusão de cadastro</a>
-        </div>
-
-        <div>
-            <a href="${pageContext.request.contextPath}/listarCadastros">Edição de cadastro</a>
-        </div>
-
-        <div>
-            <a href="${pageContext.request.contextPath}/listarCadastrosConsulta">Consulta de cadastro</a>
-        </div>
-
-        <div>
-            <a href="${pageContext.request.contextPath}/listarClientesVeiculos">Listagem de clientes e veículos</a>
-        </div>
-
-        <div>
-            <a href="${pageContext.request.contextPath}/listarClienteVeiculoConsulta">Consulta de cliente e veículos</a>
-        </div>
-
-
-
->>>>>>> d470ecfd2bf0bb4f5695b82be139a2887ae00727
-</body>
-</html>
