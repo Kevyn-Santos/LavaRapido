@@ -1,0 +1,161 @@
+.fpanel-header {
+  margin-bottom: 28px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+.panel-header h1 { margin: 6px 0 2px; }
+.panel-header .back {
+  color: var(--muted);
+  font-size: .92rem;
+  font-weight: 600;
+}
+.panel-header .back:hover { color: var(--blue); text-decoration: underline; }
+.panel-header .sub, .filter-sub { color: var(--muted); font-size: .92rem; }
+
+.nav-panel { gap: clamp(8px, 1.5vw, 20px) !important; }
+.nav-panel a {
+  margin-left: 0 !important;
+  padding: 8px 12px;
+  border-radius: 4px 12px 4px 4px;
+  white-space: nowrap;
+}
+.nav-panel a.active {
+  color: var(--blue);
+  background: rgba(14,107,170,.1);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2.5vw, 28px);
+  align-items: start;
+}
+.card-panel {
+  min-width: 0;
+  padding: clamp(20px, 3vw, 32px);
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px 28px 4px 4px;
+  box-shadow: 0 12px 32px rgba(6,38,63,.06);
+}
+.card-panel h2 { margin-bottom: 18px; font-size: 1.35rem; font-weight: 800; }
+.card-panel .field label { color: var(--ink); }
+.card-panel .field input, .card-panel .field select {
+  background: #fff;
+  color: var(--navy);
+}
+
+.client-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.client-item:last-child { border-bottom: 0; }
+.client-info b, .client-car b, .booking-client b, .booking-service b { display: block; }
+.client-info span, .client-car span, .client-phone,
+.booking-client span, .booking-service span { color: var(--muted); font-size: .88rem; }
+.client-car { text-align: right; }
+
+.svc-checkboxes { display: grid; gap: 8px; margin: 12px 0 18px; }
+.svc-checkboxes label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px 12px 4px 4px;
+  cursor: pointer;
+}
+.svc-checkboxes label div { display: flex; align-items: center; gap: 8px; }
+.svc-checkboxes input { accent-color: var(--blue); }
+.svc-checkboxes input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  flex: none;
+}
+.svc-checkboxes span.price { color: var(--muted); font-size: .9rem; font-weight: 700; }
+.summary-title { margin-bottom: 12px; font-size: 1.2rem; font-weight: 800; }
+.summary-services { margin: 6px 0 10px; color: var(--muted); }
+.summary-price { margin-bottom: 16px; color: var(--muted); font-size: 1.05rem; }
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.summary-grid div { color: var(--muted); font-size: .9rem; }
+.summary-grid b { display: block; color: var(--ink); font-size: .95rem; }
+.booking-feedback { min-height: 1.5em; margin: 0 0 10px; color: var(--ok); font-size: .92rem; }
+.booking-feedback.error { color: #B3261E; }
+.booking-feedback:empty { display: none; }
+.card-panel .btn:disabled { cursor: not-allowed; opacity: .7; }
+
+.date-selector { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.date-selector h2 { font-size: clamp(1.25rem, 3vw, 1.8rem); font-weight: 800; }
+.date-selector button {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 4px 12px 4px 4px;
+  background: var(--card);
+  color: var(--blue);
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+.date-selector button:hover { background: var(--paper-2); }
+.filter-sub { margin-bottom: 20px; }
+.booking-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px 18px 4px 4px;
+}
+.booking-card:last-child { margin-bottom: 0; }
+.car-icon { width: 50px; height: 30px; stroke: var(--blue); fill: none; stroke-width: 2; flex: none; }
+.booking-client { flex: 1; }
+.booking-service { flex: 1.5; }
+.booking-actions { display: flex; align-items: center; gap: 10px; }
+.booking-actions select {
+  min-height: 38px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+}
+.btn-cancel {
+  min-height: 38px;
+  padding: 7px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 4px 12px 4px 4px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-cancel:hover { border-color: #B3261E; color: #B3261E; }
+
+@media(max-width: 860px) {
+  .two-col { grid-template-columns: 1fr; }
+}
+@media(max-width: 760px) {
+  .top-in { flex-wrap: wrap; }
+  .nav-panel { width: 100%; margin-left: 0 !important; overflow-x: auto; }
+  .booking-card { flex-wrap: wrap; }
+  .booking-actions { width: 100%; justify-content: flex-end; }
+}
+@media(max-width: 560px) {
+  .client-item { align-items: flex-start; flex-direction: column; }
+  .client-car { text-align: left; }
+  .booking-actions { justify-content: space-between; }
+  .booking-actions select { min-width: 0; flex: 1; }
+}
