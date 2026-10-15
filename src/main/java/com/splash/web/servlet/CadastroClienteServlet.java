@@ -1,7 +1,9 @@
-package com.example;
+package com.splash.web.servlet;
 
 import java.io.IOException;
 import java.sql.SQLException;
+
+import com.splash.web.db.ClienteRepository;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,7 +17,7 @@ public class CadastroClienteServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
+        request.getRequestDispatcher("/cadastroT.jsp").forward(request, response);
     }
 
     @Override
@@ -33,7 +35,7 @@ public class CadastroClienteServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro",
                     "Preencha todos os campos. O CPF deve ter 11 dígitos e a senha ao menos 8 caracteres.");
-            request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
+            request.getRequestDispatcher("/cadastroT.jsp").forward(request, response);
             return;
         }
 
@@ -44,7 +46,7 @@ public class CadastroClienteServlet extends HttpServlet {
             if (exception.getSQLState() != null && exception.getSQLState().startsWith("23")) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 request.setAttribute("erro", "CPF ou e-mail já cadastrado.");
-                request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
+                request.getRequestDispatcher("/cadastroT.jsp").forward(request, response);
                 return;
             }
             WebSupport.erroBanco(request, response, exception);

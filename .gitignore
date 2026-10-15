@@ -41,6 +41,8 @@ build/
 
 ### Miscelaneous ###
 miscelaneous/*
-/src/main/java/com/splash/web/servlet/
+/src/main/java/com/splash/web/servlet/Cadastro.java
+/src/main/java/com/splash/web/servlet/MostrarCadastro.java
 /src/main/webapp/WEB-INF/views/
 /src/test/
+/.env

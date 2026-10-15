@@ -1,4 +1,4 @@
 package com.splash.web.db;
 
-public class DAOServico {
+public class DAOAgendamento {
 }

@@ -42,7 +42,7 @@ public class Cliente extends Pessoa {
     }
 
     public void setCPF(String cpf) {
-        this.cpf = cpf;
+        this.cpf = Validacao.cpf(cpf);
     }
 
     public String getCpf() {
