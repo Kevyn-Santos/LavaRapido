@@ -1,4 +1,4 @@
-package com.example;
+package com.splash.web.db;
 
 import java.io.IOException;
 import java.sql.SQLException;
