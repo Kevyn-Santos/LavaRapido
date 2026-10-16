@@ -2,7 +2,7 @@ package com.splash.web.db;
 
 import java.sql.SQLException;
 
-final class ClienteRepository {
+public final class ClienteRepository {
 
     private ClienteRepository() {
     }

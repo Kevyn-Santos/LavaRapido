@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet("/cadastro")
+@WebServlet("/cadastroServlet")
 public class CadastroClienteServlet extends HttpServlet {
 
     @Override
