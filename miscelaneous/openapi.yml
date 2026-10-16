@@ -1,16 +1,23 @@
 openapi: 3.0.3
 info:
   title: SplashFast
-  version: "1.0"
+  version: "1.1"
   description: |
     Documentação das rotas HTTP da aplicação web SplashFast (Jakarta Servlets + JSP, Tomcat 10).
 
     Observações gerais:
     - Não há `web.xml`; todas as rotas vêm de `@WebServlet` e de JSPs públicas (fora de `WEB-INF`).
-    - As rotas renderizam HTML (forward para JSP) ou texto puro; não há API JSON.
+    - `EncodingFilter` (`@WebFilter("/*")`) força UTF-8 em todas as requisições e respostas.
+    - As rotas renderizam HTML (forward para JSP) ou redirecionam (302); não há API JSON.
     - Os formulários enviam `application/x-www-form-urlencoded`.
-    - Não há autenticação/sessão implementada.
-    - Erros não tratados (`RuntimeException`) resultam na página de erro padrão do Tomcat (HTTP 500).
+    - Autenticação por sessão HTTP (cookie `JSESSIONID`):
+      - cliente: `POST /login` grava `clienteId`/`clienteNome` na sessão;
+      - colaborador: `POST /colaborador/login` grava `colaboradorId`/`colaboradorNome`/`nivelAcesso`.
+      Rotas de cliente sem sessão redirecionam para `/login`; rotas de colaborador sem sessão redirecionam
+      para `/colaborador/login` e, com nível insuficiente, retornam 403.
+    - Hierarquia de níveis: `ADMINISTRADOR` (3) > `ATENDENTE` (2) > `OPERACIONAL` (1).
+    - Erros de banco tratados por `WebSupport.erroBanco` respondem 500 com forward para `/erro.jsp` (atributo `mensagem`).
+      Erros não tratados (`RuntimeException`) resultam na página de erro padrão do Tomcat (HTTP 500).
 servers:
   - url: http://{host}:{port}/{contextPath}
     description: Tomcat local (o build.sh publica target/SplashFast-1.0.war em /var/lib/tomcat10/webapps)
@@ -22,11 +29,19 @@ servers:
       contextPath:
         default: SplashFast-1.0
         description: Nome do WAR implantado (artifactId-version, sem finalName no pom.xml).
+security:
+  - {}
 tags:
   - name: Páginas
     description: JSPs acessíveis diretamente
+  - name: Autenticação
+    description: Login/logout de clientes e colaboradores e configuração do administrador inicial
+  - name: Área do cliente
+    description: Portal, veículos e agendamentos do cliente autenticado
+  - name: Administração
+    description: Painel de colaboradores (serviços, equipe, atendimentos, pagamentos)
   - name: Clientes
-    description: Cadastro, listagem, edição e exclusão de clientes
+    description: Cadastro, listagem, consulta, edição e exclusão de clientes (telas de teste das DAOs)
 paths:
   /:
     get:
@@ -40,22 +55,449 @@ paths:
   /index.jsp:
     get:
       tags: [Páginas]
-      summary: Formulário de cadastro de cliente
+      summary: Página inicial com formulário de cadastro e links das telas de teste
       description: |
-        Exibe o formulário que faz `POST /cadastro`, links para `/listarCadastros` e `/listarCadastrosExclusao` (este último com atributo `hidden`)
-        e, se existir o atributo de request `erro`, a mensagem de erro em vermelho.
+        Exibe um formulário de cadastro (que faz `POST /cadastro`, rota legada) e links para
+        `/listarCadastrosExclusao`, `/listarCadastros`, `/listarCadastrosConsulta`, `/listarClientesVeiculos`
+        e `/listarClienteVeiculoConsulta`. Se existir o atributo de request `erro`, mostra a mensagem em vermelho.
       operationId: indexJsp
       responses:
         "200":
           $ref: "#/components/responses/IndexHtml"
-  /cadastro:
+  /cadastro.jsp:
+    get:
+      tags: [Páginas]
+      summary: Formulário de cadastro de cliente (novo layout)
+      description: |
+        Formulário com nome, CPF, telefone, e-mail e senha (mín. 8) e link para `/login`.
+        ATENÇÃO: o `action` aponta para `/cadastro` (rota legada), e não para `/cadastroServlet`.
+      operationId: cadastroJsp
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+  /login.jsp:
+    get:
+      tags: [Páginas]
+      summary: Formulário de login do cliente
+      description: |
+        Mesmo conteúdo de `GET /login`. Exibe "Cadastro realizado..." quando há o parâmetro `cadastro`
+        e o atributo `erro` quando presente. Links para `/cadastro` e `/colaborador/login`.
+      operationId: loginJsp
+      parameters:
+        - $ref: "#/components/parameters/CadastroQuery"
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+  /health.jsp:
+    get:
+      tags: [Páginas]
+      summary: Health check
+      description: Página estática com o texto `OK`.
+      operationId: healthCheck
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+
+  /login:
+    get:
+      tags: [Autenticação]
+      summary: Formulário de login do cliente
+      description: Servlet `LoginServlet`. Forward para `/login.jsp`.
+      operationId: formLoginCliente
+      parameters:
+        - $ref: "#/components/parameters/CadastroQuery"
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+    post:
+      tags: [Autenticação]
+      summary: Autentica um cliente
+      description: |
+        Chama `ClienteRepository.autenticar(email, senha)`. Em sucesso invalida a sessão anterior, cria uma nova com
+        `clienteId` e `clienteNome` e redireciona para `/portal`.
+      operationId: loginCliente
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/LoginForm"
+      responses:
+        "302":
+          description: Login realizado. `Location` → `/portal`.
+        "400":
+          description: E-mail ou senha não preenchidos. Forward para `/login.jsp` com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "401":
+          description: Credenciais inválidas. Forward para `/login.jsp` com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+  /colaborador/login:
+    get:
+      tags: [Autenticação]
+      summary: Formulário de login de colaborador
+      description: Servlet `ColaboradorLoginServlet`. Forward para `/colaborador-login.jsp`.
+      operationId: formLoginColaborador
+      parameters:
+        - name: setup
+          in: query
+          required: false
+          description: "`sucesso` após a criação do administrador inicial."
+          schema:
+            type: string
+            enum: [sucesso]
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+    post:
+      tags: [Autenticação]
+      summary: Autentica um colaborador
+      description: |
+        Chama `LavaRapidoRepository.autenticarColaborador(email, senha)`. Em sucesso invalida a sessão anterior,
+        cria uma nova com `colaboradorId`, `colaboradorNome` e `nivelAcesso` e redireciona para `/admin`.
+      operationId: loginColaborador
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/LoginForm"
+      responses:
+        "302":
+          description: Login realizado. `Location` → `/admin`.
+        "400":
+          description: E-mail ou senha não preenchidos. Formulário com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "401":
+          description: Credenciais inválidas. Formulário com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+  /sair:
+    post:
+      tags: [Autenticação]
+      summary: Logout (cliente ou colaborador)
+      description: Servlet `LogoutServlet`. Invalida a sessão (se existir) e redireciona para `/`. `GET` retorna 405.
+      operationId: logout
+      responses:
+        "302":
+          description: "`Location` → `/`."
+  /setup/admin:
+    get:
+      tags: [Autenticação]
+      summary: Formulário de criação do administrador inicial
+      description: |
+        Servlet `SetupAdminServlet`. Requer a variável de ambiente `INITIAL_ADMIN_TOKEN` definida.
+        Forward para `/setup-admin.jsp`.
+      operationId: formSetupAdmin
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "410":
+          description: Já existe um administrador; a configuração inicial foi concluída.
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+        "503":
+          description: "`INITIAL_ADMIN_TOKEN` ausente/vazio. Página com atributo `configuracaoIndisponivel=true`."
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      tags: [Autenticação]
+      summary: Cria o administrador inicial
+      description: |
+        Compara `token` com `INITIAL_ADMIN_TOKEN` em tempo constante e chama
+        `LavaRapidoRepository.criarAdministradorInicial(nome, cargo, email, senha)`.
+        Em sucesso redireciona para `/colaborador/login?setup=sucesso`.
+      operationId: setupAdmin
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/SetupAdminForm"
+      responses:
+        "302":
+          description: Administrador criado. `Location` → `/colaborador/login?setup=sucesso`.
+        "400":
+          description: Campos vazios, acima do limite ou senha com menos de 8 caracteres. Formulário com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "403":
+          description: Token ausente ou inválido.
+        "409":
+          description: E-mail já cadastrado (SQLState `23xxx`). Formulário com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "410":
+          description: Já existe um administrador (`IllegalStateException`).
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+        "503":
+          description: "`INITIAL_ADMIN_TOKEN` ausente/vazio. Página com atributo `configuracaoIndisponivel=true`."
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /portal:
+    get:
+      tags: [Área do cliente]
+      summary: Portal do cliente
+      description: |
+        Servlet `PortalServlet`. Com `clienteId` na sessão faz forward para `/portal.jsp` (links para `/veiculos`,
+        `/agendamentos` e botão de `POST /sair`). Com `colaboradorId` redireciona para `/admin`; sem sessão, para `/`.
+      operationId: portalCliente
+      security:
+        - sessaoCliente: []
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "302":
+          description: "`Location` → `/admin` (colaborador logado) ou `/` (sem sessão)."
+  /veiculos:
+    get:
+      tags: [Área do cliente]
+      summary: Lista os veículos do cliente
+      description: |
+        Servlet `VeiculoServlet`. Define o atributo `veiculos` (lista de `VeiculoCliente`) e faz forward para `/veiculos.jsp`.
+      operationId: listarVeiculos
+      security:
+        - sessaoCliente: []
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "302":
+          $ref: "#/components/responses/RedirectLoginCliente"
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+    post:
+      tags: [Área do cliente]
+      summary: Adiciona ou remove um veículo do cliente
+      description: |
+        Campo `acao` define a operação:
+        - `adicionar`: `LavaRapidoRepository.adicionarVeiculo(clienteId, placa, marca, modelo, cor)` (placa em maiúsculas);
+        - `remover`: `LavaRapidoRepository.removerVeiculo(clienteId, idVeiculo)`.
+        Em sucesso redireciona para `/veiculos`. Em falha de validação reexibe a lista com atributo `erro`.
+      operationId: alterarVeiculo
+      security:
+        - sessaoCliente: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/VeiculoForm"
+      responses:
+        "200":
+          description: |
+            Remoção não realizada (veículo inexistente ou vinculado a agendamento). Lista reexibida com atributo `erro`
+            (o status permanece 200).
+          content:
+            text/html:
+              schema:
+                type: string
+        "302":
+          description: Operação concluída (`Location` → `/veiculos`) ou sem sessão (`Location` → `/login`).
+        "400":
+          description: "`acao` inválida, ou placa/marca/modelo vazios ou acima do limite."
+          content:
+            text/html:
+              schema:
+                type: string
+        "409":
+          description: Placa já cadastrada ou veículo com agendamentos (SQLState `23xxx`). Lista com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+  /agendamentos:
+    get:
+      tags: [Área do cliente]
+      summary: Agendamentos do cliente
+      description: |
+        Servlet `AgendamentoServlet`. Define os atributos `veiculos`, `servicos`, `agendamentos` (do cliente) e
+        `dataMinima` (hoje) e faz forward para `/agendamentos.jsp`.
+      operationId: listarAgendamentos
+      security:
+        - sessaoCliente: []
+      parameters:
+        - name: sucesso
+          in: query
+          required: false
+          description: "`1` após agendar/cancelar com sucesso."
+          schema:
+            type: string
+            enum: ["1"]
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "302":
+          $ref: "#/components/responses/RedirectLoginCliente"
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+    post:
+      tags: [Área do cliente]
+      summary: Cria ou cancela um agendamento
+      description: |
+        Campo `acao` define a operação:
+        - `agendar`: valida veículo, data (não pode ser passada), horário e ao menos um serviço e chama
+          `LavaRapidoRepository.criarAgendamento(clienteId, idVeiculo, data, horario, idsServicos)`;
+        - `cancelar`: `LavaRapidoRepository.cancelarAgendamento(clienteId, idAgendamento)`.
+        Em sucesso redireciona para `/agendamentos?sucesso=1`; em erro reexibe a página com atributo `erro`.
+      operationId: alterarAgendamento
+      security:
+        - sessaoCliente: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/AgendamentoForm"
+            encoding:
+              idServicos:
+                explode: true
+      responses:
+        "302":
+          description: Operação concluída (`Location` → `/agendamentos?sucesso=1`) ou sem sessão (`Location` → `/login`).
+        "400":
+          description: "`acao` inválida, data/horário mal formatados, data passada, veículo ou serviços ausentes/inválidos."
+          content:
+            text/html:
+              schema:
+                type: string
+        "409":
+          description: |
+            Cancelamento de agendamento inexistente/não cancelável, ou veículo já agendado no mesmo dia e horário
+            (SQLState `23xxx`). Página com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+
+  /admin/{secao}:
+    get:
+      tags: [Administração]
+      summary: Painel do colaborador
+      description: |
+        Servlet `AdminServlet` (`/admin/*`). `/admin` e `/admin/` equivalem à seção `inicio`.
+        Define o atributo `secao` e, conforme a seção, `servicos`, `colaboradores`, `atendimentos` (+ `colaboradores`)
+        ou `pagamentos`; faz forward para `/admin.jsp`.
+
+        Nível mínimo por seção: `inicio`/`atendimentos` → OPERACIONAL; `pagamentos` → ATENDENTE;
+        `servicos`/`colaboradores` → ADMINISTRADOR.
+      operationId: painelAdmin
+      security:
+        - sessaoColaborador: []
+      parameters:
+        - $ref: "#/components/parameters/SecaoAdmin"
+        - name: sucesso
+          in: query
+          required: false
+          description: "`1` após uma operação POST bem-sucedida."
+          schema:
+            type: string
+            enum: ["1"]
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "302":
+          $ref: "#/components/responses/RedirectLoginColaborador"
+        "403":
+          $ref: "#/components/responses/NivelInsuficiente"
+        "404":
+          description: Seção desconhecida.
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+    post:
+      tags: [Administração]
+      summary: Executa uma operação na seção do painel
+      description: |
+        O corpo depende da seção (mesmos níveis mínimos do GET):
+        - `servicos`: `acao=salvar` (cria se `idServico` vazio, senão atualiza) ou `acao=remover` → `ServicoForm`;
+        - `colaboradores`: cadastra um colaborador → `ColaboradorForm`;
+        - `atendimentos`: atualiza status e equipe do atendimento → `AtendimentoForm`;
+        - `pagamentos`: registra (`PAGO`) ou cancela (`CANCELADO`) um pagamento → `PagamentoForm`.
+        Em sucesso redireciona para `/admin/{secao}?sucesso=1`. A seção `inicio` não aceita POST (404).
+      operationId: operacaoAdmin
+      security:
+        - sessaoColaborador: []
+      parameters:
+        - $ref: "#/components/parameters/SecaoAdmin"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/ServicoForm"
+                - $ref: "#/components/schemas/ColaboradorForm"
+                - $ref: "#/components/schemas/AtendimentoForm"
+                - $ref: "#/components/schemas/PagamentoForm"
+            encoding:
+              idColaboradores:
+                explode: true
+      responses:
+        "302":
+          description: |
+            Operação concluída (`Location` → `/admin/{secao}?sucesso=1`) ou sem sessão (`Location` → `/colaborador/login`).
+        "400":
+          description: Dados inválidos (`IllegalArgumentException`). Painel reexibido com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "403":
+          $ref: "#/components/responses/NivelInsuficiente"
+        "404":
+          description: Seção desconhecida ou `inicio`.
+        "409":
+          description: Violação de restrição (e-mail duplicado ou registro em uso, SQLState `23xxx`). Painel com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/ErroBanco"
+
+  /cadastroServlet:
+    get:
+      tags: [Clientes]
+      summary: Formulário de cadastro de cliente
+      description: Servlet `CadastroClienteServlet`. Forward para `/cadastroT.jsp`.
+      operationId: formCadastroCliente
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
     post:
       tags: [Clientes]
       summary: Cadastra um novo cliente
       description: |
-        Servlet `com.splash.web.servlet.Cadastro`. Preenche um `Cliente` com os parâmetros e chama `DAOCliente.insertUsuario`.
-        Em sucesso faz forward para `/mostrarCadastros` (que renderiza `WEB-INF/views/cadastro.jsp` com a lista de clientes).
-        Em erro faz forward para `/index.jsp` com o atributo `erro`.
+        Servlet `CadastroClienteServlet`. Faz `trim` dos campos, remove não dígitos do CPF e chama
+        `ClienteRepository.cadastrar(nome, cpf, telefone, email, senha)`.
+        Em sucesso redireciona para `/login?cadastro=sucesso`; em erro faz forward para `/cadastroT.jsp` com atributo `erro`.
       operationId: cadastrarCliente
       requestBody:
         required: true
@@ -64,39 +506,31 @@ paths:
             schema:
               $ref: "#/components/schemas/CadastroClienteForm"
       responses:
-        "200":
-          description: Cliente inserido. Forward para `/mostrarCadastros` → `cadastroT.jsp` com a tabela de clientes (atributo `queryUsers`).
-          content:
-            text/html:
-              schema:
-                type: string
+        "302":
+          description: Cliente cadastrado. `Location` → `/login?cadastro=sucesso`.
         "400":
-          description: Dados inválidos (validação do modelo lança `IllegalArgumentException`). Forward para `/index.jsp` com atributo `erro`.
+          description: |
+            Campo vazio, CPF sem 11 dígitos, nome > 100, telefone > 20, e-mail > 150 ou senha < 8 caracteres.
+            Formulário com atributo `erro`.
           content:
             text/html:
               schema:
                 type: string
         "409":
-          description: |
-            Violação de restrição de unicidade (CPF/e-mail duplicado). Forward para `/index.jsp` com atributo `erro`.
-            ATENÇÃO: na prática inalcançável, pois `DAOCliente.insertUsuario` encapsula a exceção em um `SQLException` genérico (vira 500).
+          description: CPF ou e-mail já cadastrado (SQLState `23xxx`). Formulário com atributo `erro`.
           content:
             text/html:
               schema:
                 type: string
         "500":
-          description: Erro de banco de dados (`SQLException`). Forward para `/index.jsp` com atributo `erro`.
-          content:
-            text/html:
-              schema:
-                type: string
+          $ref: "#/components/responses/ErroBanco"
   /mostrarCadastros:
     post:
       tags: [Clientes]
-      summary: Lista os clientes após cadastro
+      summary: Lista os clientes cadastrados
       description: |
-        Servlet `com.splash.web.servlet.MostrarCadastros`. Só implementa `doPost` (normalmente alcançado via forward de `POST /cadastro`).
-        Define o atributo `queryUsers` (lista de `Cliente`) e faz forward para `WEB-INF/views/cadastro.jsp`.
+        Servlet `MostrarCadastros`. Só implementa `doPost` (era alcançada via forward da rota legada `/cadastro`).
+        Define o atributo `queryUsers` (lista de `Cliente`) e faz forward para `WEB-INF/views/cadastroT.jsp`.
         `GET` retorna 405.
       operationId: mostrarCadastros
       responses:
@@ -113,7 +547,7 @@ paths:
       tags: [Clientes]
       summary: Formulário de edição de cadastro
       description: |
-        Servlet `com.splash.web.servlet.Listarcadastros`. Define o atributo `currentUsers` (lista de `Cliente`)
+        Servlet `Listarcadastros`. Define o atributo `currentUsers` (lista de `Cliente`)
         e faz forward para `WEB-INF/views/EditarCadastro.jsp`, cujo formulário faz `POST /editarCadastro`.
       operationId: listarCadastrosEdicao
       responses:
@@ -130,9 +564,10 @@ paths:
       tags: [Clientes]
       summary: Atualiza nome, telefone e/ou e-mail de um cliente
       description: |
-        Servlet `com.splash.web.servlet.EditarCadastro`. Chama `DAOCliente.updateUsuarios(IdUser, nome, telefone, email)`;
-        apenas campos não vazios são atualizados. Sempre faz forward para `WEB-INF/views/EditarCadastro.jsp`,
-        com o atributo `atualização` (sucesso) ou `erro` (falha). O atributo `currentUsers` NÃO é definido aqui.
+        Servlet `EditarCadastro`. Valida telefone e e-mail não vazios com `Validacao.telefone`/`Validacao.email`
+        e chama `DAOCliente.updateUsuarios(IdUser, nome, telefone, email)`; apenas campos não vazios são atualizados.
+        Sempre faz forward para `WEB-INF/views/EditarCadastro.jsp`, com o atributo `atualização` (sucesso) ou `erro` (falha).
+        O atributo `currentUsers` NÃO é definido aqui.
       operationId: editarCliente
       requestBody:
         required: true
@@ -149,7 +584,7 @@ paths:
                 type: string
         "400":
           description: |
-            `IdUser` ausente/não numérico (`NumberFormatException`), nenhum campo preenchido,
+            `IdUser` ausente/não numérico (`NumberFormatException`), telefone/e-mail inválidos, nenhum campo preenchido
             ou nenhum cliente encontrado com o ID. Página com atributo `erro`.
           content:
             text/html:
@@ -166,9 +601,8 @@ paths:
       tags: [Clientes]
       summary: Formulário de exclusão de cadastro
       description: |
-        Servlet `com.splash.web.servlet.ListarCadastrosExclusao`.
-        Define o atributo `currentUsers` e faz forward para `WEB-INF/views/DeletarCadastro.jsp`,
-        cujo formulário faz `POST /deletarCadastro`.
+        Servlet `ListarCadastrosExclusao`. Define o atributo `currentUsers` e faz forward para
+        `WEB-INF/views/DeletarCadastro.jsp`, cujo formulário faz `POST /deletarCadastro`.
       operationId: listarCadastrosExclusao
       responses:
         "200":
@@ -184,9 +618,10 @@ paths:
       tags: [Clientes]
       summary: Exclui um cliente
       description: |
-        Servlet `com.splash.web.servlet.DeletarCadastro`. Se `CheckAll` for exatamente `"true"` chama
-        `DAOCliente.deleteusuariosTotal` (pretende excluir também veículos e agendamentos); caso contrário `deleteusuario`.
-        Responde com texto puro (sem content-type definido explicitamente).
+        Servlet `DeletarCadastro`. Se `CheckAll` for `"true"` chama `DAOCliente.deleteusuariosTotal`
+        (exclui também veículos e agendamentos); caso contrário `deleteusuario`.
+        Sempre recarrega `currentUsers` e faz forward para `WEB-INF/views/DeletarCadastro.jsp`
+        com o atributo `sucesso` ou `erro`.
       operationId: deletarCliente
       requestBody:
         required: true
@@ -196,24 +631,188 @@ paths:
               $ref: "#/components/schemas/DeletarClienteForm"
       responses:
         "200":
-          description: Exclusão executada (mesmo que nenhum registro tenha sido afetado).
+          description: Exclusão executada (mesmo que nenhum registro tenha sido afetado). Página com atributo `sucesso`.
           content:
-            text/plain:
+            text/html:
               schema:
                 type: string
-                enum:
-                  - Dados deletados com sucesso
-                  - Cliente, veículos e agendamento deletados com sucesso
+        "400":
+          description: "`IdUser` ausente/não numérico. Página com atributo `erro`."
+          content:
+            text/html:
+              schema:
+                type: string
+        "409":
+          description: Violação de FK (`SQLIntegrityConstraintViolationException`). Página com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
         "500":
-          description: "`IdUser` inválido (`NumberFormatException`), erro de FK ou de banco: exceção relançada como `RuntimeException`."
+          description: Erro de banco de dados (`SQLException`). Página com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+  /listarCadastrosConsulta:
+    get:
+      tags: [Clientes]
+      summary: Formulário de consulta de cliente por ID
+      description: |
+        Servlet `ListarCadastrosConsulta` (tela de teste). Define `currentUsers` e faz forward para
+        `WEB-INF/views/ConsultarCadastro.jsp`, cujo formulário faz `POST /consultarCadastro`.
+      operationId: listarCadastrosConsulta
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+  /consultarCadastro:
+    post:
+      tags: [Clientes]
+      summary: Consulta um cliente por ID
+      description: |
+        Servlet `ConsultarCadastro` (tela de teste de `DAOCliente.getusuario`). Define `usuario` (`Cliente`) e
+        `currentUsers` e faz forward para `WEB-INF/views/ConsultarCadastro.jsp`. Erros vão no atributo `erro`.
+      operationId: consultarCliente
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/IdClienteForm"
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "400":
+          description: "`IdUser` inválido ou cliente não encontrado (`IllegalArgumentException`). Página com atributo `erro`."
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          description: Erro de banco de dados (`SQLException`). Página com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+  /listarClientesVeiculos:
+    get:
+      tags: [Clientes]
+      summary: Lista todos os clientes com seus veículos
+      description: |
+        Servlet `ListarClientesVeiculos` (tela de teste de `DAOCliente.getUsuariosVeiculo`). Define `clientesVeiculos`
+        (lista de `Cliente` com `veiculos`) e faz forward para `WEB-INF/views/ListarClientesVeiculos.jsp`.
+        Erros vão no atributo `erro`.
+      operationId: listarClientesVeiculos
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "400":
+          description: "`IllegalArgumentException` na montagem dos modelos. Página com atributo `erro`."
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          description: Erro de banco de dados (`SQLException`). Página com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+  /listarClienteVeiculoConsulta:
+    get:
+      tags: [Clientes]
+      summary: Formulário de consulta de cliente e veículos por ID
+      description: |
+        Servlet `ListarClienteVeiculoConsulta` (tela de teste). Define `currentUsers` e faz forward para
+        `WEB-INF/views/ConsultarClienteVeiculo.jsp`, cujo formulário faz `POST /consultarClienteVeiculo`.
+      operationId: listarClienteVeiculoConsulta
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+  /consultarClienteVeiculo:
+    post:
+      tags: [Clientes]
+      summary: Consulta um cliente e seus veículos por ID
+      description: |
+        Servlet `ConsultarClienteVeiculo` (tela de teste de `DAOCliente.getUsuarioveiculo`). Define `usuario`
+        (`Cliente` com `veiculos`) e `currentUsers` e faz forward para `WEB-INF/views/ConsultarClienteVeiculo.jsp`.
+        Erros vão no atributo `erro`.
+      operationId: consultarClienteVeiculo
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/IdClienteForm"
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
+        "400":
+          description: "`IdUser` inválido ou cliente não encontrado (`IllegalArgumentException`). Página com atributo `erro`."
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          description: Erro de banco de dados (`SQLException`). Página com atributo `erro`.
           content:
             text/html:
               schema:
                 type: string
 components:
+  securitySchemes:
+    sessaoCliente:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+      description: Sessão com o atributo `clienteId` (criada por `POST /login`).
+    sessaoColaborador:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+      description: Sessão com `colaboradorId` e `nivelAcesso` (criada por `POST /colaborador/login`).
+  parameters:
+    CadastroQuery:
+      name: cadastro
+      in: query
+      required: false
+      description: "`sucesso` após `POST /cadastroServlet`; exibe a mensagem de cadastro realizado."
+      schema:
+        type: string
+        enum: [sucesso]
+    SecaoAdmin:
+      name: secao
+      in: path
+      required: true
+      description: Seção do painel. `/admin` (sem seção) equivale a `inicio`.
+      schema:
+        type: string
+        enum: [inicio, atendimentos, pagamentos, servicos, colaboradores]
   responses:
+    Html:
+      description: Página HTML.
+      content:
+        text/html:
+          schema:
+            type: string
     IndexHtml:
-      description: Página HTML com o formulário de cadastro.
+      description: Página HTML com o formulário de cadastro e os links das telas de teste.
+      content:
+        text/html:
+          schema:
+            type: string
+    RedirectLoginCliente:
+      description: Sem cliente na sessão. `Location` → `/login`.
+    RedirectLoginColaborador:
+      description: Sem colaborador na sessão. `Location` → `/colaborador/login`.
+    NivelInsuficiente:
+      description: Colaborador logado com nível de acesso abaixo do exigido pela seção.
+    ErroBanco:
+      description: Falha de banco (`WebSupport.erroBanco`). Forward para `/erro.jsp` com atributo `mensagem`.
       content:
         text/html:
           schema:
@@ -225,34 +824,194 @@ components:
           schema:
             type: string
   schemas:
+    LoginForm:
+      type: object
+      required: [email, senha]
+      properties:
+        email:
+          type: string
+          format: email
+        senha:
+          type: string
+          format: password
+    SetupAdminForm:
+      type: object
+      description: Campos de `WEB-INF/views/setup-admin.jsp`.
+      required: [token, nome, cargo, email, senha]
+      properties:
+        token:
+          type: string
+          format: password
+          description: Deve ser igual à variável de ambiente `INITIAL_ADMIN_TOKEN`.
+        nome:
+          type: string
+          maxLength: 100
+        cargo:
+          type: string
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          maxLength: 150
+        senha:
+          type: string
+          format: password
+          minLength: 8
     CadastroClienteForm:
       type: object
-      description: Campos do formulário em `index.jsp`.
+      description: Campos aceitos por `POST /cadastroServlet` (aparados com `trim`, exceto `senha`).
       required: [nome, cpf, telefone, email, senha]
       properties:
         nome:
           type: string
           maxLength: 100
-          description: Obrigatório, não pode ser vazio (aparado com trim).
         cpf:
           type: string
-          maxLength: 11
-          description: CPF. O input HTML limita a 11 caracteres; `setCPF` não valida nem normaliza.
-          example: "12345678901"
+          description: Caracteres não numéricos são removidos; deve restar exatamente 11 dígitos.
+          example: "123.456.789-01"
         telefone:
           type: string
-          description: 10 ou 11 dígitos (DDD + número); caracteres não numéricos são removidos.
-          example: "11987654321"
+          maxLength: 20
+          example: "(11) 98765-4321"
         email:
           type: string
           format: email
           maxLength: 150
-          description: Validado por regex e convertido para minúsculas.
         senha:
           type: string
           format: password
+          minLength: 8
+    VeiculoForm:
+      type: object
+      description: Campos de `WEB-INF/views/veiculos.jsp`.
+      required: [acao]
+      properties:
+        acao:
+          type: string
+          enum: [adicionar, remover]
+        idVeiculo:
+          type: integer
+          description: Obrigatório para `remover`.
+        placa:
+          type: string
+          maxLength: 10
+          description: Obrigatório para `adicionar`; convertida para maiúsculas.
+        marca:
+          type: string
+          maxLength: 60
+          description: Obrigatório para `adicionar`.
+        modelo:
+          type: string
+          maxLength: 60
+          description: Obrigatório para `adicionar`.
+        cor:
+          type: string
+          maxLength: 30
+    AgendamentoForm:
+      type: object
+      description: Campos de `WEB-INF/views/agendamentos.jsp`.
+      required: [acao]
+      properties:
+        acao:
+          type: string
+          enum: [agendar, cancelar]
+        idAgendamento:
+          type: integer
+          description: Obrigatório para `cancelar`.
+        idVeiculo:
+          type: integer
+          description: Obrigatório para `agendar`.
+        data:
+          type: string
+          format: date
+          description: Obrigatório para `agendar`; não pode ser anterior a hoje.
+        horario:
+          type: string
+          pattern: "^\\d{2}:\\d{2}(:\\d{2})?$"
+          example: "14:30"
+          description: Obrigatório para `agendar` (`LocalTime.parse`).
+        idServicos:
+          type: array
+          description: Obrigatório para `agendar`; ao menos um ID positivo (parâmetro repetido).
+          items:
+            type: integer
+            minimum: 1
+    ServicoForm:
+      type: object
+      description: "`POST /admin/servicos` (ADMINISTRADOR)."
+      required: [acao]
+      properties:
+        acao:
+          type: string
+          enum: [salvar, remover]
+        idServico:
+          type: integer
+          description: Obrigatório para `remover`; em `salvar`, vazio cria e preenchido atualiza.
+        nome:
+          type: string
+          maxLength: 100
+          description: Obrigatório para `salvar`.
+        descricao:
+          type: string
           maxLength: 255
-          description: Gravada na coluna `senha_hash` sem hash (texto puro). O input HTML limita a 10 caracteres.
+        preco:
+          type: string
+          description: Obrigatório para `salvar`. Decimal ≥ 0, até 10 dígitos e 2 casas; aceita vírgula.
+          example: "49,90"
+    ColaboradorForm:
+      type: object
+      description: "`POST /admin/colaboradores` (ADMINISTRADOR)."
+      required: [nome, cargo, email, senha, nivelAcesso]
+      properties:
+        nome:
+          type: string
+          maxLength: 100
+        cargo:
+          type: string
+          maxLength: 60
+        email:
+          type: string
+          format: email
+          maxLength: 150
+        senha:
+          type: string
+          format: password
+          minLength: 8
+        nivelAcesso:
+          $ref: "#/components/schemas/NivelAcesso"
+    AtendimentoForm:
+      type: object
+      description: "`POST /admin/atendimentos` (OPERACIONAL ou superior)."
+      required: [idAtendimento, status]
+      properties:
+        idAtendimento:
+          type: integer
+        status:
+          type: string
+          enum: [AGUARDANDO, EM_LAVAGEM, FINALIZADO, ENTREGUE]
+        idColaboradores:
+          type: array
+          description: Colaboradores responsáveis (parâmetro repetido; IDs positivos).
+          items:
+            type: integer
+            minimum: 1
+    PagamentoForm:
+      type: object
+      description: "`POST /admin/pagamentos` (ATENDENTE ou superior)."
+      required: [idPagamento, status]
+      properties:
+        idPagamento:
+          type: integer
+        status:
+          type: string
+          enum: [PAGO, CANCELADO]
+        formaPagamento:
+          type: string
+          description: Obrigatório quando `status=PAGO`.
+          enum: [DINHEIRO, PIX, CREDITO, DEBITO]
+    NivelAcesso:
+      type: string
+      enum: [OPERACIONAL, ATENDENTE, ADMINISTRADOR]
     EditarClienteForm:
       type: object
       description: Campos do formulário em `WEB-INF/views/EditarCadastro.jsp`. Ao menos um entre nome, telefone e email deve ser preenchido.
@@ -266,12 +1025,12 @@ components:
           description: Opcional. Vazio mantém o valor atual.
         telefone:
           type: string
-          maxLength: 12
-          description: Opcional. Vazio mantém o valor atual. Não é validado no update.
+          maxLength: 15
+          description: Opcional. Vazio mantém o valor atual; se preenchido, validado por `Validacao.telefone`.
         email:
           type: string
           format: email
-          description: Opcional. Vazio mantém o valor atual. Não é validado no update.
+          description: Opcional. Vazio mantém o valor atual; se preenchido, validado por `Validacao.email`.
     DeletarClienteForm:
       type: object
       description: Campos do formulário em `WEB-INF/views/DeletarCadastro.jsp`.
@@ -282,15 +1041,22 @@ components:
           description: id_cliente do cliente a excluir.
         CheckAll:
           type: string
-          description: |
-            Exclusão em cascata quando igual a `"true"`. O checkbox HTML não tem atributo `value`,
-            então o navegador envia `"on"` (ou omite o campo) — ver inconsistências.
-          enum: ["true", "on"]
+          description: Exclusão em cascata (veículos e agendamentos) quando igual a `"true"` (valor do checkbox).
+          enum: ["true"]
+    IdClienteForm:
+      type: object
+      description: Campos de `ConsultarCadastro.jsp` / `ConsultarClienteVeiculo.jsp`.
+      required: [IdUser]
+      properties:
+        IdUser:
+          type: integer
+          minimum: 1
+          description: id_cliente a consultar.
     Cliente:
       type: object
       description: |
-        Modelo `com.splash.web.model.Cliente` (estende `Pessoa` → `EntidadeBase`), como lido por `DAOCliente.getUsuarios`
-        (tabela `cliente`). Usado nos atributos de request `queryUsers` e `currentUsers`.
+        Modelo `com.splash.web.model.Cliente` (estende `Pessoa` → `EntidadeBase`), como lido por `DAOCliente`
+        (tabela `cliente`). Usado nos atributos de request `queryUsers`, `currentUsers`, `usuario` e `clientesVeiculos`.
       properties:
         id:
           type: integer
@@ -319,15 +1085,30 @@ components:
         veiculos:
           type: array
           readOnly: true
+          description: Preenchido apenas por `getUsuarioveiculo`/`getUsuariosVeiculo`.
           items:
             $ref: "#/components/schemas/Veiculo"
     Veiculo:
       type: object
-      description: Modelo `com.splash.web.model.Veiculo` (ainda sem rotas HTTP).
+      description: Modelo `com.splash.web.model.Veiculo`.
       properties:
         placa:
           type: string
           description: Padrão antigo (ABC1234) ou Mercosul (ABC1D23).
+        marca:
+          type: string
+        modelo:
+          type: string
+        cor:
+          type: string
+    VeiculoCliente:
+      type: object
+      description: Record `LavaRapidoRepository.Veiculo` (atributo `veiculos` em `/veiculos` e `/agendamentos`).
+      properties:
+        id:
+          type: integer
+        placa:
+          type: string
         marca:
           type: string
         modelo:
