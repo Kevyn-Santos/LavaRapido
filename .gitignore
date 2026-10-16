@@ -40,7 +40,8 @@ build/
 /src/main/resources/
 
 ### Miscelaneous ###
-miscelaneous/*
+miscelaneous/build.sh
+miscelaneous/pomBack.xml
 /src/main/java/com/splash/web/servlet/Cadastro.java
 /src/main/java/com/splash/web/servlet/MostrarCadastro.java
 /src/main/webapp/WEB-INF/views/

@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: SplashFast
+  version: "1.0"
+  description: |
+    Documentação das rotas HTTP da aplicação web SplashFast (Jakarta Servlets + JSP, Tomcat 10).
+
+    Observações gerais:
+    - Não há `web.xml`; todas as rotas vêm de `@WebServlet` e de JSPs públicas (fora de `WEB-INF`).
+    - As rotas renderizam HTML (forward para JSP) ou texto puro; não há API JSON.
+    - Os formulários enviam `application/x-www-form-urlencoded`.
+    - Não há autenticação/sessão implementada.
+    - Erros não tratados (`RuntimeException`) resultam na página de erro padrão do Tomcat (HTTP 500).
+servers:
+  - url: http://{host}:{port}/{contextPath}
+    description: Tomcat local (o build.sh publica target/SplashFast-1.0.war em /var/lib/tomcat10/webapps)
+    variables:
+      host:
+        default: localhost
+      port:
+        default: "8080"
+      contextPath:
+        default: SplashFast-1.0
+        description: Nome do WAR implantado (artifactId-version, sem finalName no pom.xml).
+tags:
+  - name: Páginas
+    description: JSPs acessíveis diretamente
+  - name: Clientes
+    description: Cadastro, listagem, edição e exclusão de clientes
+paths:
+  /:
+    get:
+      tags: [Páginas]
+      summary: Página inicial (welcome file index.jsp)
+      description: Equivalente a `GET /index.jsp`.
+      operationId: paginaInicial
+      responses:
+        "200":
+          $ref: "#/components/responses/IndexHtml"
+  /index.jsp:
+    get:
+      tags: [Páginas]
+      summary: Formulário de cadastro de cliente
+      description: |
+        Exibe o formulário que faz `POST /cadastro`, links para `/listarCadastros` e `/listarCadastrosExclusao` (este último com atributo `hidden`)
+        e, se existir o atributo de request `erro`, a mensagem de erro em vermelho.
+      operationId: indexJsp
+      responses:
+        "200":
+          $ref: "#/components/responses/IndexHtml"
+  /cadastro:
+    post:
+      tags: [Clientes]
+      summary: Cadastra um novo cliente
+      description: |
+        Servlet `com.splash.web.servlet.Cadastro`. Preenche um `Cliente` com os parâmetros e chama `DAOCliente.insertUsuario`.
+        Em sucesso faz forward para `/mostrarCadastros` (que renderiza `WEB-INF/views/cadastro.jsp` com a lista de clientes).
+        Em erro faz forward para `/index.jsp` com o atributo `erro`.
+      operationId: cadastrarCliente
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CadastroClienteForm"
+      responses:
+        "200":
+          description: Cliente inserido. Forward para `/mostrarCadastros` → `cadastroT.jsp` com a tabela de clientes (atributo `queryUsers`).
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          description: Dados inválidos (validação do modelo lança `IllegalArgumentException`). Forward para `/index.jsp` com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "409":
+          description: |
+            Violação de restrição de unicidade (CPF/e-mail duplicado). Forward para `/index.jsp` com atributo `erro`.
+            ATENÇÃO: na prática inalcançável, pois `DAOCliente.insertUsuario` encapsula a exceção em um `SQLException` genérico (vira 500).
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          description: Erro de banco de dados (`SQLException`). Forward para `/index.jsp` com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+  /mostrarCadastros:
+    post:
+      tags: [Clientes]
+      summary: Lista os clientes após cadastro
+      description: |
+        Servlet `com.splash.web.servlet.MostrarCadastros`. Só implementa `doPost` (normalmente alcançado via forward de `POST /cadastro`).
+        Define o atributo `queryUsers` (lista de `Cliente`) e faz forward para `WEB-INF/views/cadastro.jsp`.
+        `GET` retorna 405.
+      operationId: mostrarCadastros
+      responses:
+        "200":
+          description: Página "Cadastro Realizado com sucesso!" com tabela (ID, Nome, CPF, Telefone, Email).
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+  /listarCadastros:
+    get:
+      tags: [Clientes]
+      summary: Formulário de edição de cadastro
+      description: |
+        Servlet `com.splash.web.servlet.Listarcadastros`. Define o atributo `currentUsers` (lista de `Cliente`)
+        e faz forward para `WEB-INF/views/EditarCadastro.jsp`, cujo formulário faz `POST /editarCadastro`.
+      operationId: listarCadastrosEdicao
+      responses:
+        "200":
+          description: Página "Editar cadastro" com `<select name="IdUser">` populado com os clientes.
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+  /editarCadastro:
+    post:
+      tags: [Clientes]
+      summary: Atualiza nome, telefone e/ou e-mail de um cliente
+      description: |
+        Servlet `com.splash.web.servlet.EditarCadastro`. Chama `DAOCliente.updateUsuarios(IdUser, nome, telefone, email)`;
+        apenas campos não vazios são atualizados. Sempre faz forward para `WEB-INF/views/EditarCadastro.jsp`,
+        com o atributo `atualização` (sucesso) ou `erro` (falha). O atributo `currentUsers` NÃO é definido aqui.
+      operationId: editarCliente
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/EditarClienteForm"
+      responses:
+        "200":
+          description: Atualização realizada. Página com a mensagem "Atualização realizada com sucesso!".
+          content:
+            text/html:
+              schema:
+                type: string
+        "400":
+          description: |
+            `IdUser` ausente/não numérico (`NumberFormatException`), nenhum campo preenchido,
+            ou nenhum cliente encontrado com o ID. Página com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          description: Erro de banco de dados (`SQLException`). Página com atributo `erro`.
+          content:
+            text/html:
+              schema:
+                type: string
+  /listarCadastrosExclusao:
+    get:
+      tags: [Clientes]
+      summary: Formulário de exclusão de cadastro
+      description: |
+        Servlet `com.splash.web.servlet.ListarCadastrosExclusao`.
+        Define o atributo `currentUsers` e faz forward para `WEB-INF/views/DeletarCadastro.jsp`,
+        cujo formulário faz `POST /deletarCadastro`.
+      operationId: listarCadastrosExclusao
+      responses:
+        "200":
+          description: Página "Deletar cadastro" com `<select name="IdUser">` e checkbox `CheckAll`.
+          content:
+            text/html:
+              schema:
+                type: string
+        "500":
+          $ref: "#/components/responses/ErroInterno"
+  /deletarCadastro:
+    post:
+      tags: [Clientes]
+      summary: Exclui um cliente
+      description: |
+        Servlet `com.splash.web.servlet.DeletarCadastro`. Se `CheckAll` for exatamente `"true"` chama
+        `DAOCliente.deleteusuariosTotal` (pretende excluir também veículos e agendamentos); caso contrário `deleteusuario`.
+        Responde com texto puro (sem content-type definido explicitamente).
+      operationId: deletarCliente
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/DeletarClienteForm"
+      responses:
+        "200":
+          description: Exclusão executada (mesmo que nenhum registro tenha sido afetado).
+          content:
+            text/plain:
+              schema:
+                type: string
+                enum:
+                  - Dados deletados com sucesso
+                  - Cliente, veículos e agendamento deletados com sucesso
+        "500":
+          description: "`IdUser` inválido (`NumberFormatException`), erro de FK ou de banco: exceção relançada como `RuntimeException`."
+          content:
+            text/html:
+              schema:
+                type: string
+components:
+  responses:
+    IndexHtml:
+      description: Página HTML com o formulário de cadastro.
+      content:
+        text/html:
+          schema:
+            type: string
+    ErroInterno:
+      description: Erro não tratado (`SQLException`/`RuntimeException`) — página de erro padrão do Tomcat.
+      content:
+        text/html:
+          schema:
+            type: string
+  schemas:
+    CadastroClienteForm:
+      type: object
+      description: Campos do formulário em `index.jsp`.
+      required: [nome, cpf, telefone, email, senha]
+      properties:
+        nome:
+          type: string
+          maxLength: 100
+          description: Obrigatório, não pode ser vazio (aparado com trim).
+        cpf:
+          type: string
+          maxLength: 11
+          description: CPF. O input HTML limita a 11 caracteres; `setCPF` não valida nem normaliza.
+          example: "12345678901"
+        telefone:
+          type: string
+          description: 10 ou 11 dígitos (DDD + número); caracteres não numéricos são removidos.
+          example: "11987654321"
+        email:
+          type: string
+          format: email
+          maxLength: 150
+          description: Validado por regex e convertido para minúsculas.
+        senha:
+          type: string
+          format: password
+          maxLength: 255
+          description: Gravada na coluna `senha_hash` sem hash (texto puro). O input HTML limita a 10 caracteres.
+    EditarClienteForm:
+      type: object
+      description: Campos do formulário em `WEB-INF/views/EditarCadastro.jsp`. Ao menos um entre nome, telefone e email deve ser preenchido.
+      required: [IdUser]
+      properties:
+        IdUser:
+          type: integer
+          description: id_cliente do cliente a editar.
+        nome:
+          type: string
+          description: Opcional. Vazio mantém o valor atual.
+        telefone:
+          type: string
+          maxLength: 12
+          description: Opcional. Vazio mantém o valor atual. Não é validado no update.
+        email:
+          type: string
+          format: email
+          description: Opcional. Vazio mantém o valor atual. Não é validado no update.
+    DeletarClienteForm:
+      type: object
+      description: Campos do formulário em `WEB-INF/views/DeletarCadastro.jsp`.
+      required: [IdUser]
+      properties:
+        IdUser:
+          type: integer
+          description: id_cliente do cliente a excluir.
+        CheckAll:
+          type: string
+          description: |
+            Exclusão em cascata quando igual a `"true"`. O checkbox HTML não tem atributo `value`,
+            então o navegador envia `"on"` (ou omite o campo) — ver inconsistências.
+          enum: ["true", "on"]
+    Cliente:
+      type: object
+      description: |
+        Modelo `com.splash.web.model.Cliente` (estende `Pessoa` → `EntidadeBase`), como lido por `DAOCliente.getUsuarios`
+        (tabela `cliente`). Usado nos atributos de request `queryUsers` e `currentUsers`.
+      properties:
+        id:
+          type: integer
+          nullable: true
+          description: Herdado de `EntidadeBase`; o DAO não o preenche (fica nulo).
+        id_cliente:
+          type: integer
+          description: Chave primária na tabela `cliente`.
+        nome:
+          type: string
+          maxLength: 100
+        cpf:
+          type: string
+          description: 11 dígitos.
+        telefone:
+          type: string
+          description: 10 ou 11 dígitos.
+        email:
+          type: string
+          format: email
+          maxLength: 150
+        senhaHash:
+          type: string
+          writeOnly: true
+          maxLength: 255
+        veiculos:
+          type: array
+          readOnly: true
+          items:
+            $ref: "#/components/schemas/Veiculo"
+    Veiculo:
+      type: object
+      description: Modelo `com.splash.web.model.Veiculo` (ainda sem rotas HTTP).
+      properties:
+        placa:
+          type: string
+          description: Padrão antigo (ABC1234) ou Mercosul (ABC1D23).
+        marca:
+          type: string
+        modelo:
+          type: string
+        cor:
+          type: string
