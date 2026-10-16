@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
   <!-- Estilo Externo -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/Assets/CSS/style.css">
 </head>
 <body>
 
@@ -159,6 +159,6 @@
           <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
         </div>
       </div>
-      <a class="lantern" href="acesso.jsp"><i aria-hidden="true"></i>Acesso da equipe</a>
+      <a class="lantern" href="WEB-INF/Views/acesso.jsp"><i aria-hidden="true"></i>Acesso da equipe</a>
     </div>
   </footer>
