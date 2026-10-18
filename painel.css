@@ -82,6 +82,80 @@
   flex: none;
 }
 .svc-checkboxes span.price { color: var(--muted); font-size: .9rem; font-weight: 700; }
+.booking-client-search { display: grid; gap: 6px; margin-bottom: 8px; }
+.booking-client-search { position: relative; }
+.booking-client-search label { font-weight: 600; font-size: .92rem; }
+.booking-client-search input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+}
+.booking-client-results {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(6,38,63,.16);
+}
+.booking-client-results[hidden] { display: none; }
+.booking-client-option {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.booking-client-option:hover, .booking-client-option:focus { background: var(--paper-2); outline: none; }
+.booking-client-empty { padding: 10px 12px; color: var(--muted); font-size: .9rem; }
+#services-checkboxes input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  accent-color: var(--blue);
+}
+#services-checkboxes { display: grid; gap: 8px; margin: 12px 0 18px; }
+#services-checkboxes .service-option {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center !important;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px 12px 4px 4px;
+  cursor: pointer;
+}
+#services-checkboxes .service-option-main { display: flex; align-items: center; gap: 8px; min-width: 0; }
+#services-checkboxes .service-option input[type="checkbox"] {
+  appearance: auto;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px;
+  min-height: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 0 0 18px;
+  accent-color: var(--blue);
+}
+#services-checkboxes .service-option-price { white-space: nowrap; color: var(--muted); font-size: .9rem; font-weight: 700; }
 .summary-title { margin-bottom: 12px; font-size: 1.2rem; font-weight: 800; }
 .summary-services { margin: 6px 0 10px; color: var(--muted); }
 .summary-price { margin-bottom: 16px; color: var(--muted); font-size: 1.05rem; }
