@@ -6,7 +6,7 @@
 
 
 
-Execute `src/main/resources/schema.sql` em uma instância MySQL. A aplicação usa estas variáveis de ambiente:
+Execute `../src/main/resources/schema.sql` em uma instância MySQL. A aplicação usa estas variáveis de ambiente:
 
 | Variável | Padrão |
 | --- | --- |

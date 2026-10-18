@@ -1,4 +1,4 @@
-package com.example;
+package com.splash.web.servlet;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -8,6 +8,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.splash.web.db.LavaRapidoRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

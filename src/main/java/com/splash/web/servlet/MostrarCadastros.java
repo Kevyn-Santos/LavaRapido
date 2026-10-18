@@ -18,7 +18,7 @@ public class MostrarCadastros extends HttpServlet {
         DAOCliente daoClienteConsulta = new DAOCliente();
         try {
             request.setAttribute("queryUsers", daoClienteConsulta.getUsuarios());
-            request.getRequestDispatcher("/WEB-INF/views/cadastro.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/cadastroT.jsp").forward(request, response);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

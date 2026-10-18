@@ -1,4 +1,4 @@
-package com.example;
+package com.splash.web.db;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -91,8 +91,8 @@ public final class LavaRapidoRepository {
     static void cadastrarCliente(String nome, String cpf, String telefone, String email, String senha)
             throws SQLException {
         String sql = "INSERT INTO cliente (nome, cpf, telefone, email, senha_hash) VALUES (?, ?, ?, ?, ?)";
-        try (Connection connection = Database.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, nome.trim());
             statement.setString(2, cpf.trim());
             statement.setString(3, telefone.trim());
@@ -104,7 +104,7 @@ public final class LavaRapidoRepository {
 
     static Cliente autenticarCliente(String email, String senha) throws SQLException {
         String sql = "SELECT id_cliente, nome, email, senha_hash FROM cliente WHERE email = ?";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email.trim().toLowerCase());
             try (ResultSet result = statement.executeQuery()) {
@@ -120,7 +120,7 @@ public final class LavaRapidoRepository {
     static Colaborador autenticarColaborador(String email, String senha) throws SQLException {
         String sql = "SELECT id_colaborador, nome, cargo, nivel_acesso, email, senha_hash "
                 + "FROM colaborador WHERE email = ?";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email.trim().toLowerCase());
             try (ResultSet result = statement.executeQuery()) {
@@ -138,7 +138,7 @@ public final class LavaRapidoRepository {
         String sql = "SELECT id_veiculo, placa, marca, modelo, cor FROM veiculo "
                 + "WHERE id_cliente = ? ORDER BY placa";
         List<Veiculo> veiculos = new ArrayList<>();
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, idCliente);
             try (ResultSet result = statement.executeQuery()) {
@@ -154,7 +154,7 @@ public final class LavaRapidoRepository {
     static void adicionarVeiculo(int idCliente, String placa, String marca, String modelo, String cor)
             throws SQLException {
         String sql = "INSERT INTO veiculo (id_cliente, placa, marca, modelo, cor) VALUES (?, ?, ?, ?, ?)";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, idCliente);
             statement.setString(2, placa.trim().toUpperCase());
@@ -167,7 +167,7 @@ public final class LavaRapidoRepository {
 
     static boolean removerVeiculo(int idCliente, int idVeiculo) throws SQLException {
         String sql = "DELETE FROM veiculo WHERE id_cliente = ? AND id_veiculo = ?";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, idCliente);
             statement.setInt(2, idVeiculo);
@@ -178,7 +178,7 @@ public final class LavaRapidoRepository {
     static List<Servico> listarServicos() throws SQLException {
         String sql = "SELECT id_servico, nome, descricao, preco FROM servico ORDER BY nome";
         List<Servico> servicos = new ArrayList<>();
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet result = statement.executeQuery()) {
             while (result.next()) {
@@ -195,7 +195,7 @@ public final class LavaRapidoRepository {
         String sql = atualizar
                 ? "UPDATE servico SET nome = ?, descricao = ?, preco = ? WHERE id_servico = ?"
                 : "INSERT INTO servico (nome, descricao, preco) VALUES (?, ?, ?)";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, nome.trim());
             statement.setString(2, descricao == null || descricao.isBlank() ? null : descricao.trim());
@@ -211,7 +211,7 @@ public final class LavaRapidoRepository {
 
     static boolean removerServico(int idServico) throws SQLException {
         String sql = "DELETE FROM servico WHERE id_servico = ?";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, idServico);
             return statement.executeUpdate() == 1;
@@ -233,7 +233,7 @@ public final class LavaRapidoRepository {
         String insertAttendance = "INSERT INTO atendimento (id_agendamento) VALUES (?)";
         String insertPayment = "INSERT INTO pagamento (id_agendamento, valor) VALUES (?, ?)";
 
-        try (Connection connection = Database.getConnection()) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement statement = connection.prepareStatement(verifyVehicle)) {
@@ -314,7 +314,7 @@ public final class LavaRapidoRepository {
                 + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
                 + "WHERE v.id_cliente = ? GROUP BY a.id_agendamento ORDER BY a.data DESC, a.horario DESC";
         List<Agendamento> agendamentos = new ArrayList<>();
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, idCliente);
             try (ResultSet result = statement.executeQuery()) {
@@ -334,7 +334,7 @@ public final class LavaRapidoRepository {
         String sql = "UPDATE agendamento a JOIN veiculo v ON v.id_veiculo = a.id_veiculo "
                 + "SET a.status = 'CANCELADO' WHERE a.id_agendamento = ? AND v.id_cliente = ? "
                 + "AND a.status = 'AGENDADO'";
-        try (Connection connection = Database.getConnection()) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
                 boolean cancelado;
@@ -366,7 +366,7 @@ public final class LavaRapidoRepository {
             String senha) throws SQLException {
         String sql = "INSERT INTO colaborador (nome, cargo, nivel_acesso, email, senha_hash) "
                 + "VALUES (?, ?, ?, ?, ?)";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, nome.trim());
             statement.setString(2, cargo.trim());
@@ -381,7 +381,7 @@ public final class LavaRapidoRepository {
         String sql = "SELECT id_colaborador, nome, cargo, nivel_acesso, email "
                 + "FROM colaborador ORDER BY nome";
         List<Colaborador> colaboradores = new ArrayList<>();
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet result = statement.executeQuery()) {
             while (result.next()) {
@@ -405,7 +405,7 @@ public final class LavaRapidoRepository {
                 + "LEFT JOIN colaborador col ON col.id_colaborador = ca.id_colaborador "
                 + "GROUP BY at.id_atendimento ORDER BY a.data, a.horario";
         List<Atendimento> atendimentos = new ArrayList<>();
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet result = statement.executeQuery()) {
             while (result.next()) {
@@ -430,7 +430,7 @@ public final class LavaRapidoRepository {
                 + "THEN CURRENT_TIMESTAMP ELSE data_inicio END, "
                 + "data_fim = CASE WHEN ? IN ('FINALIZADO', 'ENTREGUE') AND data_fim IS NULL "
                 + "THEN CURRENT_TIMESTAMP ELSE data_fim END WHERE id_atendimento = ?";
-        try (Connection connection = Database.getConnection()) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement statement = connection.prepareStatement(select)) {
@@ -508,7 +508,7 @@ public final class LavaRapidoRepository {
                 + "JOIN cliente c ON c.id_cliente = v.id_cliente "
                 + "ORDER BY a.data DESC, a.horario DESC";
         List<Pagamento> pagamentos = new ArrayList<>();
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet result = statement.executeQuery()) {
             while (result.next()) {
@@ -528,7 +528,7 @@ public final class LavaRapidoRepository {
                 + "forma_pagamento = CASE WHEN ? = 'PAGO' THEN ? ELSE forma_pagamento END, "
                 + "data_pagamento = CASE WHEN ? = 'PAGO' THEN CURRENT_TIMESTAMP ELSE data_pagamento END "
                 + "WHERE id_pagamento = ? AND status_pagamento <> 'CANCELADO'";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, status);
             statement.setString(2, status);
@@ -543,7 +543,7 @@ public final class LavaRapidoRepository {
 
     static boolean existeAdministrador() throws SQLException {
         String sql = "SELECT 1 FROM colaborador WHERE nivel_acesso = 'ADMINISTRADOR' LIMIT 1";
-        try (Connection connection = Database.getConnection();
+        try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet result = statement.executeQuery()) {
             return result.next();
@@ -552,7 +552,7 @@ public final class LavaRapidoRepository {
 
     static void criarAdministradorInicial(String nome, String cargo, String email, String senha)
             throws SQLException {
-        try (Connection connection = Database.getConnection()) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
             try (PreparedStatement lock = connection.prepareStatement("SELECT GET_LOCK(?, 5)")) {
                 lock.setString(1, "lava_rapido_initial_admin");
                 try (ResultSet result = lock.executeQuery()) {

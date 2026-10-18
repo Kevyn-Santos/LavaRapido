@@ -1,10 +1,11 @@
-package com.example;
+package com.splash.web.servlet;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.SQLException;
 
+import com.splash.web.db.LavaRapidoRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

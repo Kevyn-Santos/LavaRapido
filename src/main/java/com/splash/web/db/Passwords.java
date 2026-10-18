@@ -1,4 +1,4 @@
-package com.example;
+package com.splash.web.db;
 
 import org.mindrot.jbcrypt.BCrypt;
 
