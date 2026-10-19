@@ -3,6 +3,7 @@ package com.splash.web.db;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.DriverManager;
+import java.nio.file.Path;
 import io.github.cdimascio.dotenv.Dotenv;
 
 /**
@@ -16,7 +17,12 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class DatabaseConnection {
 
     public enum Ambiente{LOCAL, PROD}; // Define os possíveis ambientes de desenvolvimento do banco (PROD, LOCAL)
+
+    // Pasta do .env: propriedade -Ddotenv.dir ou variável DOTENV_DIR. Sem nenhuma das duas, a pasta onde a JVM foi
+    // iniciada (no Tomcat do sistema é o CATALINA_BASE, não a raiz do projeto). Ver miscelaneous/variaveis-de-ambiente.md
+    private static final String PASTA_ENV = pastaEnv();
     private static final Dotenv dotenv = Dotenv.configure() // Configura a biblioteca para capturar apenas os valores preenchidos de ENV local
+            .directory(PASTA_ENV)
             .ignoreIfMissing()
             .load();
 
@@ -39,10 +45,20 @@ public class DatabaseConnection {
     private static String ChaveObrigatoria(String chave){
         String valor = dotenv.get(chave);
         if (valor == null || valor.isBlank()) {
-            throw new IllegalStateException("Variável de ambiente ausente ou vazia: " + chave);
+            // Diz onde o .env foi procurado, porque a pasta muda conforme o Tomcat (ver pastaEnv)
+            throw new IllegalStateException("Variável de ambiente ausente ou vazia: " + chave
+                    + " (procurada nas variáveis do sistema e em " + Path.of(PASTA_ENV, ".env").toAbsolutePath().normalize() + ")");
         }
         return valor;
     };
+
+    private static String pastaEnv() {
+        String pasta = System.getProperty("dotenv.dir");
+        if (pasta == null || pasta.isBlank()) {
+            pasta = System.getenv("DOTENV_DIR");
+        }
+        return pasta == null || pasta.isBlank() ? "./" : pasta.trim();
+    }
 
 
     public static Connection getConnection(Ambiente ambiente) throws SQLException {
