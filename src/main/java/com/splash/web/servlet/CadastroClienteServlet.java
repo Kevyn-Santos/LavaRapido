@@ -13,45 +13,56 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-@WebServlet("/cadastroServlet")
+/**
+ * Único cadastro de cliente (substitui a servlet {@code Cadastro}, que usava a mesma rota).
+ *
+ * <p>GET mostra o formulário {@code cadastro.jsp}. POST valida os campos pelo modelo {@link Cliente}
+ * (via {@code Validacao}), gera o hash da senha e grava com {@link DAOCliente#insertUsuario(Cliente)}.</p>
+ */
+@WebServlet("/cadastro")
 public class CadastroClienteServlet extends HttpServlet {
+
+    private static final String FORMULARIO = "/cadastro.jsp";
+    private static final int SENHA_MINIMA = 8;
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
+        request.getRequestDispatcher(FORMULARIO).forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String nome = WebSupport.campo(request, "nome");
-        String cpf = WebSupport.campo(request, "cpf").replaceAll("\\D", "");
-        String telefone = WebSupport.campo(request, "telefone");
-        String email = WebSupport.campo(request, "email");
         String senha = request.getParameter("senha");
 
-        if (!WebSupport.preenchidos(nome, cpf, telefone, email, senha)
-                || cpf.length() != 11 || nome.length() > 100 || telefone.length() > 20
-                || email.length() > 150 || senha.length() < 8) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            request.setAttribute("erro",
-                    "Preencha todos os campos. O CPF deve ter 11 dígitos e a senha ao menos 8 caracteres.");
-            request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
-            return;
-        }
-
         try {
-            new DAOCliente().insertUsuario(new Cliente(nome, cpf, telefone, email, Passwords.hash(senha)));
+            // O tamanho mínimo é conferido antes do hash, porque o hash BCrypt sempre tem 60 caracteres
+            if (senha == null || senha.length() < SENHA_MINIMA) {
+                throw new IllegalArgumentException("A senha deve ter ao menos " + SENHA_MINIMA + " caracteres.");
+            }
+            // O construtor valida e normaliza nome, CPF, telefone e e-mail
+            Cliente cliente = new Cliente(WebSupport.campo(request, "nome"), WebSupport.campo(request, "cpf"),
+                    WebSupport.campo(request, "telefone"), WebSupport.campo(request, "email"),
+                    Passwords.hash(senha));
+            new DAOCliente().insertUsuario(cliente);
             response.sendRedirect(request.getContextPath() + "/login?cadastro=sucesso");
+        } catch (IllegalArgumentException exception) {
+            voltarAoFormulario(request, response, HttpServletResponse.SC_BAD_REQUEST, exception.getMessage());
         } catch (SQLException exception) {
             if (exception.getSQLState() != null && exception.getSQLState().startsWith("23")) {
-                response.setStatus(HttpServletResponse.SC_CONFLICT);
-                request.setAttribute("erro", "CPF ou e-mail já cadastrado.");
-                request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
+                voltarAoFormulario(request, response, HttpServletResponse.SC_CONFLICT, "CPF ou e-mail já cadastrado.");
                 return;
             }
             WebSupport.erroBanco(request, response, exception);
         }
+    }
+
+    // Os campos digitados voltam pelo ${param.x} do formulário; a senha não é devolvida
+    private void voltarAoFormulario(HttpServletRequest request, HttpServletResponse response, int status,
+            String erro) throws ServletException, IOException {
+        response.setStatus(status);
+        request.setAttribute("erro", erro);
+        request.getRequestDispatcher(FORMULARIO).forward(request, response);
     }
 }

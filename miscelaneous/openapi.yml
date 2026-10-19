@@ -70,7 +70,7 @@ paths:
       summary: Formulário de cadastro de cliente (novo layout)
       description: |
         Formulário com nome, CPF, telefone, e-mail e senha (mín. 8) e link para `/login`.
-        ATENÇÃO: o `action` aponta para `/cadastro` (rota legada), e não para `/cadastroServlet`.
+        O `action` aponta para `POST /cadastro` (`CadastroClienteServlet`). Também é a view de `GET /cadastro`.
       operationId: cadastroJsp
       responses:
         "200":
@@ -482,11 +482,13 @@ paths:
         "500":
           $ref: "#/components/responses/ErroBanco"
 
-  /cadastroServlet:
+  /cadastro:
     get:
       tags: [Clientes]
       summary: Formulário de cadastro de cliente
-      description: Servlet `CadastroClienteServlet`. Forward para `/cadastroT.jsp`.
+      description: |
+        Servlet `CadastroClienteServlet` (única rota de cadastro; a servlet legada `Cadastro` e a rota
+        `/cadastroServlet` foram removidas). Forward para `/cadastro.jsp`.
       operationId: formCadastroCliente
       responses:
         "200":
@@ -495,9 +497,10 @@ paths:
       tags: [Clientes]
       summary: Cadastra um novo cliente
       description: |
-        Servlet `CadastroClienteServlet`. Faz `trim` dos campos, remove não dígitos do CPF e chama
-        `ClienteRepository.cadastrar(nome, cpf, telefone, email, senha)`.
-        Em sucesso redireciona para `/login?cadastro=sucesso`; em erro faz forward para `/cadastroT.jsp` com atributo `erro`.
+        Servlet `CadastroClienteServlet`. Confere a senha (mín. 8), monta `model.Cliente` (o construtor valida e
+        normaliza os campos via `Validacao`), gera o hash com `Passwords.hash` e chama `DAOCliente.insertUsuario`.
+        Em sucesso redireciona para `/login?cadastro=sucesso`; em erro faz forward para `/cadastro.jsp` com atributo
+        `erro` (os campos digitados, exceto a senha, voltam preenchidos).
       operationId: cadastrarCliente
       requestBody:
         required: true
@@ -510,8 +513,8 @@ paths:
           description: Cliente cadastrado. `Location` → `/login?cadastro=sucesso`.
         "400":
           description: |
-            Campo vazio, CPF sem 11 dígitos, nome > 100, telefone > 20, e-mail > 150 ou senha < 8 caracteres.
-            Formulário com atributo `erro`.
+            Mensagem de `Validacao`: campo vazio, nome > 100, CPF sem 11 dígitos, telefone sem 10 ou 11 dígitos,
+            e-mail inválido ou > 150, ou senha < 8 caracteres. Formulário com atributo `erro`.
           content:
             text/html:
               schema:
@@ -529,7 +532,7 @@ paths:
       tags: [Clientes]
       summary: Lista os clientes cadastrados
       description: |
-        Servlet `MostrarCadastros`. Só implementa `doPost` (era alcançada via forward da rota legada `/cadastro`).
+        Servlet `MostrarCadastros` (tela de teste). Só implementa `doPost`; era alcançada via forward da servlet legada `Cadastro`, removida.
         Define o atributo `queryUsers` (lista de `Cliente`) e faz forward para `WEB-INF/views/cadastroT.jsp`.
         `GET` retorna 405.
       operationId: mostrarCadastros
@@ -780,7 +783,7 @@ components:
       name: cadastro
       in: query
       required: false
-      description: "`sucesso` após `POST /cadastroServlet`; exibe a mensagem de cadastro realizado."
+      description: "`sucesso` após `POST /cadastro`; exibe a mensagem de cadastro realizado."
       schema:
         type: string
         enum: [sucesso]
@@ -859,7 +862,7 @@ components:
           minLength: 8
     CadastroClienteForm:
       type: object
-      description: Campos aceitos por `POST /cadastroServlet` (aparados com `trim`, exceto `senha`).
+      description: Campos aceitos por `POST /cadastro` (aparados com `trim`, exceto `senha`).
       required: [nome, cpf, telefone, email, senha]
       properties:
         nome:
@@ -871,7 +874,7 @@ components:
           example: "123.456.789-01"
         telefone:
           type: string
-          maxLength: 20
+          description: Caracteres não numéricos são removidos; deve restar 10 ou 11 dígitos (DDD + número).
           example: "(11) 98765-4321"
         email:
           type: string
