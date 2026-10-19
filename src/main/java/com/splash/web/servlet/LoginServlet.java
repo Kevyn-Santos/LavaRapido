@@ -3,8 +3,8 @@ package com.splash.web.servlet;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.splash.web.db.ClienteRepository;
-import com.splash.web.db.LavaRapidoRepository;
+import com.splash.web.db.DAOCliente;
+import com.splash.web.model.dto.ClienteView;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,7 +19,7 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        request.getRequestDispatcher("/login.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
     }
 
     @Override
@@ -31,15 +31,15 @@ public class LoginServlet extends HttpServlet {
         if (!WebSupport.preenchidos(email, senha)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro", "Preencha e-mail e senha.");
-            request.getRequestDispatcher("/login.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
             return;
         }
         try {
-            LavaRapidoRepository.Cliente cliente = ClienteRepository.autenticar(email, senha);
+            ClienteView cliente = new DAOCliente().autenticar(email, senha);
             if (cliente == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 request.setAttribute("erro", "E-mail ou senha inválidos.");
-                request.getRequestDispatcher("/login.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
                 return;
             }
             HttpSession sessaoAnterior = request.getSession(false);

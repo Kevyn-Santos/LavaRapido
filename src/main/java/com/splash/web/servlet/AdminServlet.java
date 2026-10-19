@@ -7,7 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import com.splash.web.db.LavaRapidoRepository;
+import com.splash.web.db.DAOAtendimento;
+import com.splash.web.db.DAOColaborador;
+import com.splash.web.db.DAOPagamento;
+import com.splash.web.db.DAOServico;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -37,18 +40,17 @@ public class AdminServlet extends HttpServlet {
         try {
             request.setAttribute("secao", secao);
             switch (secao) {
-                case "servicos" -> request.setAttribute("servicos", LavaRapidoRepository.listarServicos());
-                case "colaboradores" ->
-                    request.setAttribute("colaboradores", LavaRapidoRepository.listarColaboradores());
+                case "servicos" -> request.setAttribute("servicos", new DAOServico().listar());
+                case "colaboradores" -> request.setAttribute("colaboradores", new DAOColaborador().listar());
                 case "atendimentos" -> {
-                    request.setAttribute("atendimentos", LavaRapidoRepository.listarAtendimentos());
-                    request.setAttribute("colaboradores", LavaRapidoRepository.listarColaboradores());
+                    request.setAttribute("atendimentos", new DAOAtendimento().listar());
+                    request.setAttribute("colaboradores", new DAOColaborador().listar());
                 }
-                case "pagamentos" -> request.setAttribute("pagamentos", LavaRapidoRepository.listarPagamentos());
+                case "pagamentos" -> request.setAttribute("pagamentos", new DAOPagamento().listar());
                 default -> {
                 }
             }
-            request.getRequestDispatcher("/admin.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/admin.jsp").forward(request, response);
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
         }
@@ -94,10 +96,11 @@ public class AdminServlet extends HttpServlet {
     }
 
     private void processarServico(HttpServletRequest request) throws SQLException {
+        DAOServico daoServico = new DAOServico();
         String acao = WebSupport.campo(request, "acao");
         Integer id = WebSupport.inteiro(WebSupport.campo(request, "idServico"));
         if ("remover".equals(acao)) {
-            if (id == null || !LavaRapidoRepository.removerServico(id)) {
+            if (id == null || !daoServico.remover(id)) {
                 throw new IllegalArgumentException("Serviço não encontrado.");
             }
             return;
@@ -117,7 +120,7 @@ public class AdminServlet extends HttpServlet {
                 || preco.signum() < 0 || preco.precision() > 10 || preco.scale() > 2) {
             throw new IllegalArgumentException("Confira nome, descrição e preço (máximo 2 casas decimais).");
         }
-        LavaRapidoRepository.salvarServico(id, nome, descricao, preco);
+        daoServico.salvar(id, nome, descricao, preco);
     }
 
     private void processarColaborador(HttpServletRequest request) throws SQLException {
@@ -131,7 +134,7 @@ public class AdminServlet extends HttpServlet {
                 || !Set.of("ADMINISTRADOR", "ATENDENTE", "OPERACIONAL").contains(nivel)) {
             throw new IllegalArgumentException("Confira os dados do colaborador; a senha deve ter ao menos 8 caracteres.");
         }
-        LavaRapidoRepository.cadastrarColaborador(nome, cargo, nivel, email, senha);
+        new DAOColaborador().inserir(nome, cargo, nivel, email, senha);
     }
 
     private void processarAtendimento(HttpServletRequest request) throws SQLException {
@@ -151,7 +154,7 @@ public class AdminServlet extends HttpServlet {
                 ids.add(colaboradorId);
             }
         }
-        LavaRapidoRepository.atualizarAtendimento(id, status, ids);
+        new DAOAtendimento().atualizar(id, status, ids);
     }
 
     private void processarPagamento(HttpServletRequest request) throws SQLException {
@@ -162,7 +165,7 @@ public class AdminServlet extends HttpServlet {
                 || ("PAGO".equals(status) && !FORMAS_PAGAMENTO.contains(forma))) {
             throw new IllegalArgumentException("Selecione um pagamento, status e forma de pagamento válidos.");
         }
-        LavaRapidoRepository.atualizarPagamento(id, status, forma);
+        new DAOPagamento().atualizar(id, status, forma);
     }
 
     private String secao(HttpServletRequest request) {

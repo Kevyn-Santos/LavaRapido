@@ -16,7 +16,7 @@ public class PortalServlet extends HttpServlet {
             throws ServletException, IOException {
         if (request.getSession(false) != null
                 && request.getSession(false).getAttribute("clienteId") != null) {
-            request.getRequestDispatcher("/portal.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/portal.jsp").forward(request, response);
             return;
         }
         if (request.getSession(false) != null

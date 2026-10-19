@@ -3,7 +3,9 @@ package com.splash.web.servlet;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.splash.web.db.ClienteRepository;
+import com.splash.web.db.DAOCliente;
+import com.splash.web.model.Cliente;
+import com.splash.web.security.Passwords;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,7 +19,7 @@ public class CadastroClienteServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/cadastroT.jsp").forward(request, response);
+        request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
     }
 
     @Override
@@ -35,18 +37,18 @@ public class CadastroClienteServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro",
                     "Preencha todos os campos. O CPF deve ter 11 dígitos e a senha ao menos 8 caracteres.");
-            request.getRequestDispatcher("/cadastroT.jsp").forward(request, response);
+            request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
             return;
         }
 
         try {
-            ClienteRepository.cadastrar(nome, cpf, telefone, email, senha);
+            new DAOCliente().insertUsuario(new Cliente(nome, cpf, telefone, email, Passwords.hash(senha)));
             response.sendRedirect(request.getContextPath() + "/login?cadastro=sucesso");
         } catch (SQLException exception) {
             if (exception.getSQLState() != null && exception.getSQLState().startsWith("23")) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 request.setAttribute("erro", "CPF ou e-mail já cadastrado.");
-                request.getRequestDispatcher("/cadastroT.jsp").forward(request, response);
+                request.getRequestDispatcher("/cadastro.jsp").forward(request, response);
                 return;
             }
             WebSupport.erroBanco(request, response, exception);

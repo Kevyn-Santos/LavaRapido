@@ -8,7 +8,9 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.splash.web.db.LavaRapidoRepository;
+import com.splash.web.db.DAOAgendamento;
+import com.splash.web.db.DAOServico;
+import com.splash.web.db.DAOVeiculo;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -28,7 +30,7 @@ public class AgendamentoServlet extends HttpServlet {
         try {
             carregarDados(request, clienteId);
             request.setAttribute("dataMinima", LocalDate.now());
-            request.getRequestDispatcher("/agendamentos.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/agendamentos.jsp").forward(request, response);
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
         }
@@ -41,11 +43,12 @@ public class AgendamentoServlet extends HttpServlet {
         if (clienteId < 0) {
             return;
         }
+        DAOAgendamento daoAgendamento = new DAOAgendamento();
         String acao = WebSupport.campo(request, "acao");
         try {
             if ("cancelar".equals(acao)) {
                 Integer id = WebSupport.inteiro(WebSupport.campo(request, "idAgendamento"));
-                if (id == null || !LavaRapidoRepository.cancelarAgendamento(clienteId, id)) {
+                if (id == null || !daoAgendamento.cancelar(clienteId, id)) {
                     request.setAttribute("erro", "Agendamento não encontrado ou não pode mais ser cancelado.");
                     response.setStatus(HttpServletResponse.SC_CONFLICT);
                     doGet(request, response);
@@ -68,7 +71,7 @@ public class AgendamentoServlet extends HttpServlet {
                     }
                     idsServicos.add(valor);
                 }
-                LavaRapidoRepository.criarAgendamento(clienteId, idVeiculo, data, horario.toString(), idsServicos);
+                daoAgendamento.criar(clienteId, idVeiculo, data, horario.toString(), idsServicos);
             } else {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Ação inválida.");
                 return;
@@ -91,8 +94,8 @@ public class AgendamentoServlet extends HttpServlet {
     }
 
     private void carregarDados(HttpServletRequest request, int clienteId) throws SQLException {
-        request.setAttribute("veiculos", LavaRapidoRepository.listarVeiculos(clienteId));
-        request.setAttribute("servicos", LavaRapidoRepository.listarServicos());
-        request.setAttribute("agendamentos", LavaRapidoRepository.listarAgendamentosCliente(clienteId));
+        request.setAttribute("veiculos", new DAOVeiculo().listarPorCliente(clienteId));
+        request.setAttribute("servicos", new DAOServico().listar());
+        request.setAttribute("agendamentos", new DAOAgendamento().listarPorCliente(clienteId));
     }
 }

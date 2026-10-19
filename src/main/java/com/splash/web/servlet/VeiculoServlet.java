@@ -3,7 +3,7 @@ package com.splash.web.servlet;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.splash.web.db.LavaRapidoRepository;
+import com.splash.web.db.DAOVeiculo;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,9 +20,9 @@ public class VeiculoServlet extends HttpServlet {
         if (clienteId < 0) {
             return;
         }
-        try { 
-            request.setAttribute("veiculos", LavaRapidoRepository.listarVeiculos(clienteId));
-            request.getRequestDispatcher("/veiculos.jsp").forward(request, response);
+        try {
+            request.setAttribute("veiculos", new DAOVeiculo().listarPorCliente(clienteId));
+            request.getRequestDispatcher("/WEB-INF/views/veiculos.jsp").forward(request, response);
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
         }
@@ -35,11 +35,12 @@ public class VeiculoServlet extends HttpServlet {
         if (clienteId < 0) {
             return;
         }
+        DAOVeiculo daoVeiculo = new DAOVeiculo();
         String acao = WebSupport.campo(request, "acao");
         try {
             if ("remover".equals(acao)) {
                 Integer idVeiculo = WebSupport.inteiro(WebSupport.campo(request, "idVeiculo"));
-                if (idVeiculo == null || !LavaRapidoRepository.removerVeiculo(clienteId, idVeiculo)) {
+                if (idVeiculo == null || !daoVeiculo.remover(clienteId, idVeiculo)) {
                     request.setAttribute("erro", "Veículo não encontrado ou vinculado a um agendamento.");
                     doGet(request, response);
                     return;
@@ -56,7 +57,7 @@ public class VeiculoServlet extends HttpServlet {
                     doGet(request, response);
                     return;
                 }
-                LavaRapidoRepository.adicionarVeiculo(clienteId, placa, marca, modelo, cor);
+                daoVeiculo.inserir(clienteId, placa, marca, modelo, cor);
             } else {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Ação inválida.");
                 return;

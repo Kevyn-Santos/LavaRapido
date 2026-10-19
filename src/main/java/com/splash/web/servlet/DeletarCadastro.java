@@ -11,24 +11,18 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
-// Servlet de teste para DAOCliente.deleteusuario e DAOCliente.deleteusuariosTotal (não versionada)
+// Servlet de teste para DAOCliente.deleteusuario (deleteusuariosTotal foi removido: fazia o mesmo DELETE, ver 6.6)
 @WebServlet("/deletarCadastro")
 public class DeletarCadastro extends HttpServlet {
 
     @Override
     public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         DAOCliente daoCliente = new DAOCliente();
-        boolean ativo = "true".equals(request.getParameter("CheckAll"));
 
         try {
             int id = Integer.parseInt(request.getParameter("IdUser"));
-            if (ativo) {
-                daoCliente.deleteusuariosTotal(id);
-                request.setAttribute("sucesso", "Cliente, veículos e agendamentos deletados com sucesso (id " + id + ")");
-            } else {
-                daoCliente.deleteusuario(id);
-                request.setAttribute("sucesso", "Dados deletados com sucesso (id " + id + ")");
-            }
+            daoCliente.deleteusuario(id);
+            request.setAttribute("sucesso", "Dados deletados com sucesso (id " + id + ")");
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro", e.getMessage());

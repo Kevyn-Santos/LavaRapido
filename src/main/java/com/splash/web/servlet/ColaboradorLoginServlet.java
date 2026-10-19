@@ -3,7 +3,8 @@ package com.splash.web.servlet;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import com.splash.web.db.LavaRapidoRepository;
+import com.splash.web.db.DAOColaborador;
+import com.splash.web.model.dto.ColaboradorView;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,7 +18,7 @@ public class ColaboradorLoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/colaborador-login.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/colaborador-login.jsp").forward(request, response);
     }
 
     @Override
@@ -32,8 +33,7 @@ public class ColaboradorLoginServlet extends HttpServlet {
             return;
         }
         try {
-            LavaRapidoRepository.Colaborador colaborador =
-                    LavaRapidoRepository.autenticarColaborador(email, senha);
+            ColaboradorView colaborador = new DAOColaborador().autenticar(email, senha);
             if (colaborador == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 request.setAttribute("erro", "E-mail ou senha inválidos.");

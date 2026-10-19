@@ -43,7 +43,7 @@ final class WebSupport {
         request.setAttribute("mensagem", "Não foi possível concluir a operação. Verifique a conexão e os dados do banco.");
         response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         request.getServletContext().log("Falha ao acessar o banco de dados.", exception);
-        request.getRequestDispatcher("/erro.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/erro.jsp").forward(request, response);
     }
 
     static String campo(HttpServletRequest request, String nome) {

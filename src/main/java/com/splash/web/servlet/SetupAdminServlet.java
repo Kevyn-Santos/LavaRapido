@@ -27,7 +27,7 @@ public class SetupAdminServlet extends HttpServlet {
                 response.sendError(HttpServletResponse.SC_GONE, "A configuração inicial já foi concluída.");
                 return;
             }
-            request.getRequestDispatcher("/setup-admin.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/setup-admin.jsp").forward(request, response);
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
         }
@@ -55,11 +55,11 @@ public class SetupAdminServlet extends HttpServlet {
                 || cargo.length() > 60 || email.length() > 150 || senha.length() < 8) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro", "Preencha os campos; a senha deve ter ao menos 8 caracteres.");
-            request.getRequestDispatcher("/setup-admin.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/setup-admin.jsp").forward(request, response);
             return;
         }
         try {
-              dao.criarAdministradorInicial(nome, cargo, email, senha);
+            dao.criarAdministradorInicial(nome, cargo, email, senha);
             response.sendRedirect(request.getContextPath() + "/colaborador/login?setup=sucesso");
         } catch (IllegalStateException exception) {
             response.sendError(HttpServletResponse.SC_GONE, "A configuração inicial já foi concluída.");
@@ -67,7 +67,7 @@ public class SetupAdminServlet extends HttpServlet {
             if (exception.getSQLState() != null && exception.getSQLState().startsWith("23")) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
                 request.setAttribute("erro", "Este e-mail já está cadastrado.");
-                request.getRequestDispatcher("/setup-admin.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/setup-admin.jsp").forward(request, response);
                 return;
             }
             WebSupport.erroBanco(request, response, exception);
@@ -79,7 +79,7 @@ public class SetupAdminServlet extends HttpServlet {
         if (System.getenv("INITIAL_ADMIN_TOKEN") == null || System.getenv("INITIAL_ADMIN_TOKEN").isBlank()) {
             response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             request.setAttribute("configuracaoIndisponivel", true);
-            request.getRequestDispatcher("/setup-admin.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/setup-admin.jsp").forward(request, response);
             return false;
         }
         return true;
