@@ -28,7 +28,8 @@ class ServicoCard extends StatelessWidget {
       child: ListTile(
         leading: Icon(servico.icone, color: cor),
         title: Text(servico.nome),
-        subtitle: Text(servico.descricao),
+        subtitle:
+            servico.descricao.isEmpty ? null : Text(servico.descricao),
         trailing: Text(
           servico.precoFormatado,
           style: const TextStyle(fontWeight: FontWeight.bold),

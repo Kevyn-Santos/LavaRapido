@@ -4,24 +4,17 @@ import 'package:flash_splash/core/data/repositorio.dart';
 import 'package:flash_splash/core/models/agendamento.dart';
 import 'package:flash_splash/core/models/servico.dart';
 import 'package:flash_splash/core/utils/formatadores.dart';
+import 'package:flash_splash/features/agendamentos/novo_agendamento.dart';
 import 'package:flash_splash/features/home/servico_card.dart';
 import 'package:flash_splash/features/pagamento/pagamento.dart';
 
-class InicioCliente extends StatefulWidget {
+class InicioCliente extends StatelessWidget {
   const InicioCliente({super.key});
-
-  @override
-  State<InicioCliente> createState() => _InicioClienteState();
-}
-
-class _InicioClienteState extends State<InicioCliente> {
-  Servico? _servicoSelecionado;
 
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final cores = tema.colorScheme;
-    final servicoSelecionado = _servicoSelecionado;
 
     return Scaffold(
       appBar: AppBar(
@@ -107,49 +100,77 @@ class _InicioClienteState extends State<InicioCliente> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 4),
+            Text(
+              'Toque em um serviço para agendar.',
+              style: TextStyle(color: cores.onSurfaceVariant),
+            ),
             const SizedBox(height: 12),
 
-            for (final servico in Repositorio.servicos)
-              ServicoCard(
-                servico: servico,
-                selecionado: servico == servicoSelecionado,
-                onTap: () {
-                  setState(() {
-                    _servicoSelecionado = servico;
-                  });
-                },
-              ),
-
-            const SizedBox(height: 15),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: servicoSelecionado == null
-                    ? null
-                    : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => Pagamento(
-                              servico: servicoSelecionado,
+            // Espaço dos serviços: a lista vem do Repositorio (o back
+            // fornece os 4 tipos de serviço).
+            ValueListenableBuilder<List<Servico>>(
+              valueListenable: Repositorio.servicos,
+              builder: (context, lista, _) {
+                return Column(
+                  children: [
+                    for (final servico in lista)
+                      ServicoCard(
+                        servico: servico,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => NovoAgendamento(
+                                servicoInicial: servico,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                icon: const Icon(Icons.payment),
-                label: const Text('IR PARA PAGAMENTO'),
-              ),
+                          );
+                        },
+                      ),
+                  ],
+                );
+              },
             ),
-            if (servicoSelecionado == null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Center(
-                  child: Text(
-                    'Toque em um serviço para continuar.',
-                    style: TextStyle(color: cores.onSurfaceVariant),
-                  ),
-                ),
-              ),
+
+            // Pagamento: só existe quando há um agendamento a pagar.
+            const SizedBox(height: 15),
+            ValueListenableBuilder<List<Agendamento>>(
+              valueListenable: Repositorio.agendamentos,
+              builder: (context, _, __) {
+                final aPagar = Repositorio.proximoAPagar();
+                return Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: aPagar == null
+                            ? null
+                            : () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        Pagamento(agendamento: aPagar),
+                                  ),
+                                );
+                              },
+                        icon: const Icon(Icons.payment),
+                        label: const Text('IR PARA PAGAMENTO'),
+                      ),
+                    ),
+                    if (aPagar == null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Agende um serviço para liberar o pagamento.',
+                          style: TextStyle(color: cores.onSurfaceVariant),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
           ],
         ),
       ),

@@ -17,7 +17,7 @@ class Notificacoes extends StatelessWidget {
           Card(
             child: ListTile(
               leading: Icon(Icons.local_car_wash, color: cor),
-              title: const Text('Bem-vindo ao Flash Splash!'),
+              title: const Text('Bem-vindo ao Fast Splash!'),
               subtitle: const Text(
                 'Aqui aparecerão seus avisos e novidades.',
               ),

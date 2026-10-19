@@ -8,7 +8,10 @@ import 'package:flash_splash/core/utils/formatadores.dart';
 import 'package:flash_splash/features/home/servico_card.dart';
 
 class NovoAgendamento extends StatefulWidget {
-  const NovoAgendamento({super.key});
+  /// Serviço já escolhido (quando vem da tela Início).
+  final Servico? servicoInicial;
+
+  const NovoAgendamento({super.key, this.servicoInicial});
 
   @override
   State<NovoAgendamento> createState() => _NovoAgendamentoState();
@@ -19,6 +22,12 @@ class _NovoAgendamentoState extends State<NovoAgendamento> {
   Veiculo? _veiculo;
   DateTime? _data;
   TimeOfDay? _hora;
+
+  @override
+  void initState() {
+    super.initState();
+    _servico = widget.servicoInicial;
+  }
 
   bool get _completo =>
       _servico != null && _veiculo != null && _data != null && _hora != null;
@@ -113,16 +122,25 @@ class _NovoAgendamentoState extends State<NovoAgendamento> {
         padding: const EdgeInsets.all(18),
         children: [
           _titulo('1. Serviço'),
-          for (final servico in Repositorio.servicos)
-            ServicoCard(
-              servico: servico,
-              selecionado: servico == _servico,
-              onTap: () {
-                setState(() {
-                  _servico = servico;
-                });
-              },
-            ),
+          ValueListenableBuilder<List<Servico>>(
+            valueListenable: Repositorio.servicos,
+            builder: (context, lista, _) {
+              return Column(
+                children: [
+                  for (final servico in lista)
+                    ServicoCard(
+                      servico: servico,
+                      selecionado: servico == _servico,
+                      onTap: () {
+                        setState(() {
+                          _servico = servico;
+                        });
+                      },
+                    ),
+                ],
+              );
+            },
+          ),
 
           _titulo('2. Veículo'),
           ValueListenableBuilder<List<Veiculo>>(

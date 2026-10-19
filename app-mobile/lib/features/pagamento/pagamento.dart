@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:flash_splash/core/models/servico.dart';
+import 'package:flash_splash/core/data/repositorio.dart';
+import 'package:flash_splash/core/models/agendamento.dart';
+import 'package:flash_splash/core/utils/formatadores.dart';
 
 class _FormaPagamento {
   final String nome;
@@ -15,12 +17,13 @@ const List<_FormaPagamento> _formas = [
   _FormaPagamento('Cartão de débito', Icons.payment),
 ];
 
-/// Tela de pagamento. Se [servico] for informado, mostra o resumo do
-/// serviço escolhido; sem ele, funciona como "Formas de pagamento".
+/// Tela de pagamento. Só se paga um serviço que já tenha agendamento:
+/// com [agendamento] mostra o resumo e confirma o pagamento; sem ele,
+/// funciona apenas como "Formas de pagamento".
 class Pagamento extends StatefulWidget {
-  final Servico? servico;
+  final Agendamento? agendamento;
 
-  const Pagamento({super.key, this.servico});
+  const Pagamento({super.key, this.agendamento});
 
   @override
   State<Pagamento> createState() => _PagamentoState();
@@ -29,15 +32,16 @@ class Pagamento extends StatefulWidget {
 class _PagamentoState extends State<Pagamento> {
   String _formaSelecionada = 'Pix';
 
-  void _confirmar() {
-    final servico = widget.servico;
+  Future<void> _confirmar() async {
+    final agendamento = widget.agendamento;
 
-    final mensagem = servico == null
+    final mensagem = agendamento == null
         ? 'Forma de pagamento escolhida: $_formaSelecionada.'
-        : '${servico.nome} (${servico.precoFormatado}) '
+        : '${agendamento.servico.nome} '
+            '(${agendamento.servico.precoFormatado}) '
             'por $_formaSelecionada.';
 
-    showDialog<void>(
+    await showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -54,33 +58,41 @@ class _PagamentoState extends State<Pagamento> {
         );
       },
     );
+
+    if (!mounted) return;
+    if (agendamento != null) {
+      Repositorio.marcarComoPago(agendamento);
+      Navigator.pop(context);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final servico = widget.servico;
+    final agendamento = widget.agendamento;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(servico == null ? 'Formas de pagamento' : 'Pagamento'),
+        title: Text(
+          agendamento == null ? 'Formas de pagamento' : 'Pagamento',
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
-          if (servico != null) ...[
+          if (agendamento != null) ...[
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
                     Icon(
-                      servico.icone,
+                      agendamento.servico.icone,
                       size: 55,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      servico.nome,
+                      agendamento.servico.nome,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -88,8 +100,13 @@ class _PagamentoState extends State<Pagamento> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Valor: ${servico.precoFormatado}',
+                      'Valor: ${agendamento.servico.precoFormatado}',
                       style: const TextStyle(fontSize: 18),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${Formatadores.dataHora(agendamento.dataHora)} • '
+                      '${agendamento.veiculo.placa}',
                     ),
                   ],
                 ),
@@ -129,7 +146,7 @@ class _PagamentoState extends State<Pagamento> {
             child: ElevatedButton(
               onPressed: _confirmar,
               child: Text(
-                servico == null
+                agendamento == null
                     ? 'SALVAR FORMA DE PAGAMENTO'
                     : 'CONFIRMAR PAGAMENTO',
                 style: const TextStyle(fontWeight: FontWeight.bold),

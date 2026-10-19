@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Paleta e temas do Flash Splash (mesma paleta do site do grupo).
+/// Paleta e temas do Fast Splash (mesma paleta do site do grupo).
 class AppTheme {
   AppTheme._();
 
