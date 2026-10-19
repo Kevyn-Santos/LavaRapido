@@ -259,8 +259,11 @@ DAO usando `mockConstruction(DAOVeiculo.class)` do Mockito.
 Seguem a ordem de `separacao-daos.md`, seção 8:
 
 1. ~~Criar as DTOs em `model.dto` e trocar os imports dos records nas DAOs.~~ Feito em 2026-10-18 (`dtos-criadas.md`).
-2. Mover `Passwords` para `security/`.
-3. Aplicar a mudança 6.1 (unir `cadastrarCliente` com `insertUsuario`).
-4. Trocar as chamadas dos servlets (seção 3.3 deste arquivo).
-5. Apagar `LavaRapidoRepository` e `ClienteRepository`.
+2. ~~Mover `Passwords` para `security/`.~~ Feito em 2026-10-18.
+3. ~~Aplicar a mudança 6.1 (unir `cadastrarCliente` com `insertUsuario`).~~ Feito em 2026-10-18.
+4. ~~Trocar as chamadas dos servlets (seção 3.3 deste arquivo).~~ Feito em 2026-10-18.
+5. ~~Apagar `LavaRapidoRepository` e `ClienteRepository`.~~ Feito em 2026-10-18.
 6. Escrever os testes das novas DAOs.
+
+> **Atualização (2026-10-18):** os passos 2 a 5 estão registrados em `repositorios-removidos-e-cadastro-unico.md`,
+> junto com a correção dos forwards para `WEB-INF/views` e o cadastro único em `/cadastro`.
