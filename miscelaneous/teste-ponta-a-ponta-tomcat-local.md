@@ -93,10 +93,14 @@ Commit `a0c18cd`. Depois da correção, a lista abre e a equipe já atribuída v
 Só `index.jsp` e `cadastro.jsp` carregam o CSS do site. As outras telas finais são HTML sem estilo: funcionam,
 mas ainda não têm o visual do site.
 
-### 5.2 Telas de teste (restantes)
+### 5.2 Telas de teste (removidas)
 
-Foram criadas para testar os métodos do `DAOCliente`. Nenhum link do `index.jsp` leva a elas, mas continuam
-acessíveis pela URL **sem login**, e mostram nome, CPF, telefone e e-mail de **todos** os clientes.
+> **Atualização (2026-10-18):** todas as telas abaixo foram apagadas no commit `23d4d4b`. Elas serão recriadas
+> depois como telas finais. Os métodos do `DAOCliente` que elas usavam continuam no código e cobertos pelo
+> `DAOClienteTest`.
+
+Eram as telas criadas para testar o `DAOCliente`. Respondiam **sem login** e mostravam nome, CPF, telefone e
+e-mail de **todos** os clientes.
 
 | Rota de listagem (GET) | Ação (POST) | View | Método testado |
 |---|---|---|---|
@@ -105,15 +109,11 @@ acessíveis pela URL **sem login**, e mostram nome, CPF, telefone e e-mail de **
 | `/listarCadastrosConsulta` | `/consultarCadastro` | `ConsultarCadastro.jsp` | `getusuario` |
 | `/listarClientesVeiculos` | — | `ListarClientesVeiculos.jsp` | `getUsuariosVeiculo` |
 | `/listarClienteVeiculoConsulta` | `/consultarClienteVeiculo` | `ConsultarClienteVeiculo.jsp` | `getUsuarioveiculo` |
-| — | `/mostrarCadastros` | `cadastroT.jsp` | `getUsuarios`. **Órfã**: só era usada pela servlet `Cadastro`, apagada. |
+| — | `/mostrarCadastros` | `cadastroT.jsp` | `getUsuarios` |
 
-Observações:
-
-- Editar e excluir cliente **só existem nessas telas**: o fluxo final ainda não tem tela para o cliente editar o
-  próprio cadastro, nem para a equipe gerenciar clientes. Antes de apagar as telas de teste, é preciso decidir se
-  essas funções viram telas finais (por exemplo, `/admin/clientes` com `ADMINISTRADOR`).
-- `/deletarCadastro` falha com 409 quando o cliente tem veículo (`ON DELETE RESTRICT` em `veiculo`). O checkbox
-  `CheckAll` de `DeletarCadastro.jsp` não faz mais nada (`deleteusuariosTotal` foi removido).
+Funções que ficam **sem tela** até serem recriadas: editar e excluir cliente (cliente editando o próprio cadastro
+ou equipe gerenciando clientes). Cuidado para a futura exclusão: `veiculo` usa `ON DELETE RESTRICT`, então
+excluir um cliente com veículo responde 409.
 
 ## 6. O que ainda falta para a MVP V1 local
 
@@ -124,7 +124,7 @@ Substitui a lista da seção 4 de `repositorios-removidos-e-cadastro-unico.md`:
 | Versionar views e testes | **Feito** (commit `71a7190`). |
 | Seed com hash inválido | **Fora do escopo**: o seed não será usado por enquanto. Se voltar a ser usado, precisa de hashes BCrypt reais e não pode criar o administrador. |
 | Teste ponta a ponta com banco | **Feito** (este arquivo). |
-| Variáveis de ambiente | **Documentadas** em `variaveis-de-ambiente.md`. Falta configurar o Tomcat do sistema (seção 4.2 de lá). Ainda pendente: tratar a `IllegalStateException` de variável ausente para cair em `erro.jsp`. |
-| Telas de teste sem login | **Pendente**: proteger (ex.: exigir `ADMINISTRADOR`) ou remover, depois da decisão da 5.2. |
+| Variáveis de ambiente | **Documentadas** em `variaveis-de-ambiente.md`. O `.env` da raiz do projeto pode ser lido com `DOTENV_DIR`/`-Ddotenv.dir` (commit `54c7310`). Falta aplicar no Tomcat do sistema a seção 4.3 de lá (`/etc/default/tomcat10`, `LANG=C.UTF-8`, permissão do usuário `tomcat`). Ainda pendente: tratar a `IllegalStateException` de variável ausente para cair em `erro.jsp`. |
+| Telas de teste sem login | **Feito**: removidas (5.2). Editar e excluir cliente ficam para telas finais futuras. |
 | Estilo das telas finais | **Pendente** (5.1). |
 | Testes das DAOs novas, 6.5, `servlet-api` 6.0, README, dois `schema.sql` | **Pendentes** (menores). |

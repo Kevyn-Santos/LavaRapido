@@ -18,8 +18,10 @@ O projeto lê variáveis de duas formas diferentes, e isso muda onde cada uma po
 private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 ```
 
-- Lê o arquivo `.env` da **pasta onde a JVM foi iniciada** (`./`, padrão da biblioteca), e não da pasta do projeto.
-  `ignoreIfMissing()` faz com que a falta do arquivo não seja erro.
+- Lê o arquivo `.env` da pasta indicada pela propriedade de sistema **`dotenv.dir`** ou pela variável
+  **`DOTENV_DIR`** (nessa ordem). Sem nenhuma das duas, lê da **pasta onde a JVM foi iniciada** (`./`, padrão da
+  biblioteca), que **não** é a raiz do projeto quando o Tomcat é o do sistema (ver 4.3). `ignoreIfMissing()` faz
+  com que a falta do arquivo não seja erro. A pasta configurável existe desde o commit `54c7310`.
 - `dotenv.get(chave)` consulta **primeiro `System.getenv(chave)`** e só depois o `.env`. Uma variável de
   ambiente real sempre vence o arquivo. Isso foi conferido no bytecode da versão 3.2.0 (`DotenvImpl.get`).
 - Por isso o mesmo código serve para os dois casos: no desenvolvimento o valor vem do `.env`; no Docker e no
@@ -38,6 +40,7 @@ private static final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load()
 
 | Variável | Obrigatória | Mecanismo | Onde é pedida | Se faltar |
 |---|---|---|---|---|
+| `dotenv.dir` (propriedade `-D`) ou `DOTENV_DIR` | Não | `System.getProperty`, depois `System.getenv` | `DatabaseConnection.pastaEnv`, na carga da classe | O `.env` é procurado em `./` (pasta de início da JVM). |
 | `ENV_DEV` | Não (padrão `LOCAL`) | `dotenv` | `DatabaseConnection.java:24` (campo `PADRAO`), na carga da classe | Usa `LOCAL`. |
 | `LOCAL_DB_URL` | Sim, se `ENV_DEV=LOCAL` | `dotenv` | `DatabaseConnection.getConnection(Ambiente)` → `ChaveObrigatoria` (`:40`), a cada conexão | `IllegalStateException: Variável de ambiente ausente ou vazia: LOCAL_DB_URL` |
 | `LOCAL_USER` | Sim, se `ENV_DEV=LOCAL` | `dotenv` | idem | idem |
@@ -54,8 +57,9 @@ Detalhes:
   falhar **na carga da classe** (`ExceptionInInitializerError`), e toda tentativa de acesso ao banco passa a
   falhar até o Tomcat ser reiniciado.
 - **`<PREFIXO>_DB_URL`** é a URL JDBC completa, por exemplo `jdbc:mysql://localhost:3306/lava_rapido`.
-- **Falta de variável do banco:** a `IllegalStateException` não é `SQLException`, então `WebSupport.erroBanco` não
-  a trata. A resposta é a página 500 padrão do Tomcat, não `erro.jsp` (confirmado no smoke test). As páginas que
+- **Falta de variável do banco:** a mensagem diz em qual arquivo a variável foi procurada, por exemplo
+  `... LOCAL_DB_URL (procurada nas variáveis do sistema e em /var/lib/tomcat10/.env)`. A `IllegalStateException`
+  não é `SQLException`, então `WebSupport.erroBanco` não a trata. A resposta é a página 500 padrão do Tomcat, não `erro.jsp` (confirmado no smoke test). As páginas que
   não usam o banco (`/`, `/cadastro` no GET, `/login` no GET) continuam abrindo.
 - **`INITIAL_ADMIN_TOKEN`:** o token digitado no formulário é comparado com `MessageDigest.isEqual`, que leva o
   mesmo tempo com qualquer entrada. Depois que existe um `ADMINISTRADOR`, `/setup/admin` responde 410 e a
@@ -72,45 +76,93 @@ Não são lidas pelo código Java; servem para configurar o Tomcat dentro da ima
 | `CATALINA_OPTS` | `Dockerfile:35` (`CMD`) | Montada pelo próprio `CMD` com `export`. Um valor definido de fora é **substituído**, não somado. |
 
 O `.dockerignore` exclui o `.env`. Dentro do container, todas as variáveis da seção 2 precisam ser variáveis de
-ambiente reais.
+ambiente reais. Não defina `dotenv.dir`/`DOTENV_DIR` no Docker nem no Render.
 
 ---
 
 ## 4. Como definir em cada ambiente
 
-### 4.1 Tomcat isolado, IDE ou `catalina.sh` na mão
+### 4.1 Por que o `.env` da raiz do projeto não é lido sozinho
 
-O `.env` precisa estar na pasta de onde o Tomcat é iniciado. `INITIAL_ADMIN_TOKEN` vai como variável do processo:
+O WAR roda a partir de `webapps/` e não carrega nenhuma informação sobre onde está o código-fonte. A única pasta
+que a aplicação conhece é a pasta onde a JVM foi iniciada. Por isso é preciso **dizer** onde está o `.env`, com
+`-Ddotenv.dir=<raiz do projeto>` (ou `DOTENV_DIR`). Assim só o "ponteiro" fica na configuração do Tomcat, e as
+credenciais continuam num único `.env`, na raiz do projeto.
+
+Alternativas descartadas:
+
+- **Empacotar o `.env` no WAR** (a `dotenv` também procura no classpath): a senha iria para o WAR e para a imagem
+  Docker.
+- **Gravar o caminho do projeto no build** (filtro do Maven com `${project.basedir}`): o WAR ficaria preso à máquina
+  onde foi gerado, e no Docker o caminho seria `/build`.
+
+### 4.2 Tomcat isolado, IDE ou `catalina.sh` na mão
+
+Basta iniciar a partir da raiz do projeto ou passar a pasta. `INITIAL_ADMIN_TOKEN` vai como variável do processo:
 
 ```shell
-cd /caminho/do/projeto          # pasta que contém o .env
-INITIAL_ADMIN_TOKEN='um-token-forte' $CATALINA_HOME/bin/catalina.sh run
+CATALINA_OPTS="-Ddotenv.dir=/caminho/do/projeto" INITIAL_ADMIN_TOKEN='um-token-forte' $CATALINA_HOME/bin/catalina.sh run
 ```
 
-### 4.2 Tomcat do sistema (Debian/Ubuntu, `systemctl` `tomcat10`)
+Na IDE (configuração de execução do Tomcat), coloque `-Ddotenv.dir=<raiz do projeto>` nas *VM options* (no
+IntelliJ, `$PROJECT_DIR$` funciona) ou use a raiz do projeto como *working directory*.
 
-O `/usr/libexec/tomcat10/tomcat-start.sh` faz `cd $CATALINA_BASE` antes de iniciar. Por isso a `dotenv` procura
-**`/var/lib/tomcat10/.env`**, e não o `.env` do projeto (hoje esse arquivo não existe). Duas opções:
+### 4.3 Tomcat do sistema (Debian/Ubuntu, `systemctl` `tomcat10`)
 
-- copiar o `.env` para `/var/lib/tomcat10/.env`, legível pelo usuário `tomcat` (vale só para as variáveis da
-  `dotenv`); **ou**
-- exportar as variáveis em `/etc/default/tomcat10`, que o script carrega com `.`. É preciso usar `export`, senão
-  elas não chegam à JVM. **É a única forma de passar `INITIAL_ADMIN_TOKEN`** nesse Tomcat:
+O `/usr/libexec/tomcat10/tomcat-start.sh` carrega `/etc/default/tomcat10` com `.` e faz `cd $CATALINA_BASE` antes
+de iniciar. Sem configuração, o `.env` é procurado em **`/var/lib/tomcat10/.env`**. Para ler o `.env` do projeto,
+são necessários três ajustes, todos com `sudo`.
 
-  ```shell
-  export ENV_DEV=LOCAL
-  export LOCAL_DB_URL=jdbc:mysql://localhost:3306/lava_rapido
-  export LOCAL_USER=...
-  export LOCAL_PASS=...
-  export INITIAL_ADMIN_TOKEN=...
-  ```
+**1. Apontar a pasta e corrigir o locale** em `/etc/default/tomcat10`:
 
-  Depois: `sudo systemctl restart tomcat10`. (Uma alternativa é `systemctl edit tomcat10` com linhas `Environment=`.)
+```shell
+JAVA_HOME=/usr/lib/jvm/temurin-25-jdk-amd64/
+JAVA_OPTS="-Djava.awt.headless=true"
+export LANG=C.UTF-8
+export DOTENV_DIR="/home/kevyn/Documents/Faculdade/JAVA/LavaRápido/SplashFast"
+export INITIAL_ADMIN_TOKEN='um-token-forte'   # só até criar o 1º administrador
+```
 
-Observação: em `/etc/default/tomcat10`, `JAVA_HOME=usr/lib/jvm/temurin-25-jdk-amd64/` está sem a `/` inicial.
-O Tomcat sobe com o Java 25 mesmo assim (`tomcat-locate-java.sh` encontra outro caminho), mas vale corrigir.
+- **`LANG=C.UTF-8` é obrigatório** enquanto o caminho tiver caracteres fora do ASCII (o `á` de `LavaRápido`).
+  Um serviço do systemd começa com o locale `C`, e a JVM não consegue converter o caminho:
+  `InvalidPathException: Malformed input or input contains unmappable characters`. O erro acontece na carga do
+  `DatabaseConnection` e derruba todo acesso ao banco até o Tomcat ser reiniciado. `-Dsun.jnu.encoding=UTF-8` **não**
+  resolve; o que resolve é o locale. (Outra saída: um caminho sem acento, como um link simbólico
+  `ln -s ".../LavaRápido/SplashFast" ~/splashfast` e `DOTENV_DIR=/home/kevyn/splashfast`.)
+- O `export` é necessário: sem ele, a variável não chega à JVM.
+- `INITIAL_ADMIN_TOKEN` não é lido do `.env` (seção 1.2), por isso também vai aqui.
+- A linha `JAVA_HOME` do arquivo atual está sem a `/` inicial (`usr/lib/...`). O Tomcat sobe mesmo assim, porque
+  `tomcat-locate-java.sh` encontra o Java por outro caminho, mas vale corrigir.
 
-### 4.3 Docker local
+**2. Dar ao usuário `tomcat` acesso de leitura ao `.env`.** Hoje `/home/kevyn` tem permissão `750`, e o usuário
+`tomcat` não consegue nem entrar na pasta. As outras pastas do caminho já permitem a passagem (`x` para outros).
+
+```shell
+sudo setfacl -m u:tomcat:x /home/kevyn                 # só atravessar, sem listar
+chmod 600 /caminho/do/projeto/.env                      # hoje está 664: qualquer usuário lê as senhas
+sudo setfacl -m u:tomcat:r /caminho/do/projeto/.env
+```
+
+O serviço usa `ProtectSystem=strict`, que deixa `/home` só para leitura. É o que basta: não há `ProtectHome`.
+
+**3. Reiniciar:** `sudo systemctl restart tomcat10`. Para conferir, um login com senha errada em
+`http://localhost:8080/SplashFast/login` deve responder "E-mail ou senha inválidos" (401), e não uma página 500.
+Se der 500, o log (`/var/log/tomcat10/localhost.*.log`) mostra em qual arquivo `.env` a variável foi procurada.
+
+Alternativa sem `DOTENV_DIR`: exportar as próprias variáveis do banco (`ENV_DEV`, `LOCAL_*`) em
+`/etc/default/tomcat10`. Funciona, mas duplica as credenciais fora do projeto.
+
+### Verificação (Tomcat isolado, iniciado fora da pasta do projeto)
+
+| Configuração | `POST /login` com senha errada |
+|---|---|
+| Sem `dotenv.dir` | 500: `LOCAL_DB_URL (procurada ... em <CATALINA_BASE>/.env)` |
+| `-Ddotenv.dir=<raiz>` | 401: `.env` lido, banco consultado |
+| `-Ddotenv.dir=<raiz>` e locale `C` | 500: `InvalidPathException` |
+| `-Ddotenv.dir=<raiz>`, locale `C` e `-Dsun.jnu.encoding=UTF-8` | 500: `InvalidPathException` |
+| `-Ddotenv.dir=<raiz>` e `LANG=C.UTF-8` | 401 |
+
+### 4.4 Docker local
 
 Nada é necessário no **build**. O estágio de build roda `mvn package -DskipTests` sem acessar o banco. As
 variáveis entram só na **execução**. Não use `ARG`/`ENV` com senhas no `Dockerfile`: elas ficariam gravadas nas
@@ -126,7 +178,7 @@ docker run --env-file .env -e INITIAL_ADMIN_TOKEN=... -p 10000:10000 splashfast
 - Dentro do container, `localhost` é o próprio container. Para usar o MySQL da máquina, use
   `host.docker.internal` (com `--add-host=host.docker.internal:host-gateway` no Linux) ou `--network host`.
 
-### 4.4 Render
+### 4.5 Render
 
 No painel do serviço (Environment):
 
@@ -142,7 +194,7 @@ No painel do serviço (Environment):
 ## 5. Como se liga ao resto do projeto
 
 ```
-.env (pasta de início da JVM) ─┐
+.env (dotenv.dir/DOTENV_DIR ou ./) ─┐
                                ├─► Dotenv.get ─► DatabaseConnection ─► todas as DAOs
 System.getenv ─────────────────┤   (sistema vence o .env)
                                └─► SetupAdminServlet (só System.getenv) ─► /setup/admin
