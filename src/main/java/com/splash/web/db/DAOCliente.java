@@ -158,7 +158,7 @@ public class DAOCliente {
         }
     }
 
-    // Devolve a DTO ClienteView (id, nome, email), usada no login
+    // Devolve a DTO ClienteView (id, nome, email), usada no login. Substitui ClienteRepository.autenticar
     public ClienteView autenticar(String email, String senha) throws SQLException {
         String sql = "SELECT id_cliente, nome, email, senha_hash FROM cliente WHERE email = ?";
         try (Connection connection = DatabaseConnection.getConnection();
@@ -183,9 +183,15 @@ public class DAOCliente {
     inserção de usuarios
     --------------------------------------*/
 
-    // LavaRapidoRepository.cadastrarCliente será unido a insertUsuario (separacao-daos.md, 6.1).
-    // Continua no repositório por enquanto, porque ClienteRepository depende dele.
-
+    /**
+     * Único INSERT de cliente (antigo {@code LavaRapidoRepository.cadastrarCliente}, ver separacao-daos.md 6.1).
+     *
+     * <p>Grava os dados como estão no {@link Cliente}: a normalização (trim, e-mail em minúsculas, CPF e telefone
+     * só com dígitos) já foi feita pelos setters via {@code Validacao}. A senha precisa chegar com hash,
+     * gerado antes por {@code Passwords.hash}.</p>
+     *
+     * @throws java.sql.SQLIntegrityConstraintViolationException Se o CPF ou o e-mail já estiverem cadastrados.
+     */
     public void insertUsuario(Cliente cliente) throws SQLException {
         String sql = "INSERT INTO cliente (nome, cpf, telefone, email, senha_hash) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -277,8 +283,6 @@ public class DAOCliente {
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, Id);
             stmt.executeUpdate();
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
         }
     }
 

@@ -11,7 +11,7 @@ public final class Passwords {
         return BCrypt.hashpw(password, BCrypt.gensalt(12));
     }
 
-    static boolean matches(String password, String hash) {
+    public static boolean matches(String password, String hash) {
         return hash != null && BCrypt.checkpw(password, hash);
     }
 }
