@@ -16,7 +16,7 @@ info:
       Rotas de cliente sem sessão redirecionam para `/login`; rotas de colaborador sem sessão redirecionam
       para `/colaborador/login` e, com nível insuficiente, retornam 403.
     - Hierarquia de níveis: `ADMINISTRADOR` (3) > `ATENDENTE` (2) > `OPERACIONAL` (1).
-    - Erros de banco tratados por `WebSupport.erroBanco` respondem 500 com forward para `/erro.jsp` (atributo `mensagem`).
+    - Erros de banco tratados por `WebSupport.erroBanco` respondem 500 com forward para `/WEB-INF/views/erro.jsp` (atributo `mensagem`).
       Erros não tratados (`RuntimeException`) resultam na página de erro padrão do Tomcat (HTTP 500).
 servers:
   - url: http://{host}:{port}/{contextPath}
@@ -88,7 +88,7 @@ paths:
     get:
       tags: [Autenticação]
       summary: Formulário de login do cliente
-      description: Servlet `LoginServlet`. Forward para `/login.jsp`.
+      description: Servlet `LoginServlet`. Forward para `/WEB-INF/views/login.jsp`.
       operationId: formLoginCliente
       parameters:
         - $ref: "#/components/parameters/CadastroQuery"
@@ -99,7 +99,7 @@ paths:
       tags: [Autenticação]
       summary: Autentica um cliente
       description: |
-        Chama `ClienteRepository.autenticar(email, senha)`. Em sucesso invalida a sessão anterior, cria uma nova com
+        Chama `new DAOCliente().autenticar(email, senha)` (devolve `ClienteView`). Em sucesso invalida a sessão anterior, cria uma nova com
         `clienteId` e `clienteNome` e redireciona para `/portal`.
       operationId: loginCliente
       requestBody:
@@ -112,13 +112,13 @@ paths:
         "302":
           description: Login realizado. `Location` → `/portal`.
         "400":
-          description: E-mail ou senha não preenchidos. Forward para `/login.jsp` com atributo `erro`.
+          description: E-mail ou senha não preenchidos. Forward para `/WEB-INF/views/login.jsp` com atributo `erro`.
           content:
             text/html:
               schema:
                 type: string
         "401":
-          description: Credenciais inválidas. Forward para `/login.jsp` com atributo `erro`.
+          description: Credenciais inválidas. Forward para `/WEB-INF/views/login.jsp` com atributo `erro`.
           content:
             text/html:
               schema:
@@ -129,7 +129,7 @@ paths:
     get:
       tags: [Autenticação]
       summary: Formulário de login de colaborador
-      description: Servlet `ColaboradorLoginServlet`. Forward para `/colaborador-login.jsp`.
+      description: Servlet `ColaboradorLoginServlet`. Forward para `/WEB-INF/views/colaborador-login.jsp`.
       operationId: formLoginColaborador
       parameters:
         - name: setup
@@ -146,7 +146,7 @@ paths:
       tags: [Autenticação]
       summary: Autentica um colaborador
       description: |
-        Chama `LavaRapidoRepository.autenticarColaborador(email, senha)`. Em sucesso invalida a sessão anterior,
+        Chama `new DAOColaborador().autenticar(email, senha)` (devolve `ColaboradorView`). Em sucesso invalida a sessão anterior,
         cria uma nova com `colaboradorId`, `colaboradorNome` e `nivelAcesso` e redireciona para `/admin`.
       operationId: loginColaborador
       requestBody:
@@ -187,7 +187,7 @@ paths:
       summary: Formulário de criação do administrador inicial
       description: |
         Servlet `SetupAdminServlet`. Requer a variável de ambiente `INITIAL_ADMIN_TOKEN` definida.
-        Forward para `/setup-admin.jsp`.
+        Forward para `/WEB-INF/views/setup-admin.jsp`.
       operationId: formSetupAdmin
       responses:
         "200":
@@ -207,7 +207,7 @@ paths:
       summary: Cria o administrador inicial
       description: |
         Compara `token` com `INITIAL_ADMIN_TOKEN` em tempo constante e chama
-        `LavaRapidoRepository.criarAdministradorInicial(nome, cargo, email, senha)`.
+        `DAOColaborador.criarAdministradorInicial(nome, cargo, email, senha)`.
         Em sucesso redireciona para `/colaborador/login?setup=sucesso`.
       operationId: setupAdmin
       requestBody:
@@ -249,7 +249,7 @@ paths:
       tags: [Área do cliente]
       summary: Portal do cliente
       description: |
-        Servlet `PortalServlet`. Com `clienteId` na sessão faz forward para `/portal.jsp` (links para `/veiculos`,
+        Servlet `PortalServlet`. Com `clienteId` na sessão faz forward para `/WEB-INF/views/portal.jsp` (links para `/veiculos`,
         `/agendamentos` e botão de `POST /sair`). Com `colaboradorId` redireciona para `/admin`; sem sessão, para `/`.
       operationId: portalCliente
       security:
@@ -264,7 +264,7 @@ paths:
       tags: [Área do cliente]
       summary: Lista os veículos do cliente
       description: |
-        Servlet `VeiculoServlet`. Define o atributo `veiculos` (lista de `VeiculoCliente`) e faz forward para `/veiculos.jsp`.
+        Servlet `VeiculoServlet`. Define o atributo `veiculos` (lista de `VeiculoCliente`) e faz forward para `/WEB-INF/views/veiculos.jsp`.
       operationId: listarVeiculos
       security:
         - sessaoCliente: []
@@ -280,8 +280,8 @@ paths:
       summary: Adiciona ou remove um veículo do cliente
       description: |
         Campo `acao` define a operação:
-        - `adicionar`: `LavaRapidoRepository.adicionarVeiculo(clienteId, placa, marca, modelo, cor)` (placa em maiúsculas);
-        - `remover`: `LavaRapidoRepository.removerVeiculo(clienteId, idVeiculo)`.
+        - `adicionar`: `DAOVeiculo.inserir(clienteId, placa, marca, modelo, cor)` (placa em maiúsculas);
+        - `remover`: `DAOVeiculo.remover(clienteId, idVeiculo)`.
         Em sucesso redireciona para `/veiculos`. Em falha de validação reexibe a lista com atributo `erro`.
       operationId: alterarVeiculo
       security:
@@ -323,7 +323,7 @@ paths:
       summary: Agendamentos do cliente
       description: |
         Servlet `AgendamentoServlet`. Define os atributos `veiculos`, `servicos`, `agendamentos` (do cliente) e
-        `dataMinima` (hoje) e faz forward para `/agendamentos.jsp`.
+        `dataMinima` (hoje) e faz forward para `/WEB-INF/views/agendamentos.jsp`.
       operationId: listarAgendamentos
       security:
         - sessaoCliente: []
@@ -348,8 +348,8 @@ paths:
       description: |
         Campo `acao` define a operação:
         - `agendar`: valida veículo, data (não pode ser passada), horário e ao menos um serviço e chama
-          `LavaRapidoRepository.criarAgendamento(clienteId, idVeiculo, data, horario, idsServicos)`;
-        - `cancelar`: `LavaRapidoRepository.cancelarAgendamento(clienteId, idAgendamento)`.
+          `DAOAgendamento.criar(clienteId, idVeiculo, data, horario, idsServicos)`;
+        - `cancelar`: `DAOAgendamento.cancelar(clienteId, idAgendamento)`.
         Em sucesso redireciona para `/agendamentos?sucesso=1`; em erro reexibe a página com atributo `erro`.
       operationId: alterarAgendamento
       security:
@@ -390,7 +390,7 @@ paths:
       description: |
         Servlet `AdminServlet` (`/admin/*`). `/admin` e `/admin/` equivalem à seção `inicio`.
         Define o atributo `secao` e, conforme a seção, `servicos`, `colaboradores`, `atendimentos` (+ `colaboradores`)
-        ou `pagamentos`; faz forward para `/admin.jsp`.
+        ou `pagamentos`; faz forward para `/WEB-INF/views/admin.jsp`.
 
         Nível mínimo por seção: `inicio`/`atendimentos` → OPERACIONAL; `pagamentos` → ATENDENTE;
         `servicos`/`colaboradores` → ADMINISTRADOR.
@@ -562,7 +562,7 @@ components:
     NivelInsuficiente:
       description: Colaborador logado com nível de acesso abaixo do exigido pela seção.
     ErroBanco:
-      description: Falha de banco (`WebSupport.erroBanco`). Forward para `/erro.jsp` com atributo `mensagem`.
+      description: Falha de banco (`WebSupport.erroBanco`). Forward para `/WEB-INF/views/erro.jsp` com atributo `mensagem`.
       content:
         text/html:
           schema:
@@ -764,7 +764,7 @@ components:
       enum: [OPERACIONAL, ATENDENTE, ADMINISTRADOR]
     VeiculoCliente:
       type: object
-      description: Record `LavaRapidoRepository.Veiculo` (atributo `veiculos` em `/veiculos` e `/agendamentos`).
+      description: DTO `model.dto.VeiculoView` (atributo `veiculos` em `/veiculos` e `/agendamentos`).
       properties:
         id:
           type: integer
