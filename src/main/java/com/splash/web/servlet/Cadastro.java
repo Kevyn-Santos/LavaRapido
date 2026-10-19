@@ -2,6 +2,8 @@ package com.splash.web.servlet;
 
 import com.splash.web.db.DAOCliente;
 import com.splash.web.model.Cliente;
+import com.splash.web.security.Passwords;
+import com.splash.web.security.Passwords.*;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -26,7 +28,7 @@ public class Cadastro extends HttpServlet {
             cliente.setCPF(request.getParameter("cpf"));
             cliente.setTelefone(request.getParameter("telefone"));
             cliente.setEmail(request.getParameter("email"));
-            cliente.setSenhaHash(request.getParameter("senha"));
+            cliente.setSenhaHash(Passwords.hash(request.getParameter("senha")));
             daoCliente.insertUsuario(cliente);
         } catch (IllegalArgumentException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

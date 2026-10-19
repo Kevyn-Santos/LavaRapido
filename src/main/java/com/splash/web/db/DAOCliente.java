@@ -21,6 +21,8 @@ Stmt é um container assim como request, ele armazena todas as informações pas
 
 
 import com.splash.web.model.Cliente;
+import com.splash.web.model.dto.ClienteView;
+import com.splash.web.security.Passwords;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -156,6 +158,22 @@ public class DAOCliente {
         }
     }
 
+    // Devolve a DTO ClienteView (id, nome, email), usada no login
+    public ClienteView autenticar(String email, String senha) throws SQLException {
+        String sql = "SELECT id_cliente, nome, email, senha_hash FROM cliente WHERE email = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, email.trim().toLowerCase());
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next() && Passwords.matches(senha, result.getString("senha_hash"))) {
+                    return new ClienteView(result.getInt("id_cliente"), result.getString("nome"),
+                            result.getString("email"));
+                }
+                return null;
+            }
+        }
+    }
+
     // Converte a linha atual do ResultSet em Cliente sem revalidar (ver Cliente.carregar)
     private Cliente mapearCliente(ResultSet rs) throws SQLException {
         return Cliente.carregar(rs.getInt("id_cliente"), rs.getString("nome"), rs.getString("cpf"), rs.getString("telefone"), rs.getString("email"));
@@ -165,6 +183,8 @@ public class DAOCliente {
     inserção de usuarios
     --------------------------------------*/
 
+    // LavaRapidoRepository.cadastrarCliente será unido a insertUsuario (separacao-daos.md, 6.1).
+    // Continua no repositório por enquanto, porque ClienteRepository depende dele.
 
     public void insertUsuario(Cliente cliente) throws SQLException {
         String sql = "INSERT INTO cliente (nome, cpf, telefone, email, senha_hash) VALUES (?, ?, ?, ?, ?)";
@@ -262,12 +282,12 @@ public class DAOCliente {
         }
     }
 
-    public void deleteusuariosTotal(int Id) throws SQLException {
-        String sqlCliente = "DELETE FROM cliente WHERE id_cliente=?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sqlCliente)) {
-            stmt.setInt(1, Id);
-            stmt.executeUpdate();
-        }
-    }
+//    public void deleteusuariosTotal(int Id) throws SQLException {
+//        String sqlCliente = "DELETE FROM cliente WHERE id_cliente=?";
+//        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sqlCliente)) {
+//            stmt.setInt(1, Id);
+//            stmt.executeUpdate();
+//        }
+//    }
 
 }

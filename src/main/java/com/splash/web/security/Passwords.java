@@ -1,13 +1,13 @@
-package com.splash.web.db;
+package com.splash.web.security;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-final class Passwords {
+public final class Passwords {
 
     private Passwords() {
     }
 
-    static String hash(String password) {
+    public static String hash(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt(12));
     }
 

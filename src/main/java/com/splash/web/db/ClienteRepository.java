@@ -1,5 +1,7 @@
 package com.splash.web.db;
 
+import com.splash.web.model.dto.ClienteView;
+
 import java.sql.SQLException;
 
 public final class ClienteRepository {
@@ -12,7 +14,7 @@ public final class ClienteRepository {
         LavaRapidoRepository.cadastrarCliente(nome, cpf, telefone, email, senha);
     }
 
-    static LavaRapidoRepository.Cliente autenticar(String email, String senha) throws SQLException {
+    public static ClienteView autenticar(String email, String senha) throws SQLException {
         return LavaRapidoRepository.autenticarCliente(email, senha);
     }
 }

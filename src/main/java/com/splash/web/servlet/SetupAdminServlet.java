@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.sql.SQLException;
 
-import com.splash.web.db.LavaRapidoRepository;
+import com.splash.web.db.DAOColaborador;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -18,11 +18,12 @@ public class SetupAdminServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        DAOColaborador dao = new DAOColaborador();
         if (!configurado(request, response)) {
             return;
         }
         try {
-            if (LavaRapidoRepository.existeAdministrador()) {
+            if (dao.existeAdministrador()) {
                 response.sendError(HttpServletResponse.SC_GONE, "A configuração inicial já foi concluída.");
                 return;
             }
@@ -35,6 +36,7 @@ public class SetupAdminServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        DAOColaborador dao = new DAOColaborador();
         if (!configurado(request, response)) {
             return;
         }
@@ -57,7 +59,7 @@ public class SetupAdminServlet extends HttpServlet {
             return;
         }
         try {
-            LavaRapidoRepository.criarAdministradorInicial(nome, cargo, email, senha);
+              dao.criarAdministradorInicial(nome, cargo, email, senha);
             response.sendRedirect(request.getContextPath() + "/colaborador/login?setup=sucesso");
         } catch (IllegalStateException exception) {
             response.sendError(HttpServletResponse.SC_GONE, "A configuração inicial já foi concluída.");
