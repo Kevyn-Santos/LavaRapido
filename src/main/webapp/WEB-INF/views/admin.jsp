@@ -130,8 +130,8 @@
                                         <select name="idColaboradores" multiple>
                                             <c:forEach var="colaborador" items="${colaboradores}">
                                                 <option value="${colaborador.id}"
-                                                    ${fn:contains(concat(',', atendimento.idsColaboradores, ','),
-                                                        concat(',', colaborador.id, ',')) ? 'selected' : ''}>
+                                                    ${fn:contains(',' += atendimento.idsColaboradores += ',',
+                                                        ',' += colaborador.id += ',') ? 'selected' : ''}>
                                                     <c:out value="${colaborador.nome}"/>
                                                 </option>
                                             </c:forEach>
