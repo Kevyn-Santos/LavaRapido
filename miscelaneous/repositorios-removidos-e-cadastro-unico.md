@@ -145,6 +145,10 @@ erro e, em sucesso, fazia forward para `/mostrarCadastros`, que lista **todos** 
 
 ## 4. O que falta para a MVP V1 local
 
+> **Atualização (2026-10-18):** os itens 1 e 4 foram feitos, e o item 2 saiu do escopo (o seed não será usado
+> por enquanto). As variáveis do item 3 estão em `variaveis-de-ambiente.md`. A lista atualizada está na seção 6
+> de `teste-ponta-a-ponta-tomcat-local.md`.
+
 Em ordem de prioridade. Os itens 1 a 4 impedem o uso real; os outros são melhorias.
 
 1. **Versionar as views.** Tirar `/src/main/webapp/WEB-INF/views/` do `.gitignore` e commitar as JSPs, incluindo

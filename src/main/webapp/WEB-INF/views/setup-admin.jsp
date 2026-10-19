@@ -11,7 +11,7 @@
     <c:choose>
         <c:when test="${configuracaoIndisponivel}">
             <p role="alert">A configuração inicial ainda não foi habilitada no servidor.</p>
-            <p>Defina a variável de ambiente <code>INITIAL_ADMIN_TOKEN</code> com um token forte e reinicie o Jetty. Depois, use o mesmo token no formulário abaixo.</p>
+            <p>Defina a variável de ambiente <code>INITIAL_ADMIN_TOKEN</code> com um token forte e reinicie o Tomcat. Depois, use o mesmo token no formulário abaixo.</p>
             <p>O MySQL também precisa estar iniciado e configurado para que a conta possa ser criada.</p>
         </c:when>
         <c:otherwise>
