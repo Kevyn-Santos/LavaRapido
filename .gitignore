@@ -42,8 +42,10 @@ build/
 ### Miscelaneous ###
 miscelaneous/build.sh
 miscelaneous/pomBack.xml
+miscelaneous/TODO.md
 /src/main/java/com/splash/web/servlet/Cadastro.java
 /src/main/java/com/splash/web/servlet/MostrarCadastro.java
 #/src/main/webapp/WEB-INF/views/
 /src/test/
 /.env
+CLAUDE.md
