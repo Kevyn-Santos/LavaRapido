@@ -26,7 +26,7 @@
     <h2>Crie a sua conta</h2>
     <p>São apenas quatro campos. O veículo será informado na app ao agendar.</p>
     
-    <form action="WEB-INF/views/baixar-app.jsp" method="post">
+    <form action="${pageContext.request.contextPath}/cadastro" method="post">
       <div class="field">
         <label for="rn">Nome completo</label>
         <input id="rn" name="name" required placeholder="O seu nome">

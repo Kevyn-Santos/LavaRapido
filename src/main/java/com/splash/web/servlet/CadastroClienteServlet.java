@@ -17,12 +17,14 @@ import jakarta.servlet.http.HttpServletResponse;
  * Único cadastro de cliente (substitui a servlet {@code Cadastro}, que usava a mesma rota).
  *
  * <p>GET mostra o formulário {@code cadastro.jsp}. POST valida os campos pelo modelo {@link Cliente}
- * (via {@code Validacao}), gera o hash da senha e grava com {@link DAOCliente#insertUsuario(Cliente)}.</p>
+ * (via {@code Validacao}), gera o hash da senha e grava com {@link DAOCliente#insertUsuario(Cliente)}.
+ * Os nomes dos parâmetros são os do formulário de {@code cadastro.jsp}.</p>
  */
 @WebServlet("/cadastro")
 public class CadastroClienteServlet extends HttpServlet {
 
     private static final String FORMULARIO = "/cadastro.jsp";
+    private static final String SUCESSO = "/WEB-INF/views/baixar-app.jsp";
     private static final int SENHA_MINIMA = 8;
 
     @Override
@@ -34,7 +36,7 @@ public class CadastroClienteServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String senha = request.getParameter("senha");
+        String senha = request.getParameter("pass");
 
         try {
             // O tamanho mínimo é conferido antes do hash, porque o hash BCrypt sempre tem 60 caracteres
@@ -42,11 +44,12 @@ public class CadastroClienteServlet extends HttpServlet {
                 throw new IllegalArgumentException("A senha deve ter ao menos " + SENHA_MINIMA + " caracteres.");
             }
             // O construtor valida e normaliza nome, CPF, telefone e e-mail
-            Cliente cliente = new Cliente(WebSupport.campo(request, "nome"), WebSupport.campo(request, "cpf"),
-                    WebSupport.campo(request, "telefone"), WebSupport.campo(request, "email"),
+            Cliente cliente = new Cliente(WebSupport.campo(request, "name"), WebSupport.campo(request, "cpf"),
+                    WebSupport.campo(request, "phone"), WebSupport.campo(request, "email"),
                     Passwords.hash(senha));
             new DAOCliente().insertUsuario(cliente);
-            response.sendRedirect(request.getContextPath() + "/login?cadastro=sucesso");
+            // baixar-app.jsp fica em WEB-INF, que o navegador não acessa: por isso forward, e não sendRedirect
+            request.getRequestDispatcher(SUCESSO).forward(request, response);
         } catch (IllegalArgumentException exception) {
             voltarAoFormulario(request, response, HttpServletResponse.SC_BAD_REQUEST, exception.getMessage());
         } catch (SQLException exception) {

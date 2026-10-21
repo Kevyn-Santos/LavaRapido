@@ -485,8 +485,8 @@ paths:
       description: |
         Servlet `CadastroClienteServlet`. Confere a senha (mín. 8), monta `model.Cliente` (o construtor valida e
         normaliza os campos via `Validacao`), gera o hash com `Passwords.hash` e chama `DAOCliente.insertUsuario`.
-        Em sucesso redireciona para `/login?cadastro=sucesso`; em erro faz forward para `/cadastro.jsp` com atributo
-        `erro` (os campos digitados, exceto a senha, voltam preenchidos).
+        Em sucesso faz forward para `/WEB-INF/views/baixar-app.jsp` (não é redirect: a JSP fica em `WEB-INF`); em erro
+        faz forward para `/cadastro.jsp` com atributo `erro`.
       operationId: cadastrarCliente
       requestBody:
         required: true
@@ -495,8 +495,12 @@ paths:
             schema:
               $ref: "#/components/schemas/CadastroClienteForm"
       responses:
-        "302":
-          description: Cliente cadastrado. `Location` → `/login?cadastro=sucesso`.
+        "200":
+          description: Cliente cadastrado. Página `baixar-app.jsp` (forward).
+          content:
+            text/html:
+              schema:
+                type: string
         "400":
           description: |
             Mensagem de `Validacao`: campo vazio, nome > 100, CPF sem 11 dígitos, telefone sem 10 ou 11 dígitos,
@@ -609,17 +613,17 @@ components:
           minLength: 8
     CadastroClienteForm:
       type: object
-      description: Campos aceitos por `POST /cadastro` (aparados com `trim`, exceto `senha`).
-      required: [nome, cpf, telefone, email, senha]
+      description: Campos aceitos por `POST /cadastro`, com os nomes do formulário de `cadastro.jsp` (aparados com `trim`, exceto `pass`).
+      required: [name, cpf, phone, email, pass]
       properties:
-        nome:
+        name:
           type: string
           maxLength: 100
         cpf:
           type: string
           description: Caracteres não numéricos são removidos; deve restar exatamente 11 dígitos.
           example: "123.456.789-01"
-        telefone:
+        phone:
           type: string
           description: Caracteres não numéricos são removidos; deve restar 10 ou 11 dígitos (DDD + número).
           example: "(11) 98765-4321"
@@ -627,7 +631,7 @@ components:
           type: string
           format: email
           maxLength: 150
-        senha:
+        pass:
           type: string
           format: password
           minLength: 8

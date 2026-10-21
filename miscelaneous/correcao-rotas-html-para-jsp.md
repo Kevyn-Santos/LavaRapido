@@ -112,3 +112,32 @@ href="${pageContext.request.contextPath}/index.jsp"
 
 Os links de `cadastro.jsp` (na raiz do webapp) ficaram relativos (`index.jsp`), porque já funcionam tanto em
 `/cadastro` quanto em `/cadastro.jsp`. Os links "Sair" do painel continuam indo para o início, e não para `/sair`.
+
+---
+
+## 4. Terceira etapa: formulário de cadastro ligado a `CadastroClienteServlet`
+
+Resolve o item 3 da seção 2 e as pendências de nomes de campo e `action` da seção 3.1.
+
+| Arquivo | Mudança | Por quê |
+|---|---|---|
+| `servlet/CadastroClienteServlet.java` | Lê `name`, `cpf`, `phone`, `email` e `pass` em vez de `nome`, `cpf`, `telefone`, `email` e `senha`. | São os nomes do formulário de `cadastro.jsp`; a servlet passa a corresponder à JSP. |
+| `servlet/CadastroClienteServlet.java` | Em sucesso faz forward para `/WEB-INF/views/baixar-app.jsp` (constante `SUCESSO`) em vez de redirect para `/login?cadastro=sucesso`. | A tela de sucesso do fluxo novo é a de baixar o app. Tem de ser forward porque o navegador não acessa `WEB-INF`; um `sendRedirect` para a JSP daria 404. |
+| `cadastro.jsp` | `action` do form: `WEB-INF/views/baixar-app.jsp` → `${pageContext.request.contextPath}/cadastro`. | O POST agora chega à servlet, que valida, grava e decide a tela seguinte. |
+| `openapi.yml` | `POST /cadastro` passa a responder 200 (forward para `baixar-app.jsp`), não 302, e `CadastroClienteForm` usa os novos nomes de campo. | Manter a documentação das rotas igual ao código. |
+
+A validação, o hash e os erros 400/409 continuam como antes. Em caso de erro, a servlet faz forward para
+`/cadastro.jsp` com o atributo `erro`.
+
+### Pontos em aberto (não alterados)
+
+- **Senha mínima:** a servlet exige 8 caracteres (`SENHA_MINIMA`), mas `cadastro.jsp` diz "mínimo 6" e usa
+  `minlength="6"`. Uma senha de 6 ou 7 caracteres passa no navegador e volta com 400.
+- **Mensagem de erro:** `cadastro.jsp` não mostra `${erro}` nem devolve os campos digitados. Em um erro 400 ou
+  409 o formulário reaparece vazio e sem aviso.
+- **Recarregar a página:** como o sucesso é um forward depois do POST, recarregar `baixar-app.jsp` reenvia o
+  formulário, e o resultado é 409 (CPF ou e-mail já cadastrado). Para evitar isso (padrão
+  Post/Redirect/Get), seria preciso uma rota GET que faça o forward para `baixar-app.jsp`.
+- **CSS:** `baixar-app.jsp` carrega `../../Assets/CSS/style.css`. Servida a partir de `/SplashFast/cadastro`, esse
+  caminho resolve para `/Assets/...`, fora do contexto: com deploy local (`/SplashFast`) a página fica sem estilo.
+  No Docker (`ROOT.war`) funciona.
