@@ -1,3 +1,4 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -10,8 +11,8 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="lock" href="index.html"><span class="wm"><span class="f">fast</span> <span class="s">splash</span></span></a>
-    <nav class="nav-panel"><a href="index.html" class="btn ghost sm">Sair</a></nav>
+    <a class="lock" href="index.jsp"><span class="wm"><span class="f">fast</span> <span class="s">splash</span></span></a>
+    <nav class="nav-panel"><a href="index.jsp" class="btn ghost sm">Sair</a></nav>
   </div>
 </header>
 
@@ -23,14 +24,14 @@
     </div>
 
     <nav class="ptabs" aria-label="Áreas do painel">
-      <a href="painel.html">Início</a>
-      <a href="painel-clientes.html">Clientes</a>
-      <a href="painel-carros.html" class="on" aria-current="page">Carros</a>
-      <a href="painel-agendamentos.html">Agendamentos</a>
-      <a href="painel-atendimentos.html">Atendimentos</a>
-      <a href="painel-pagamentos.html">Pagamentos</a>
-      <a href="painel-colaboradores.html">Colaboradores</a>
-      <a href="painel-servicos.html">Serviços</a>
+      <a href="painel.jsp">Início</a>
+      <a href="painel-clientes.jsp">Clientes</a>
+      <a href="painel-carros.jsp" class="on" aria-current="page">Carros</a>
+      <a href="painel-agendamentos.jsp">Agendamentos</a>
+      <a href="painel-atendimentos.jsp">Atendimentos</a>
+      <a href="painel-pagamentos.jsp">Pagamentos</a>
+      <a href="painel-colaboradores.jsp">Colaboradores</a>
+      <a href="painel-servicos.jsp">Serviços</a>
     </nav>
 
     <!-- 1. TELA DA LISTA DE CARROS -->

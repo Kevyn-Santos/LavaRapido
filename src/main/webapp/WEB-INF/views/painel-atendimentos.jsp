@@ -1,9 +1,10 @@
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!doctype html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pagamentos — Fast Splash</title>
+  <title>Atendimentos — Fast Splash</title>
   <link rel="stylesheet" href="../../Assets/CSS/painel.css">
 </head>
 <body>
@@ -24,25 +25,20 @@
 
     <nav class="ptabs" aria-label="Áreas do painel">
       <a href="painel.html">Início</a>
-      <a href="painel-clientes.html">Clientes</a>
-      <a href="painel-carros.html">Carros</a>
-      <a href="painel-agendamentos.html">Agendamentos</a>
-      <a href="painel-atendimentos.html">Atendimentos</a>
-      <a href="painel-pagamentos.html" class="on" aria-current="page">Pagamentos</a>
-      <a href="painel-colaboradores.html">Colaboradores</a>
-      <a href="painel-servicos.html">Serviços</a>
+      <a href="painel-clientes.jsp">Clientes</a>
+      <a href="painel-carros.jsp">Carros</a>
+      <a href="painel-agendamentos.jsp">Agendamentos</a>
+      <a href="painel-atendimentos.jsp" class="on" aria-current="page">Atendimentos</a>
+      <a href="painel-pagamentos.jsp">Pagamentos</a>
+      <a href="painel-colaboradores.jsp">Colaboradores</a>
+      <a href="painel-servicos.jsp">Serviços</a>
     </nav>
 
     <div class="phead">
-      <div><h2>Pagamentos</h2><p class="small">Registre e consulte os pagamentos de lavagens.</p></div>
+      <div><h2>Atendimentos</h2><p class="small">Acompanhe quem está sendo atendido e inicie o próximo.</p></div>
     </div>
 
-    <div class="sums">
-      <div><span class="small">Pendente</span><b id="sum-pending">R$ 0,00</b></div>
-      <div><span class="small">Recebido</span><b id="sum-received">R$ 0,00</b></div>
-    </div>
-
-    <div id="payments-container"></div>
+    <div id="queues-container"></div>
   </div>
 </main>
 

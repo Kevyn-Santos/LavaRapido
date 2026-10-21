@@ -14,10 +14,10 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="lock" href="../../index.html">
+    <a class="lock" href="../../index.jsp">
       <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav><a href="../../index.html">Voltar ao site</a></nav>
+    <nav><a href="../../index.jsp">Voltar ao site</a></nav>
   </div>
 </header>
 
@@ -27,7 +27,7 @@
     <p class="lead">Painel interno de agendamentos e fila de lavagem.</p>
     
     <div class="blk">
-      <form action="painel.html" method="post">
+      <form action="painel.jsp" method="post">
         <div class="field">
           <label for="se">E-mail</label>
           <input id="se" name="email" type="email" required value="admin@fastsplash.com">
@@ -39,7 +39,7 @@
         <button class="btn" type="submit" style="width:100%">Entrar no painel</button>
       </form>
     </div>
-    <a href="index.html" class="small">Voltar ao site principal</a>
+    <a href="index.jsp" class="small">Voltar ao site principal</a>
   </div>
 </main>
 
