@@ -50,7 +50,7 @@
 
       <div class="field">
         <label for="rp">Palavra-passe (mínimo 6 carateres)</label>
-        <input id="rp" name="pass" type="password" minlength="6" required>
+        <input id="rp" name="pass" type="password" maxlength="8" required>
       </div>
 
       <label class="chk">
