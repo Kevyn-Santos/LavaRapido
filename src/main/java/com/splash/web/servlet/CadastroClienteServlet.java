@@ -24,7 +24,6 @@ import jakarta.servlet.http.HttpServletResponse;
 public class CadastroClienteServlet extends HttpServlet {
 
     private static final String FORMULARIO = "/cadastro.jsp";
-    private static final String SUCESSO = "/WEB-INF/views/baixar-app.jsp";
     private static final int SENHA_MINIMA = 8;
 
     @Override
@@ -48,8 +47,7 @@ public class CadastroClienteServlet extends HttpServlet {
                     WebSupport.campo(request, "phone"), WebSupport.campo(request, "email"),
                     Passwords.hash(senha));
             new DAOCliente().insertUsuario(cliente);
-            // baixar-app.jsp fica em WEB-INF, que o navegador não acessa: por isso forward, e não sendRedirect
-            request.getRequestDispatcher(SUCESSO).forward(request, response);
+            response.sendRedirect(request.getContextPath() + "/baixar-app");
         } catch (IllegalArgumentException exception) {
             voltarAoFormulario(request, response, HttpServletResponse.SC_BAD_REQUEST, exception.getMessage());
         } catch (SQLException exception) {

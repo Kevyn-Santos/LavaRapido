@@ -141,3 +141,16 @@ A validação, o hash e os erros 400/409 continuam como antes. Em caso de erro, 
 - **CSS:** `baixar-app.jsp` carrega `../../Assets/CSS/style.css`. Servida a partir de `/SplashFast/cadastro`, esse
   caminho resolve para `/Assets/...`, fora do contexto: com deploy local (`/SplashFast`) a página fica sem estilo.
   No Docker (`ROOT.war`) funciona.
+
+---
+
+## 5. Quarta etapa: rota `/baixar-app` e CSS de `baixar-app.jsp`
+
+Resolve dois pontos em aberto da seção 4: o reenvio do cadastro ao recarregar a página e o CSS.
+
+| Arquivo | Mudança | Por quê |
+|---|---|---|
+| `servlet/BaixarAppServlet.java` (novo) | `@WebServlet("/baixar-app")`: o GET faz forward para `/WEB-INF/views/baixar-app.jsp`. | Dá uma URL pública à tela, que fica em `WEB-INF`. Mesmo padrão das outras servlets (uma por URL). |
+| `servlet/CadastroClienteServlet.java` | Em sucesso, `sendRedirect(contextPath + "/baixar-app")` no lugar do forward; a constante `SUCESSO` foi removida. | Post/Redirect/Get: o navegador termina num GET, então recarregar a página não grava de novo (e não dá 409). |
+| `WEB-INF/views/baixar-app.jsp:11` | CSS: `../../Assets/CSS/style.css` → `${pageContext.request.contextPath}/Assets/CSS/style.css`. | O caminho relativo saía do contexto `/SplashFast`; com o contexto no caminho, funciona em qualquer deploy. |
+| `openapi.yml` | `POST /cadastro` volta a responder 302 (`Location: /baixar-app`); nova rota `GET /baixar-app`. | Manter a documentação das rotas igual ao código. |

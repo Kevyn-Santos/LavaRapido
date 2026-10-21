@@ -485,8 +485,8 @@ paths:
       description: |
         Servlet `CadastroClienteServlet`. Confere a senha (mín. 8), monta `model.Cliente` (o construtor valida e
         normaliza os campos via `Validacao`), gera o hash com `Passwords.hash` e chama `DAOCliente.insertUsuario`.
-        Em sucesso faz forward para `/WEB-INF/views/baixar-app.jsp` (não é redirect: a JSP fica em `WEB-INF`); em erro
-        faz forward para `/cadastro.jsp` com atributo `erro`.
+        Em sucesso redireciona para `/baixar-app` (Post/Redirect/Get); em erro faz forward para `/cadastro.jsp` com
+        atributo `erro`.
       operationId: cadastrarCliente
       requestBody:
         required: true
@@ -495,12 +495,8 @@ paths:
             schema:
               $ref: "#/components/schemas/CadastroClienteForm"
       responses:
-        "200":
-          description: Cliente cadastrado. Página `baixar-app.jsp` (forward).
-          content:
-            text/html:
-              schema:
-                type: string
+        "302":
+          description: Cliente cadastrado. `Location` → `/baixar-app`.
         "400":
           description: |
             Mensagem de `Validacao`: campo vazio, nome > 100, CPF sem 11 dígitos, telefone sem 10 ou 11 dígitos,
@@ -517,6 +513,18 @@ paths:
                 type: string
         "500":
           $ref: "#/components/responses/ErroBanco"
+
+  /baixar-app:
+    get:
+      tags: [Clientes]
+      summary: Tela de baixar o app, após o cadastro
+      description: |
+        Servlet `BaixarAppServlet`. Forward para `/WEB-INF/views/baixar-app.jsp`. Destino do redirect de
+        `POST /cadastro`, para que recarregar a página não reenvie o formulário. Rota pública.
+      operationId: baixarApp
+      responses:
+        "200":
+          $ref: "#/components/responses/Html"
 components:
   securitySchemes:
     sessaoCliente:
