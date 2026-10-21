@@ -11,8 +11,8 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="lock" href="../../index.html"><span class="wm"><span class="f">fast</span> <span class="s">splash</span></span></a>
-    <nav class="nav-panel"><a href="../../index.html" class="btn ghost sm">Sair</a></nav>
+    <a class="lock" href="../../index.jsp"><span class="wm"><span class="f">fast</span> <span class="s">splash</span></span></a>
+    <nav class="nav-panel"><a href="../../index.jsp" class="btn ghost sm">Sair</a></nav>
   </div>
 </header>
 
@@ -24,7 +24,7 @@
     </div>
 
     <nav class="ptabs" aria-label="Áreas do painel">
-      <a href="painel.html">Início</a>
+      <a href="painel.jsp">Início</a>
       <a href="painel-clientes.jsp">Clientes</a>
       <a href="painel-carros.jsp">Carros</a>
       <a href="painel-agendamentos.jsp">Agendamentos</a>

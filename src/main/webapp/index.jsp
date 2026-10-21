@@ -113,7 +113,7 @@
           <h2>Crie sua conta e baixe o app.</h2>
           <p>Leva um minuto. Depois é só agendar pelo celular.</p>
         </div>
-        <a class="btn" href="cadastro.html">Criar conta</a>
+        <a class="btn" href="cadastro.jsp">Criar conta</a>
       </div>
     </section>
 
@@ -159,7 +159,7 @@
           <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
         </div>
       </div>
-      <a class="lantern" href="WEB-INF/Views/acesso-colaborador.html"><i aria-hidden="true"></i>Acesso da equipe</a>
+      <a class="lantern" href="WEB-INF/views/acesso-colaborador.jsp"><i aria-hidden="true"></i>Acesso da equipe</a>
     </div>
   </footer>
   <script src="Assets/Js/index.js"></script>

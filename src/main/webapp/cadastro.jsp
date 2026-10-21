@@ -14,10 +14,10 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="lock" href="index.html">
+    <a class="lock" href="index.jsp">
       <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav><a href="index.html">Voltar ao início</a></nav>
+    <nav><a href="index.jsp">Voltar ao início</a></nav>
   </div>
 </header>
 
@@ -26,7 +26,7 @@
     <h2>Crie a sua conta</h2>
     <p>São apenas quatro campos. O veículo será informado na app ao agendar.</p>
     
-    <form action="../../baixar-app.html" method="post">
+    <form action="WEB-INF/views/baixar-app.jsp" method="post">
       <div class="field">
         <label for="rn">Nome completo</label>
         <input id="rn" name="name" required placeholder="O seu nome">
@@ -55,7 +55,7 @@
 
       <button class="btn" type="submit">Criar conta e baixar a app</button>
     </form>
-    <p class="small" style="margin-top:16px"><a href="index.html">Voltar ao site</a></p>
+    <p class="small" style="margin-top:16px"><a href="index.jsp">Voltar ao site</a></p>
   </div>
 </main>
 

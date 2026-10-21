@@ -31,14 +31,14 @@
     </div>
 
     <nav class="ptabs" aria-label="Áreas do painel">
-      <a href="painel.html">Início</a>
-      <a href="painel-clientes.html" class="on" aria-current="page">Clientes</a>
-      <a href="painel-carros.html">Carros</a>
-      <a href="painel-agendamentos.html">Agendamentos</a>
-      <a href="painel-atendimentos.html">Atendimentos</a>
-      <a href="painel-pagamentos.html">Pagamentos</a>
-      <a href="painel-colaboradores.html">Colaboradores</a>
-      <a href="painel-servicos.html">Serviços</a>
+      <a href="painel.jsp">Início</a>
+      <a href="painel-clientes.jsp" class="on" aria-current="page">Clientes</a>
+      <a href="painel-carros.jsp">Carros</a>
+      <a href="painel-agendamentos.jsp">Agendamentos</a>
+      <a href="painel-atendimentos.jsp">Atendimentos</a>
+      <a href="painel-pagamentos.jsp">Pagamentos</a>
+      <a href="painel-colaboradores.jsp">Colaboradores</a>
+      <a href="painel-servicos.jsp">Serviços</a>
     </nav>
 
     <!-- 1. TELA DA LISTA DE CLIENTES -->

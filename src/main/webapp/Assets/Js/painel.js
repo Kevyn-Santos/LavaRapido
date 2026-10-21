@@ -434,7 +434,7 @@
           : type === 'wait'
             ? `<button type="button" class="btn" data-start="${escapeHTML(b.id)}">Iniciar atendimento</button>`
             : '';
-        return `<article class="atc ${type === 'run' ? 'run' : ''}"><div><b>${escapeHTML(client ? client.name : 'Removido')}</b><div class="small">${escapeHTML(b.date || '')}</div></div><div>${escapeHTML(car ? `${car.model} (${car.plate})` : 'Removido')}<div class="small" style="color:var(--primary); font-weight:600;">${escapeHTML(svcs || 'Sem serviço')}</div></div><div class="at-t"><span>Hora</span><b>${escapeHTML(b.slot || '')}</b><span>Total</span><b style="color:var(--lamp);">${fmtMoney(totalPrice)}</b></div><div class="acts"><a class="btn ghost sm" href="painel-agendamentos.html">Editar agendamento</a>${action}</div></article>`;
+        return `<article class="atc ${type === 'run' ? 'run' : ''}"><div><b>${escapeHTML(client ? client.name : 'Removido')}</b><div class="small">${escapeHTML(b.date || '')}</div></div><div>${escapeHTML(car ? `${car.model} (${car.plate})` : 'Removido')}<div class="small" style="color:var(--primary); font-weight:600;">${escapeHTML(svcs || 'Sem serviço')}</div></div><div class="at-t"><span>Hora</span><b>${escapeHTML(b.slot || '')}</b><span>Total</span><b style="color:var(--lamp);">${fmtMoney(totalPrice)}</b></div><div class="acts"><a class="btn ghost sm" href="painel-agendamentos.jsp">Editar agendamento</a>${action}</div></article>`;
       }
       const group = (title, items, type) => `<div class="grp"><h3>${title}</h3>${items.length ? items.map(b => cardHTML(b, type)).join('') : '<p class="empty">Nenhum atendimento nesta etapa.</p>'}</div>`;
       isQueue.innerHTML = group('Em andamento', inProgress, 'run')
@@ -538,7 +538,7 @@
       if (receivedTotal) receivedTotal.textContent = fmtMoney(received);
 
       if (bookings.length === 0) {
-        container.innerHTML = '<div class="empty"><p class="q">Ainda não há pagamentos.</p><p>Crie um agendamento para que ele apareça aqui.</p><a class="btn sm" href="painel-agendamentos.html">Ir para agendamentos</a></div>';
+        container.innerHTML = '<div class="empty"><p class="q">Ainda não há pagamentos.</p><p>Crie um agendamento para que ele apareça aqui.</p><a class="btn sm" href="painel-agendamentos.jsp">Ir para agendamentos</a></div>';
         return;
       }
 
