@@ -72,7 +72,7 @@ class _ConfiguracoesState extends State<Configuracoes> {
                   return AlertDialog(
                     title: const Text('Ajuda'),
                     content: const Text(
-                      'Entre em contato com o Flash Splash '
+                      'Entre em contato com o Fast Splash '
                       'para receber suporte.',
                     ),
                     actions: [
@@ -94,7 +94,7 @@ class _ConfiguracoesState extends State<Configuracoes> {
             onTap: () {
               showAboutDialog(
                 context: context,
-                applicationName: 'Flash Splash',
+                applicationName: 'Fast Splash',
                 applicationVersion: '1.0.0',
                 applicationLegalese:
                     'Aplicativo de gerenciamento de lava-rápido.',

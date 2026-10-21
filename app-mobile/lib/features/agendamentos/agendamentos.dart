@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flash_splash/core/data/repositorio.dart';
 import 'package:flash_splash/core/models/agendamento.dart';
 import 'package:flash_splash/core/utils/formatadores.dart';
+import 'package:flash_splash/features/acompanhamento/status_chip.dart';
 import 'package:flash_splash/features/agendamentos/novo_agendamento.dart';
+import 'package:flash_splash/features/pagamento/pagamento.dart';
 
 class Agendamentos extends StatelessWidget {
   const Agendamentos({super.key});
@@ -69,23 +71,66 @@ class Agendamentos extends StatelessWidget {
               else
                 ...lista.map(
                   (agendamento) => Card(
-                    child: ListTile(
-                      leading: Icon(
-                        agendamento.servico.icone,
-                        color: cor,
-                      ),
-                      title: Text(agendamento.servico.nome),
-                      subtitle: Text(
-                        '${Formatadores.dataHora(agendamento.dataHora)}\n'
-                        '${agendamento.veiculo.modelo} • '
-                        '${agendamento.veiculo.placa}',
-                      ),
-                      isThreeLine: true,
-                      trailing: IconButton(
-                        tooltip: 'Cancelar agendamento',
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () =>
-                            _confirmarCancelamento(context, agendamento),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(agendamento.servico.icone, color: cor),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  agendamento.servico.nome,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              StatusChip(status: agendamento.status),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${Formatadores.dataHora(agendamento.dataHora)}\n'
+                            '${agendamento.veiculo.modelo} • '
+                            '${agendamento.veiculo.placa}\n'
+                            '${agendamento.servico.precoFormatado}'
+                            '${agendamento.pago ? ' • Pago' : ''}',
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              if (!agendamento.pago)
+                                TextButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => Pagamento(
+                                          agendamento: agendamento,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.payment, size: 18),
+                                  label: const Text('Pagar'),
+                                ),
+                              if (agendamento.status ==
+                                  StatusServico.pendente)
+                                IconButton(
+                                  tooltip: 'Cancelar agendamento',
+                                  icon: const Icon(Icons.delete_outline),
+                                  onPressed: () => _confirmarCancelamento(
+                                    context,
+                                    agendamento,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),

@@ -1,4 +1,4 @@
-# Flash Splash
+# Fast Splash
 
 ## Atualização: nova tela inicial e paleta do site
 

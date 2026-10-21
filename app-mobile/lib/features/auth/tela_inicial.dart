@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flash_splash/core/constants/app_assets.dart';
 import 'package:flash_splash/core/data/repositorio.dart';
 import 'package:flash_splash/core/models/servico.dart';
+import 'package:flash_splash/core/session/sessao.dart';
 import 'package:flash_splash/core/theme/app_theme.dart';
+import 'package:flash_splash/features/agendamentos/novo_agendamento.dart';
 import 'package:flash_splash/features/auth/login_cliente.dart';
+import 'package:flash_splash/features/home/conta_cliente.dart';
 
 // Cores com transparência usadas só nesta tela.
 const Color _vidro = Color(0x14FFFFFF); // branco ~8%
@@ -28,13 +31,35 @@ class TelaInicial extends StatefulWidget {
 class _TelaInicialState extends State<TelaInicial> {
   final GlobalKey _chaveServicos = GlobalKey();
 
-  void _abrirLogin() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const LoginCliente(),
-      ),
-    );
+  /// Abre uma tela e, ao voltar, atualiza esta (ex.: "Entrar" vira
+  /// "Minha conta" depois do login).
+  Future<void> _abrir(List<Widget Function()> telas) async {
+    final navegador = Navigator.of(context);
+    Future<void>? ultima;
+    for (final tela in telas) {
+      ultima = navegador.push<void>(MaterialPageRoute(builder: (_) => tela()));
+    }
+    await ultima;
+    if (mounted) setState(() {});
+  }
+
+  /// "Entrar" / "Minha conta": quem já fez login vai direto para a conta.
+  void _entrar() {
+    if (Sessao.logado) {
+      _abrir([() => const ContaCliente()]);
+    } else {
+      _abrir([() => const LoginCliente()]);
+    }
+  }
+
+  /// "Agendar lavagem": com login, abre a conta e já o novo agendamento
+  /// (voltar leva à conta); sem login, pede o login uma vez.
+  void _agendar() {
+    if (Sessao.logado) {
+      _abrir([() => const ContaCliente(), () => const NovoAgendamento()]);
+    } else {
+      _abrir([() => const LoginCliente(abrirAgendamento: true)]);
+    }
   }
 
   void _irParaServicos() {
@@ -67,14 +92,14 @@ class _TelaInicialState extends State<TelaInicial> {
                     ),
                     child: _Abertura(
                       alturaTela: constraints.maxHeight,
-                      onAgendar: _abrirLogin,
+                      onAgendar: _agendar,
                       onVerServicos: _irParaServicos,
-                      onEntrar: _abrirLogin,
+                      onEntrar: _entrar,
                     ),
                   ),
                   _SecaoServicos(
                     key: _chaveServicos,
-                    onAgendar: _abrirLogin,
+                    onAgendar: _agendar,
                   ),
                 ],
               ),
@@ -160,9 +185,9 @@ class _Abertura extends StatelessWidget {
                       style: TextButton.styleFrom(
                         foregroundColor: AppTheme.superficie,
                       ),
-                      child: const Text(
-                        'Entrar',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      child: Text(
+                        Sessao.logado ? 'Minha conta' : 'Entrar',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -335,8 +360,18 @@ class _SecaoServicos extends StatelessWidget {
             style: TextStyle(color: AppTheme.bordaClara, fontSize: 15),
           ),
           const SizedBox(height: 18),
-          for (final servico in Repositorio.servicos)
-            _CartaoServico(servico: servico, onTap: onAgendar),
+          // Lista vinda do Repositorio (o back fornece os 4 serviços).
+          ValueListenableBuilder<List<Servico>>(
+            valueListenable: Repositorio.servicos,
+            builder: (context, lista, _) {
+              return Column(
+                children: [
+                  for (final servico in lista)
+                    _CartaoServico(servico: servico, onTap: onAgendar),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
@@ -389,11 +424,13 @@ class _CartaoServico extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        servico.descricao,
-                        style: const TextStyle(color: AppTheme.bordaClara),
-                      ),
+                      if (servico.descricao.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          servico.descricao,
+                          style: const TextStyle(color: AppTheme.bordaClara),
+                        ),
+                      ],
                     ],
                   ),
                 ),

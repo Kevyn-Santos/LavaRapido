@@ -6,19 +6,75 @@ import 'package:flash_splash/core/models/veiculo.dart';
 class MeusVeiculos extends StatelessWidget {
   const MeusVeiculos({super.key});
 
-  Future<void> _adicionar(BuildContext context) async {
+  /// Abre o formulário. Com [veiculo], é edição; sem, é cadastro novo.
+  Future<void> _abrirFormulario(
+    BuildContext context, {
+    Veiculo? veiculo,
+  }) async {
     final messenger = ScaffoldMessenger.of(context);
 
-    final veiculo = await showDialog<Veiculo>(
+    final resultado = await showDialog<Veiculo>(
       context: context,
-      builder: (_) => const _NovoVeiculoDialog(),
+      builder: (_) => _VeiculoDialog(veiculo: veiculo),
     );
 
-    if (veiculo == null) return;
+    if (resultado == null) return;
 
-    Repositorio.adicionarVeiculo(veiculo);
+    if (veiculo == null) {
+      Repositorio.adicionarVeiculo(resultado);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Veículo adicionado.')),
+      );
+    } else {
+      Repositorio.atualizarVeiculo(resultado);
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Veículo atualizado.')),
+      );
+    }
+  }
+
+  Future<void> _apagar(BuildContext context, Veiculo veiculo) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (Repositorio.veiculoEmUso(veiculo)) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Este veículo tem um serviço em aberto. Cancele ou conclua o '
+            'agendamento antes de apagar.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Apagar veículo'),
+          content: Text(
+            'Deseja apagar "${veiculo.modelo}" (${veiculo.placa})?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('NÃO'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('SIM, APAGAR'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar != true) return;
+
+    Repositorio.removerVeiculo(veiculo);
     messenger.showSnackBar(
-      const SnackBar(content: Text('Veículo adicionado.')),
+      const SnackBar(content: Text('Veículo apagado.')),
     );
   }
 
@@ -57,13 +113,29 @@ class MeusVeiculos extends StatelessWidget {
                       'Placa: ${veiculo.placa}\nCor: ${veiculo.cor}',
                     ),
                     isThreeLine: true,
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: 'Editar veículo',
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () =>
+                              _abrirFormulario(context, veiculo: veiculo),
+                        ),
+                        IconButton(
+                          tooltip: 'Apagar veículo',
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () => _apagar(context, veiculo),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               const SizedBox(height: 15),
               SizedBox(
                 height: 52,
                 child: ElevatedButton.icon(
-                  onPressed: () => _adicionar(context),
+                  onPressed: () => _abrirFormulario(context),
                   icon: const Icon(Icons.add),
                   label: const Text('ADICIONAR VEÍCULO'),
                 ),
@@ -76,18 +148,24 @@ class MeusVeiculos extends StatelessWidget {
   }
 }
 
-class _NovoVeiculoDialog extends StatefulWidget {
-  const _NovoVeiculoDialog();
+/// Formulário de cadastro/edição de veículo.
+class _VeiculoDialog extends StatefulWidget {
+  final Veiculo? veiculo;
+
+  const _VeiculoDialog({this.veiculo});
 
   @override
-  State<_NovoVeiculoDialog> createState() => _NovoVeiculoDialogState();
+  State<_VeiculoDialog> createState() => _VeiculoDialogState();
 }
 
-class _NovoVeiculoDialogState extends State<_NovoVeiculoDialog> {
+class _VeiculoDialogState extends State<_VeiculoDialog> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _modelo = TextEditingController();
-  final TextEditingController _placa = TextEditingController();
-  final TextEditingController _cor = TextEditingController();
+  late final TextEditingController _modelo =
+      TextEditingController(text: widget.veiculo?.modelo ?? '');
+  late final TextEditingController _placa =
+      TextEditingController(text: widget.veiculo?.placa ?? '');
+  late final TextEditingController _cor =
+      TextEditingController(text: widget.veiculo?.cor ?? '');
 
   // Aceita ABC-1234, ABC1234 e o padrão Mercosul (ABC1D23).
   static final RegExp _regexPlaca =
@@ -109,26 +187,32 @@ class _NovoVeiculoDialogState extends State<_NovoVeiculoDialog> {
   String? _validarPlaca(String? valor) {
     if (valor == null || valor.trim().isEmpty) return 'Campo obrigatório.';
     if (!_regexPlaca.hasMatch(valor.trim())) return 'Placa inválida.';
+    if (Repositorio.placaExiste(valor, ignorarId: widget.veiculo?.id)) {
+      return 'Já existe um veículo com esta placa.';
+    }
     return null;
   }
 
   void _salvar() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    final modelo = _modelo.text.trim();
+    final placa = _placa.text.trim().toUpperCase();
+    final cor = _cor.text.trim();
+    final original = widget.veiculo;
+
     Navigator.pop(
       context,
-      Veiculo(
-        modelo: _modelo.text.trim(),
-        placa: _placa.text.trim().toUpperCase(),
-        cor: _cor.text.trim(),
-      ),
+      original == null
+          ? Veiculo(modelo: modelo, placa: placa, cor: cor)
+          : original.copiarCom(modelo: modelo, placa: placa, cor: cor),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Novo veículo'),
+      title: Text(widget.veiculo == null ? 'Novo veículo' : 'Editar veículo'),
       content: SingleChildScrollView(
         child: Form(
           key: _formKey,

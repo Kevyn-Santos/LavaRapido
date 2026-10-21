@@ -5,6 +5,9 @@ class Sessao {
   /// CPF do cliente, apenas com dígitos.
   static String cpf = '';
 
+  /// Verdadeiro quando o cliente já fez login.
+  static bool get logado => cpf.isNotEmpty;
+
   static void limpar() {
     cpf = '';
   }

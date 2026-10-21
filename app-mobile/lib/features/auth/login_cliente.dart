@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 
 import 'package:flash_splash/core/session/sessao.dart';
 import 'package:flash_splash/core/utils/cpf.dart';
+import 'package:flash_splash/features/agendamentos/novo_agendamento.dart';
 import 'package:flash_splash/features/home/conta_cliente.dart';
 
 class LoginCliente extends StatefulWidget {
-  const LoginCliente({super.key});
+  /// Quando verdadeiro, depois do login já abre o novo agendamento
+  /// (vindo do botão "Agendar lavagem").
+  final bool abrirAgendamento;
+
+  const LoginCliente({super.key, this.abrirAgendamento = false});
 
   @override
   State<LoginCliente> createState() => _LoginClienteState();
@@ -56,12 +61,19 @@ class _LoginClienteState extends State<LoginCliente> {
 
     Sessao.cpf = Cpf.somenteDigitos(_cpfController.text);
 
-    Navigator.pushReplacement(
-      context,
+    final navegador = Navigator.of(context);
+    navegador.pushReplacement(
       MaterialPageRoute(
         builder: (_) => const ContaCliente(),
       ),
     );
+    if (widget.abrirAgendamento) {
+      navegador.push(
+        MaterialPageRoute(
+          builder: (_) => const NovoAgendamento(),
+        ),
+      );
+    }
   }
 
   @override
