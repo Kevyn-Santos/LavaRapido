@@ -31,7 +31,12 @@
         <label for="rn">Nome completo</label>
         <input id="rn" name="name" required placeholder="O seu nome">
       </div>
-      
+
+      <div class="field">
+        <label for="rc">CPF</label>
+        <input id="rc" name="cpf" inputmode="numeric" maxlength="14" required placeholder="000.000.000-00">
+      </div>
+
       <div class="fgrid">
         <div class="field">
           <label for="rt">Telemóvel</label>

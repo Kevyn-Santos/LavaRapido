@@ -59,3 +59,56 @@ inacessíveis pelo navegador, por causa da arquitetura descrita no `CLAUDE.md`:
 
 Os forwards das servlets existentes foram conferidos e estão corretos: todos apontam para JSPs que existem em
 `/WEB-INF/views/` (ou `/cadastro.jsp`, que é pública), e os redirects apontam para rotas mapeadas.
+
+---
+
+## 3. Segunda etapa: campo CPF no cadastro e links para o início
+
+Atende parcialmente os itens 3 e 4 da seção 2. Nenhum outro ponto foi alterado.
+
+### 3.1 Campo CPF em `cadastro.jsp`
+
+Adicionado entre "Nome completo" e "Telemóvel", copiado da versão anterior do mesmo formulário (commit
+`23d4d4b`, antes da conversão `24de23c`), sem o `value="<c:out value='${param.cpf}'/>"`, porque o `cadastro.jsp`
+atual não declara a taglib JSTL:
+
+```html
+<div class="field">
+  <label for="rc">CPF</label>
+  <input id="rc" name="cpf" inputmode="numeric" maxlength="14" required placeholder="000.000.000-00">
+</div>
+```
+
+O nome `cpf` é o que `CadastroClienteServlet` lê (`WebSupport.campo(request, "cpf")`), e o `maxlength` de 14 aceita o
+CPF com máscara, que `Validacao` normaliza. Ficam pendentes, como antes: os outros campos (`name`, `phone`,
+`pass`) ainda não têm os nomes que a servlet espera, o `action` ainda não aponta para `/cadastro`, e o texto
+"São apenas quatro campos" agora está desatualizado (são cinco).
+
+### 3.2 Links para `index.jsp` nas páginas de `WEB-INF/views/`
+
+Os links relativos (`index.jsp` e `../../index.jsp`) não funcionam numa página servida por forward: o navegador
+resolve o caminho a partir da URL da servlet, não da pasta do arquivo. Com o contexto `/SplashFast`, por exemplo,
+`../../index.jsp` sai do contexto e `index.jsp` depende da profundidade da rota. Todos passam a usar o caminho
+absoluto com o contexto, padrão já usado em `login.jsp`, `colaborador-login.jsp` e `erro.jsp`:
+
+```html
+href="${pageContext.request.contextPath}/index.jsp"
+```
+
+| Arquivo:linha | Antes |
+|---|---|
+| `acesso-colaborador.jsp:17,20` | `../../index.jsp` |
+| `acesso-colaborador.jsp:42` | `index.jsp` |
+| `baixar-app.jsp:17,20,34` | `index.jsp` |
+| `painel.jsp:14,18` | `../../index.jsp` |
+| `painel-agendamentos.jsp:19` | `index.jsp` |
+| `painel-agendamentos.jsp:23` | `../../index.jsp` |
+| `painel-atendimentos.jsp:14,15` | `../../index.jsp` |
+| `painel-carros.jsp:14,15` | `index.jsp` |
+| `painel-clientes.jsp:14,18` | `index.jsp` |
+| `painel-colaboradores.jsp:15,16` | `../../index.jsp` |
+| `painel-pagamentos.jsp:14,15` | `../../index.jsp` |
+| `painel-servicos.jsp:15,16` | `../../index.jsp` |
+
+Os links de `cadastro.jsp` (na raiz do webapp) ficaram relativos (`index.jsp`), porque já funcionam tanto em
+`/cadastro` quanto em `/cadastro.jsp`. Os links "Sair" do painel continuam indo para o início, e não para `/sair`.

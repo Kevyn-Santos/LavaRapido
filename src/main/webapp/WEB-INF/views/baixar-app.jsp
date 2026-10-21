@@ -14,10 +14,10 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="lock" href="index.jsp">
+    <a class="lock" href="${pageContext.request.contextPath}/index.jsp">
       <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav><a href="index.jsp">Início</a></nav>
+    <nav><a href="${pageContext.request.contextPath}/index.jsp">Início</a></nav>
   </div>
 </header>
 
@@ -31,7 +31,7 @@
         <a class="btn dark store" href="#"><small>Descarregar na</small><b>App Store</b></a>
         <a class="btn dark store" href="#"><small>Disponível no</small><b>Google Play</b></a>
       </div>
-      <p class="small" style="margin-top:20px"><a href="index.jsp">Voltar à página inicial</a></p>
+      <p class="small" style="margin-top:20px"><a href="${pageContext.request.contextPath}/index.jsp">Voltar à página inicial</a></p>
     </div>
 
     <svg class="dl-phone" viewBox="0 0 196 420" role="img" aria-label="Ecrã do telemóvel">

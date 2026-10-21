@@ -11,11 +11,11 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="lock" href="../../index.jsp">
+    <a class="lock" href="${pageContext.request.contextPath}/index.jsp">
       <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
     <nav class="nav-panel">
-      <a href="../../index.jsp" class="btn ghost sm">Sair</a>
+      <a href="${pageContext.request.contextPath}/index.jsp" class="btn ghost sm">Sair</a>
     </nav>
   </div>
 </header>

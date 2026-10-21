@@ -14,10 +14,10 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="lock" href="../../index.jsp">
+    <a class="lock" href="${pageContext.request.contextPath}/index.jsp">
       <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav><a href="../../index.jsp">Voltar ao site</a></nav>
+    <nav><a href="${pageContext.request.contextPath}/index.jsp">Voltar ao site</a></nav>
   </div>
 </header>
 
@@ -39,7 +39,7 @@
         <button class="btn" type="submit" style="width:100%">Entrar no painel</button>
       </form>
     </div>
-    <a href="index.jsp" class="small">Voltar ao site principal</a>
+    <a href="${pageContext.request.contextPath}/index.jsp" class="small">Voltar ao site principal</a>
   </div>
 </main>
 
