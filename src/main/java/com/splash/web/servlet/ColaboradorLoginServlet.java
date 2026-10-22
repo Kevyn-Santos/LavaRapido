@@ -18,14 +18,14 @@ public class ColaboradorLoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/WEB-INF/views/colaborador-login.jsp").forward(request, response);
+        request.getRequestDispatcher("/acesso-colaborador.jsp").forward(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String email = WebSupport.campo(request, "email");
-        String senha = request.getParameter("senha");
+        String senha = request.getParameter("pass");
         if (!WebSupport.preenchidos(email, senha)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro", "Preencha e-mail e senha.");
