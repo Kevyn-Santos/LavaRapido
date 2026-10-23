@@ -135,7 +135,7 @@ button, input, select { font: inherit; color: inherit; }
 /* Hero Section */
 .scene-hero {
   position: relative;
-  min-height: 60vh;
+  min-height: 100vh;
   padding-top: 120px;
   padding-bottom: 60px;
   background: #EDF3F4;
