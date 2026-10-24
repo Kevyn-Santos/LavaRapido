@@ -1,408 +1,539 @@
-# Análise do app mobile (`app-mobile/`) e plano de integração com o backend Java
+# Análise do app mobile (`app-mobile/`) e plano da API Java para o mobile
 
-> Escrito em 15/10/2026, a partir do código atual do repositório (incluindo as alterações ainda não commitadas do backend).
+> Primeira versão: 15/10/2026. **Revisada em 22/10/2026** a partir do código atual (`main` em `a1003c9`, com o pacote `com.splash.web.api` ainda não versionado).
+> Restrição de projeto: **sem Spring nem outro framework.** A API é feita com Java puro: o JDK, a API Jakarta Servlet que o Tomcat já fornece e poucas bibliotecas pequenas.
+
+### Registro desta revisão
+
+| O que mudou | Por quê |
+| --- | --- |
+| Parte 1 atualizada para a nova versão do app (commit `8f1f6d3`: acompanhamento, status, pagamento por agendamento, edição de veículo) | O app mudou e vários problemas da versão anterior foram resolvidos |
+| Parte 2 reescrita: o backend agora compila, usa os DAOs por tabela e tem `Dockerfile` real | O texto anterior citava `LavaRapidoRepository` e `ClienteRepository`, que não existem mais |
+| Parte 3 refeita sem Spring, com a escolha entre Servlet e `com.sun.net.httpserver` e a lista de módulos e bibliotecas | Pedido explícito: "tudo será feito com Java puro". O `api/Handler.java` recém-criado importa `HttpServer` |
+| Endpoints ligados aos métodos reais dos DAOs, com as lacunas de cada um | Para saber exatamente o que falta no `db/` antes de escrever a API |
+
+Ligação com o resto do projeto: este documento é o plano do item "TODO APP 2: criar uma API para conectar o banco" de `miscelaneous/TODO.md`, usa a camada descrita em `separacao-daos.md` e `dtos-criadas.md` e, quando as rotas existirem, elas devem entrar no `miscelaneous/openapi.yml` (hoje só tem as rotas JSP).
 
 ---
 
-## Parte 1: o projeto mobile
+## Parte 1: o app mobile hoje
 
 ### 1.1 Visão geral
 
 | Item | Valor |
 | --- | --- |
-| Nome do pacote | `flash_splash` (`pubspec.yaml`) |
+| Pacote | `flash_splash` (`pubspec.yaml`) |
 | Tecnologia | Flutter / Dart (SDK `^3.13.2`), Material 3 |
-| Dependências | **Só o Flutter SDK.** Não usa `http`, `provider`, `shared_preferences` nem nenhum outro pacote |
-| Plataformas geradas | android, ios, web, linux, macos, windows (padrão do `flutter create`) |
-| Tamanho | Cerca de 2.000 linhas de Dart em `lib/` |
-| Persistência | **Nenhuma.** Tudo fica em memória e se perde quando o app fecha |
-| Comunicação externa | **Nenhuma.** O app não faz nenhuma chamada de rede |
-
-É um **protótipo navegável da área do cliente** de um lava-rápido: login, escolha de serviço, cadastro de veículos, agendamento e uma tela de pagamento simulada. Funciona como maquete funcional do produto, sem backend.
+| Dependências | **Só o Flutter SDK.** Nenhum pacote de rede ou armazenamento |
+| Tamanho | Cerca de 2.850 linhas de Dart em `lib/` |
+| Persistência | **Nenhuma.** Tudo fica em memória (`core/data/repositorio.dart`) |
+| Comunicação externa | **Nenhuma.** Nenhuma chamada HTTP |
 
 ### 1.2 Arquitetura
 
 ```
 lib/
-  main.dart            -> runApp(FlashSplashApp)
-  app.dart             -> MaterialApp; escuta o ThemeController (claro/escuro)
+  main.dart, app.dart        MaterialApp + ThemeController (claro/escuro)
   core/
-    constants/         app_assets.dart: caminho da ilustração
-    data/              repositorio.dart: "banco" em memória (ValueNotifier estático)
-    models/            Servico, Veiculo, Agendamento (classes imutáveis simples)
-    session/           Sessao.cpf: CPF do usuário logado (string estática)
-    theme/             paleta do site + ThemeData claro/escuro + ThemeController
-    utils/             cpf.dart (validação e máscara), formatadores.dart (data/hora)
+    data/repositorio.dart    "banco" em memória: ValueNotifier estáticos de servicos, veiculos, agendamentos
+    models/                  Servico, Veiculo, Agendamento (+ enum StatusServico)
+    session/sessao.dart      Sessao.cpf (string estática)
+    theme/, utils/           paleta do site, Cpf (validação/máscara), formatadores
   features/
-    auth/              TelaInicial (vitrine) e LoginCliente
-    home/              ContaCliente (abas), InicioCliente, ServicoCard
-    agendamentos/      Agendamentos (lista), NovoAgendamento (formulário)
-    perfil/            PerfilCliente, MeusVeiculos, Notificacoes
-    pagamento/         Pagamento
-    configuracoes/     Configuracoes
+    auth/                    TelaInicial, LoginCliente
+    home/                    ContaCliente (abas), InicioCliente, ServicoCard
+    agendamentos/            Agendamentos, NovoAgendamento
+    acompanhamento/          AcompanharServicos, StatusChip            (novo)
+    perfil/                  PerfilCliente, MeusVeiculos (com edição), Notificacoes
+    pagamento/               Pagamento (agora ligado a um agendamento)
+    configuracoes/           Configuracoes
 ```
 
-**Gerência de estado:** `ValueNotifier` estático + `ValueListenableBuilder`. O `Repositorio` expõe `veiculos` e `agendamentos` como `ValueNotifier<List<...>>`; as telas reconstroem quando a lista é trocada. O tema usa o mesmo padrão (`ThemeController.themeMode`). É simples e adequado para protótipo, mas é estado global: fica difícil de testar e de trocar por dados remotos.
+O próprio `Repositorio` diz o que fazer: *"Quando houver backend, é aqui que a troca acontece"*, e `definirServicos(...)` já existe para receber a lista da API. Toda tela lê os dados por `ValueListenableBuilder` sobre esses `ValueNotifier`, então trocar a origem dos dados mexe pouco nas telas.
 
-### 1.3 Fluxo de navegação
+### 1.3 O que mudou desde a primeira análise
 
-```
-TelaInicial (vitrine com ilustração)
-  ├─ "Entrar" / "Agendar lavagem" / "Ver serviços" ──> LoginCliente
-  │
-LoginCliente (CPF + senha)
-  └─ sucesso ──> ContaCliente (pushReplacement)
-                   ├─ Aba Início ──────> InicioCliente
-                   │                      └─ escolhe serviço ─> Pagamento(servico)
-                   ├─ Aba Agenda ──────> Agendamentos
-                   │                      └─ "Novo agendamento" ─> NovoAgendamento
-                   └─ Aba Perfil ──────> PerfilCliente
-                                          ├─ Meus agendamentos ─> Agendamentos
-                                          ├─ Meus veículos ─────> MeusVeiculos (+ diálogo Novo veículo)
-                                          ├─ Formas de pagamento ─> Pagamento()
-                                          ├─ Notificações ──────> Notificacoes
-                                          ├─ Configurações ─────> Configuracoes
-                                          └─ Sair ──> TelaInicial (limpa a pilha)
-```
-
-### 1.4 Telas e funções principais
-
-| Tela | Arquivo | O que faz |
-| --- | --- | --- |
-| **Tela inicial** | `features/auth/tela_inicial.dart` | Vitrine com o layout do site: gradiente petróleo, ilustração `hero_lavagem.png`, chamada "Lavagem rápida, agendada em...", botões *Agendar lavagem* e *Ver serviços*, seção com cartões de serviço. Todos os botões levam ao login. |
-| **Login do cliente** | `features/auth/login_cliente.dart` | Formulário com CPF (máscara `000.000.000-00` e validação dos dígitos verificadores) e senha (com mostrar/ocultar). Compara a senha com a constante `'1234'`. Se passar, grava o CPF em `Sessao.cpf` e abre `ContaCliente`. "Esqueci minha senha" só mostra um SnackBar. |
-| **Conta do cliente** | `features/home/conta_cliente.dart` | `NavigationBar` com 3 abas (Início, Agenda, Perfil). Usa `IndexedStack`, então cada aba mantém o próprio estado. |
-| **Início** | `features/home/inicio_cliente.dart` | Saudação, cartão "Próximo agendamento" (o primeiro agendamento futuro), lista de serviços selecionáveis e botão *Ir para pagamento*. |
-| **Meus agendamentos** | `features/agendamentos/agendamentos.dart` | Lista os agendamentos (serviço, data/hora, veículo), cancela com diálogo de confirmação e tem o botão *Novo agendamento*. |
-| **Novo agendamento** | `features/agendamentos/novo_agendamento.dart` | Formulário em 3 passos: 1) serviço, 2) veículo (`ChoiceChip`), 3) data (hoje até +90 dias) e horário. Bloqueia horários no passado. Salva no `Repositorio`, ordenado por data. |
-| **Meu perfil** | `features/perfil/perfil_cliente.dart` | Avatar, nome fixo "Cliente Fast Splash", CPF da sessão formatado, atalhos para as outras telas e *Sair da conta*. |
-| **Meus veículos** | `features/perfil/meus_veiculos.dart` | Lista os veículos (já começa com um "Nissan Skyline ABC-1234" de exemplo). O diálogo *Novo veículo* pede modelo, placa (regex antiga ou Mercosul) e cor. |
-| **Pagamento** | `features/pagamento/pagamento.dart` | Com `servico`: resumo e valor. Sem `servico`: vira "Formas de pagamento". Escolha entre Pix, crédito e débito. Confirmar só abre um diálogo dizendo que é uma demonstração. |
-| **Notificações** | `features/perfil/notificacoes.dart` | Dois cartões estáticos. |
-| **Configurações** | `features/configuracoes/configuracoes.dart` | Switch de notificações (só visual), switch de modo escuro (funciona), *Alterar senha* (SnackBar), *Ajuda* e *Sobre*. |
-
-**Utilitários que valem destacar**
-
-- `Cpf.valido` implementa corretamente o algoritmo dos dígitos verificadores e rejeita sequências repetidas. A flag `exigirDigitosVerificadores` desliga a checagem para testes.
-- `CpfInputFormatter` aplica a máscara enquanto o usuário digita.
-- `AppTheme` centraliza a paleta do site (petróleo, ciano, coral) e já define cores de status (pendente, em andamento, concluído) que ainda não são usadas.
-
-### 1.5 Erros e limitações encontrados
-
-Verificação executada: `flutter analyze` / `flutter test` (não chegaram a rodar, ver item E1) e leitura de todo o código em `lib/`.
-
-#### Erros (quebram algo ou se comportam de forma incorreta)
-
-| # | Problema | Onde | Impacto |
-| --- | --- | --- | --- |
-| E1 | A restrição `sdk: ^3.13.2` é mais nova que o Dart instalado nesta máquina (3.13.1). `flutter pub get`, `analyze` e `test` falham com *version solving failed*. | `pubspec.yaml:7` | O projeto não compila em quem tem o SDK um patch abaixo. Use `^3.13.0` ou atualize o Flutter. |
-| E2 | **Logout não limpa os dados.** `Sessao.limpar()` zera só o CPF; `Repositorio.veiculos` e `agendamentos` continuam na memória. | `perfil_cliente.dart:110`, `sessao.dart:8` | Se outra pessoa entrar com outro CPF no mesmo aparelho, ela vê os veículos e agendamentos do usuário anterior. |
-| E3 | O login aceita **qualquer CPF válido** com a senha fixa `1234`. | `login_cliente.dart:17,50` | Não existe autenticação. O CPF não é verificado em lugar nenhum. |
-| E4 | "Ir para pagamento" (aba Início) paga um serviço **sem agendamento**, e o pagamento não é registrado em lugar nenhum. | `inicio_cliente.dart:127-141`, `pagamento.dart:32` | O fluxo não faz sentido para o negócio: no backend, o pagamento pertence a um agendamento (`pagamento.id_agendamento NOT NULL`). |
-| E5 | "Salvar forma de pagamento" não salva nada; só abre um diálogo. | `pagamento.dart:32-57` | É uma função falsa para o usuário. |
-| E6 | O horário do agendamento aceita **qualquer hora** (03:00, por exemplo), sem horário de funcionamento e sem checar conflito. | `novo_agendamento.dart:42-53` | No banco existe `UNIQUE (id_veiculo, data, horario)`. O app permite duplicatas que o backend vai rejeitar. |
-| E7 | É possível cadastrar dois veículos com a mesma placa. | `meus_veiculos.dart:115`, `repositorio.dart:37` | No banco, `veiculo.placa` é `UNIQUE`. |
-| E8 | O cartão "Próximo agendamento" só é recalculado quando a lista muda, não quando o tempo passa. | `inicio_cliente.dart:56-62` | Um agendamento que já passou continua aparecendo como "próximo" até alguma mudança na lista. |
-
-#### Limitações (funcionalidade ausente ou incompleta)
-
-1. **Sem persistência e sem backend:** tudo some ao fechar o app (`repositorio.dart:7`).
-2. **Sem cadastro de cliente.** Só existe login; não há tela para criar conta.
-3. **O agendamento aceita só um serviço**, enquanto o backend modela N serviços por agendamento (`agendamento_servico`).
-4. **Agendamento sem status:** cancelar *remove* o item da lista. No backend, cancelar muda o status para `CANCELADO` e o histórico continua existindo. As cores de status do `AppTheme` não são usadas.
-5. **Não dá para editar nem excluir veículos**, nem reagendar.
-6. **O veículo não tem `marca`**, mas no banco a coluna é `NOT NULL`. A placa é salva com hífen (`ABC-1234`), enquanto o backend normaliza para `ABC1234`.
-7. **O serviço usa `id` String (`'completa'`) e guarda `IconData` no model.** O banco usa `id_servico INT` e não tem ícone. Os serviços estão fixos no código.
-8. **Perfil genérico:** "Olá, cliente!" e "Cliente Fast Splash". Nome, e-mail e telefone não existem no app.
-9. **Telas de enfeite:** notificações estáticas, switch de notificações sem efeito, "Alterar senha" e "Esqueci minha senha" sem implementação.
-10. **O tema escolhido não é salvo**; volta para escuro a cada abertura.
-11. **O nome do produto muda de tela para tela:** "Fast Splash" (`app.dart:17`, login, início, perfil), "Flash Splash" (Sobre, Ajuda, notificações) e `flash_splash` no launcher do Android. O `applicationId` ainda é `com.example.flash_splash`.
-12. **Telas duplicadas:** "Meus agendamentos" aparece na aba Agenda e também no Perfil.
-13. **Sem área do colaborador/admin**; o app cobre só o cliente.
-14. **Testes:** só existe um smoke test (`test/widget_test.dart`) que confere se o widget raiz existe.
-15. **`LEIA-ME.md`** descreve a aplicação de um zip "por cima do projeto" no Windows; não serve como documentação de setup. O `README.md` é o padrão do `flutter create`.
-16. **Android:** a permissão `INTERNET` está declarada só nos manifests `debug/` e `profile/`. Um build *release* não vai conseguir acessar a API (ver Parte 3).
-
----
-
-## Parte 2: como o app conversa com o projeto Java
-
-### 2.1 Situação atual: não conversa
-
-**Hoje o app mobile e o backend Java não têm nenhum ponto de integração.** São dois protótipos paralelos do mesmo domínio:
-
-| | Backend Java (`src/`) | App mobile (`app-mobile/`) |
-| --- | --- | --- |
-| Interface | JSP renderizado no servidor (Tomcat) | Telas nativas Flutter |
-| Dados | MySQL (`database/schema.sql`) via JDBC | Listas em memória |
-| Autenticação | E-mail + senha com BCrypt, `HttpSession` | CPF + senha fixa `1234` |
-| Formato de troca | Formulário HTML (`application/x-www-form-urlencoded`) → `forward` para JSP | Nenhum |
-| Público | Cliente **e** colaborador/admin | Só cliente |
-
-Os servlets atuais devolvem **HTML** (`forward` para `.jsp`) ou `redirect`, e mantêm o estado em `HttpSession` (cookie `JSESSIONID`). Um app Flutter não tem como usar isso de forma razoável: ele precisa de endpoints que recebam e devolvam **JSON**.
-
-### 2.2 Onde os dois projetos já combinam
-
-Os dois descrevem o mesmo domínio, e vários pedaços batem:
-
-| Conceito | Java (model / tabela) | Dart (model) | Compatível? |
-| --- | --- | --- | --- |
-| Cliente | `Cliente` / `cliente(id_cliente, nome, cpf, telefone, email, senha_hash)` | só `Sessao.cpf` | Parcial: o app só tem o CPF |
-| Validação de CPF | `Validacao.cpf`: só confere os 11 dígitos | `Cpf.valido`: confere os dígitos verificadores | O app é **mais rigoroso** que o backend |
-| Veículo | `Veiculo(placa, marca, modelo, cor)`; placa normalizada sem hífen | `Veiculo(modelo, placa, cor)` | Falta `marca`; a placa tem formato diferente |
-| Regex da placa | `^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$` (depois de remover o hífen) | `^[A-Za-z]{3}-?[0-9][A-Za-z0-9][0-9]{2}$` | **Equivalentes** |
-| Serviço | `Servico(id INT, nome, descricao, preco BigDecimal)` | `Servico(id String, nome, descricao, preco double, icone)` | Tipo do id e ícone diferem |
-| Agendamento | `Agendamento(veiculo, data, horario, status, itens[])` | `Agendamento(servico, veiculo, dataHora)` | App: 1 serviço e sem status. Java: N serviços e com status |
-| Pagamento | `Pagamento(valor, forma: DINHEIRO/PIX/CREDITO/DEBITO, status)` | String "Pix" / "Cartão de crédito" / "Cartão de débito" | Mapeável (o app não tem DINHEIRO) |
-| Status | `StatusAgendamento`, `StatusAtendimento`, `StatusPagamento` | cores prontas em `AppTheme`, sem enum | Falta o lado Dart |
-| Identidade visual | JSPs com a paleta do site | `AppTheme`: "mesma paleta do site do grupo" | Sim |
-
-O backend já tem **toda a lógica que o app precisa**, em `LavaRapidoRepository`:
-
-| Necessidade do app | Método Java existente |
+| Antes (15/10) | Agora |
 | --- | --- |
-| Login | `autenticarCliente(email, senha)` |
-| Cadastro | `cadastrarCliente(nome, cpf, telefone, email, senha)` |
-| Listar serviços | `listarServicos()` |
-| Veículos | `listarVeiculos(idCliente)`, `adicionarVeiculo(...)`, `removerVeiculo(...)` |
-| Agendar | `criarAgendamento(idCliente, idVeiculo, data, horario, idsServicos)`: transação que já cria `agendamento_servico`, `atendimento` e `pagamento` PENDENTE |
-| Meus agendamentos | `listarAgendamentosCliente(idCliente)`: já traz total, status e pagamento |
-| Cancelar | `cancelarAgendamento(idCliente, idAgendamento)` |
+| Pagar um serviço sem agendamento (E4) | O pagamento sai de um agendamento (`Repositorio.proximoAPagar`, `marcarComoPago`) |
+| Placa duplicada aceita (E7) | `Repositorio.placaExiste` bloqueia, já normalizando o hífen |
+| Agendamento sem status | `StatusServico` (pendente, em andamento, concluído) e tela **Acompanhar** com `StatusChip` |
+| Veículo só podia ser criado | Editar e excluir; não exclui veículo com serviço não concluído |
+| Serviços fixos com ícone e id textual | 4 serviços de exemplo ("Serviço 1..4"), à espera da API |
 
-Ou seja, **a integração consiste basicamente em expor esses métodos em JSON** e trocar o `Repositorio` em memória do app por chamadas HTTP.
+### 1.4 Problemas que continuam (e o que a API resolve)
 
-### 2.3 Problemas do backend que bloqueiam a integração
-
-Encontrados com `mvn -o compile` no estado atual da árvore de trabalho (refatoração em andamento, ainda não commitada):
-
-1. **O backend não compila.** Os servlets foram para `com.splash.web.servlet`, mas `ClienteRepository` (classe `final class` sem `public`) e os métodos `static` de `LavaRapidoRepository` continuam *package-private* em `com.splash.web.db`. Resultado: dezenas de erros "is not public ... cannot be accessed from outside package" em `LoginServlet`, `CadastroClienteServlet`, `VeiculoServlet`, `AdminServlet`, entre outros. O mesmo vale para `Passwords`.
-2. **Duas classes mapeiam a mesma rota `/cadastro`** (`Cadastro.java` e `CadastroClienteServlet.java`). O Tomcat se recusa a subir a aplicação com URL patterns duplicados.
-3. **Duas camadas de acesso a dados concorrentes:** `DAOCliente` (novo) e `LavaRapidoRepository`/`ClienteRepository` (antigo). `DAOVeiculo`, `DAOAgendamento` e `DAOColaborador` são classes **vazias**.
-4. **Login por e-mail no backend e por CPF no app.** É preciso escolher um (ou aceitar os dois).
-5. **O `Dockerfile` da raiz é um placeholder** (`FROM ubuntu:latest` + `top -b`). Não empacota o WAR nem o Tomcat.
-6. A pasta `servlet-app/` é uma cópia antiga do backend (`com.example`) que ainda está no repositório e pode confundir.
+| # | Problema | Onde | Resolvido pela API? |
+| --- | --- | --- | --- |
+| E1 | `sdk: ^3.13.2` exige um patch de Dart mais novo que o instalado em algumas máquinas; `flutter pub get` falha | `pubspec.yaml:8` | Não. Trocar para `^3.13.0` |
+| E2 | Logout limpa só o CPF; veículos e agendamentos do usuário anterior ficam na memória | `perfil_cliente.dart:110`, `sessao.dart` | Sim, se o logout limpar token **e** repositórios |
+| E3 | Login aceita qualquer CPF válido com a senha fixa `1234` | `login_cliente.dart:22,55` | Sim (`POST /auth/login`) |
+| E5 | Pagamento é simulado: um diálogo e `marcarComoPago` local | `pagamento.dart:35-66` | Parcial: ver 3.6, fase 2 |
+| E6 | Horário livre (qualquer hora, inclusive 03:00), sem checar conflito | `novo_agendamento.dart:51-62` | Sim, com `GET /horarios` |
+| E8 | "Próximo agendamento" é o primeiro não concluído da lista, mesmo que a data já tenha passado | `repositorio.dart:119` | Sim, filtrando pela data que vem da API |
+| L1 | Agendamento com **um** serviço; o backend modela N (`agendamento_servico`) | `models/agendamento.dart` | Exige mudar a tela para seleção múltipla |
+| L2 | `Veiculo` **sem `marca`**, que é `NOT NULL` no banco | `models/veiculo.dart` | Exige campo novo no formulário |
+| L3 | Cancelar **remove** o item; no banco o status vira `CANCELADO` e o histórico fica | `repositorio.dart:94` | Sim, mostrando o status |
+| L4 | O botão de demonstração da tela Acompanhar deixa o **cliente** mudar o status do serviço | `acompanhar_servicos.dart:134` | Remover: só o colaborador muda (`/admin`) |
+| L5 | `id` de `Servico`, `Veiculo` e `Agendamento` é `String`; no banco é `INT` | `core/models/` | Trocar para `int` |
+| L6 | Sem tela de cadastro no app | — | Não precisa: o cadastro é no site (`/cadastro` → `/baixar-app`). Ver 2.3 |
+| L7 | Permissão `INTERNET` só nos manifests `debug/` e `profile/` | `android/app/src/` | Adicionar no `main/` antes do build *release* |
 
 ---
 
-## Parte 3: implantação de uma API para unir o backend Java + MySQL ao app Dart
+## Parte 2: o backend Java hoje
 
-### 3.1 Arquitetura proposta
+### 2.1 Estado geral
 
+- **Compila** (`mvn -o compile` sem erros, Java 25). Os problemas de visibilidade e de rota duplicada citados na versão anterior foram resolvidos.
+- **A camada de dados é só de DAOs** (`DAOCliente`, `DAOVeiculo`, `DAOServico`, `DAOAgendamento`, `DAOAtendimento`, `DAOPagamento`, `DAOColaborador`), com instâncias públicas e DTOs `record` em `model.dto`.
+- **Há um `Dockerfile` real:** build com Maven + Temurin 25, runtime `tomcat:10.1-jre25`, WAR publicado como `ROOT.war`, porta lida de `$PORT` (Render).
+- **`com.splash.web.api.Handler`** foi criado vazio, importando `com.sun.net.httpserver.HttpServer`. A seção 3.1 discute essa escolha.
+
+### 2.2 A área do cliente no site foi retirada
+
+Os últimos commits removeram de `WEB-INF/views` as telas do cliente. Hoje estes servlets fazem `forward` para JSPs que **não existem** e respondem erro:
+
+| Servlet | Rota | JSP que falta |
+| --- | --- | --- |
+| `LoginServlet` | `/login` | `/WEB-INF/views/login.jsp` |
+| `PortalServlet` | `/portal` | `/WEB-INF/views/portal.jsp` |
+| `VeiculoServlet` | `/veiculos` | `/WEB-INF/views/veiculos.jsp` |
+| `AgendamentoServlet` | `/agendamentos` | `/WEB-INF/views/agendamentos.jsp` |
+| `SetupAdminServlet` | `/setup/admin` | `/WEB-INF/views/setup-admin.jsp` (o arquivo está na raiz do `webapp/`) |
+
+Isso combina com o fluxo novo: o site faz **cadastro** (`/cadastro` → `/baixar-app`) e o **painel do colaborador** (`/admin/*`); a **área do cliente passa a ser o app**. Então a API não é um extra: ela substitui esses quatro primeiros servlets. Quando a API cobrir as mesmas operações, eles podem ser removidos (e o `openapi.yml` atualizado). `SetupAdminServlet` é do colaborador e precisa só do caminho corrigido.
+
+### 2.3 O que o app precisa x o que os DAOs já fazem
+
+| Necessidade do app | Método existente | Lacuna |
+| --- | --- | --- |
+| Login | `DAOCliente.autenticar(email, senha)` → `ClienteView` | O app entra por **CPF**. Falta `autenticarPorCpf` (ou o app passa a usar e-mail) |
+| Perfil | `DAOCliente.getusuario(id)` → `Cliente` | Devolve o model; a API deve montar a resposta sem expor campos internos |
+| Editar perfil | `DAOCliente.updateUsuarios(id, nome, telefone, email)` | — |
+| Cadastro | `new Cliente(...)` + `Passwords.hash` + `DAOCliente.insertUsuario` | Já existe no site; no app é opcional |
+| Serviços | `DAOServico.listar()` → `List<ServicoView>` | — |
+| Veículos | `DAOVeiculo.listarPorCliente`, `inserir`, `remover` | **Sem update** (o app edita veículo). `inserir` não remove o hífen: usar `Validacao.placa` antes |
+| Agendar | `DAOAgendamento.criar(idCliente, idVeiculo, data, horario, idsServicos)` | — (transação completa: serviços, atendimento e pagamento `PENDENTE`) |
+| Meus agendamentos | `DAOAgendamento.listarPorCliente` → `AgendamentoView` | Não traz os **nomes dos serviços** nem o **status do atendimento** que a tela Acompanhar usa |
+| Cancelar | `DAOAgendamento.cancelar(idCliente, id)` → `boolean` | — |
+| Horários livres | — | Falta `horariosOcupados(data)` e a regra de capacidade (o `UNIQUE` do banco é por veículo, não por box) |
+| Pagar | `DAOPagamento.atualizar(idPagamento, status, forma)` | É operação do colaborador. Para o cliente escolher a forma, falta um método restrito ao dono (fase 2) |
+
+Pela regra do `CLAUDE.md`, os métodos que faltam **não** foram criados agora; eles entram quando cada rota for implementada, na seção certa do DAO (`Listagem`, `Update`...).
+
+### 2.4 Equivalência de domínio Java ↔ Dart
+
+| Conceito | Java / banco | Dart hoje | Ação no app |
+| --- | --- | --- | --- |
+| Serviço | `ServicoView(int id, nome, descricao, BigDecimal preco)` | `Servico(String id, nome, descricao, double preco, icone)` | `id` → `int`; `preco` vem como número JSON |
+| Veículo | `VeiculoView(int id, placa, marca, modelo, cor)`; placa sem hífen | `Veiculo(String id, modelo, placa, cor)` | Adicionar `marca`; mostrar a placa com máscara |
+| Agendamento | `AgendamentoView(id, placa, veiculo, data, horario, status, total, statusPagamento, formaPagamento)` | `Agendamento(id, servico, veiculo, dataHora, status, pago)` | `servicos: List`, `total`, `status` |
+| Status do agendamento | `AGENDADO`, `CANCELADO`, `CONCLUIDO` | — | Enum Dart novo |
+| Status do atendimento | `AGUARDANDO`, `EM_LAVAGEM`, `FINALIZADO`, `ENTREGUE` | `StatusServico`: pendente, emAndamento, concluido | `AGUARDANDO`→pendente, `EM_LAVAGEM`→emAndamento, `FINALIZADO`/`ENTREGUE`→concluido (ou ganhar o 4º estado) |
+| Pagamento | `StatusPagamento` `PENDENTE`/`PAGO`/`CANCELADO`; `FormaPagamento` `DINHEIRO`/`PIX`/`CREDITO`/`DEBITO` | `bool pago`; forma como texto | `pago` = `statusPagamento == "PAGO"` |
+| Horário | `TIME` → `String` `"09:00:00"` | `DateTime dataHora` | Juntar `data` + `horario` no `fromJson` |
+
+---
+
+## Parte 3: a API para o mobile, em Java puro
+
+### 3.1 Servlet ou `com.sun.net.httpserver`?
+
+Os dois são "Java puro" (nenhum é framework). A diferença é **onde a API roda**:
+
+| Critério | **A. Servlets no mesmo WAR** (`jakarta.servlet`) | **B. `HttpServer` do JDK** (módulo `jdk.httpserver`) |
+| --- | --- | --- |
+| Onde roda | No Tomcat que já existe, mesma porta, mesmo deploy | Processo próprio, com `main` e porta própria |
+| Render | Funciona sem mudança: a API fica em `https://<app>.onrender.com/api/v1` | O Render expõe **uma** porta por serviço, a do Tomcat. Exige um segundo serviço (outro Dockerfile, outro custo/limite) ou trocar o Tomcat pelo `HttpServer` |
+| Rotas | `@WebServlet("/api/v1/veiculos/*")` + `getPathInfo()` | `server.createContext("/api/v1/veiculos", handler)` + `exchange.getRequestURI()` |
+| Filtros (auth, CORS) | `@WebFilter` / `HttpFilter` | `com.sun.net.httpserver.Filter` adicionado em cada `HttpContext` |
+| Corpo e cabeçalhos | `request.getInputStream()`, `getHeader`, `response.setStatus` | `exchange.getRequestBody()`, `getRequestHeaders()`, `sendResponseHeaders(status, tamanho)` |
+| Threads | Pool do Tomcat | Você define: `server.setExecutor(Executors.newVirtualThreadPerTaskExecutor())` |
+| Empacotamento | Nada muda (`mvn package` → WAR) | Precisa de um JAR executável com dependências (plugin `maven-shade` ou `maven-assembly`) além do WAR |
+| Reuso | DAOs, `Passwords`, `Validacao`, `EncodingFilter`, testes com Mockito | DAOs e `Validacao` sim; filtro de encoding e testes de servlet não |
+
+**Recomendação: A (Servlets no mesmo WAR).** Já é a tecnologia do projeto e da disciplina, não aumenta o deploy e os DAOs são chamados do mesmo jeito que nos servlets JSP. O `Handler.java` atual pode ser apagado (ou ficar só se a equipe escolher B).
+
+Se a equipe preferir B mesmo assim, o esqueleto é:
+
+```java
+public static void main(String[] args) throws IOException {
+    int porta = Integer.parseInt(System.getenv().getOrDefault("API_PORT", "8081"));
+    HttpServer server = HttpServer.create(new InetSocketAddress(porta), 0);
+    HttpContext veiculos = server.createContext("/api/v1/veiculos", new VeiculoHandler());
+    veiculos.getFilters().add(new AuthFilter());       // com.sun.net.httpserver.Filter
+    server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+    server.start();
+}
 ```
-┌────────────────────┐   HTTPS + JSON    ┌────────────────────────────────────────┐   JDBC   ┌─────────┐
-│  App Flutter       │ ────────────────> │  Tomcat (mesmo WAR SplashFast)         │ ───────> │  MySQL  │
-│  ApiClient (http)  │ <──────────────── │   /api/v1/*   -> Servlets REST (JSON)  │          │ lava_   │
-│  AuthRepository    │   Authorization:  │   /*.jsp, ... -> Servlets JSP (site)   │          │ rapido  │
-│  ServicoRepository │   Bearer <token>  │        │                │              │          └─────────┘
-│  ...               │                   │        └──── camada db (DAO/Repository)│
-└────────────────────┘                   └────────────────────────────────────────┘
-```
 
-**Recomendação: colocar a API no próprio projeto Java** (mesmo WAR e mesmo Tomcat), em um pacote novo `com.splash.web.api`, reaproveitando a camada `db` que já existe. Assim não há um segundo servidor para manter, e o site JSP e o app usam o mesmo banco e as mesmas regras.
+Nesse caso, o restante deste documento continua valendo; muda só a "casca" (`HttpExchange` no lugar de `HttpServletRequest/Response`).
 
-Para manter a stack da disciplina, a recomendação é **Servlets + Jackson** (sem Spring). Migrar para Spring Boot ou JAX-RS (Jersey) também resolveria, mas obriga a reescrever o que já funciona.
+### 3.2 Módulos e bibliotecas
 
-### 3.2 Pré-requisitos no backend (fazer antes)
+**Do JDK 25 (nada a instalar)**
 
-1. **Fazer o projeto compilar:** tornar `public` a classe `ClienteRepository` e os métodos de `LavaRapidoRepository` usados fora do pacote (ou, melhor, terminar a migração para os DAOs `DAOCliente`, `DAOVeiculo` e `DAOAgendamento` e deixá-los públicos).
-2. **Resolver o conflito de `/cadastro`:** apagar ou renomear um dos dois servlets.
-3. **Escolher uma única camada de dados.** A sugestão é mover a lógica de `LavaRapidoRepository` para os DAOs vazios e depois remover o repositório antigo.
-4. **Login por CPF:** adicionar `autenticarClientePorCpf(cpf, senha)` (`SELECT ... WHERE cpf = ?`; a coluna já é `UNIQUE`) ou aceitar um campo `login` que pode ser e-mail ou CPF.
+| Módulo / pacote | Uso na API |
+| --- | --- |
+| `java.base` → `java.time` | `LocalDate`, `LocalTime`, `Instant`, `Duration` (datas do agendamento, expiração do token) |
+| `java.base` → `java.util.Base64` | Codificação *base64url* do token |
+| `java.base` → `javax.crypto.Mac`, `SecretKeySpec` | Assinatura HMAC-SHA256 do token |
+| `java.base` → `java.security.MessageDigest` | `MessageDigest.isEqual` para comparar assinaturas em tempo constante |
+| `java.base` → `java.security.SecureRandom` | Gerar segredos ou tokens opacos, se a equipe preferir |
+| `java.base` → `java.util.concurrent` | *Virtual threads* (só na opção B) |
+| `java.sql` | JDBC, já usado pelos DAOs; `SQLIntegrityConstraintViolationException` → 409 |
+| `java.net.http` | `HttpClient` para testes de ponta a ponta da API em Java (alternativa ao `curl`) |
+| `jdk.httpserver` | `com.sun.net.httpserver.*`, **só na opção B** |
 
-### 3.3 Dependências (pom.xml)
+**Da API Jakarta Servlet 6.1 (o Tomcat 10.1 já fornece; `provided` no `pom.xml`)**
+
+`HttpServlet` (`doGet`/`doPost`/`doPut`/`doDelete`), `@WebServlet`, `HttpFilter` + `@WebFilter`, `HttpServletRequest#getPathInfo`, `getInputStream`, `getHeader`, `setAttribute`, e `@WebListener` + `ServletContextListener` (para falhar no deploy se `JWT_SECRET` não existir).
+
+**Já no `pom.xml`**
+
+| Biblioteca | Uso na API |
+| --- | --- |
+| `mysql-connector-j` 9.7.0 | Driver JDBC (DAOs) |
+| `jbcrypt` 0.4 (via `security.Passwords`) | Conferir a senha no login |
+| `dotenv-java` 3.2.0 | Configuração do banco; o `JWT_SECRET` segue o padrão de `INITIAL_ADMIN_TOKEN` (`System.getenv`) |
+| `junit-jupiter` 6.0.3 + `mockito-junit-jupiter` 5.23.0 | Testes dos servlets da API com `HttpServletRequest`/`Response` mockados, como em `DAOClienteTest` |
+
+**A adicionar**
+
+| Biblioteca | Versão (Maven Central, 22/10/2026) | Por quê | Alternativas |
+| --- | --- | --- | --- |
+| `com.fasterxml.jackson.core:jackson-databind` | 2.22.4 | Ler e escrever JSON. Serializa os `record` de `model.dto` direto e lê o corpo das requisições em `record`s. Escrever um *parser* JSON à mão não compensa | `gson` 2.14.0 (mais simples, precisa de adaptador para `LocalDate`); JSON-B com `org.eclipse:yasson` 3.0.5 (padrão Jakarta); Jackson 3 (`tools.jackson.core:jackson-databind` 3.2.4, já trata `java.time`, mas tem menos material de estudo) |
+| `com.fasterxml.jackson.datatype:jackson-datatype-jsr310` | 2.22.4 | `LocalDate`/`LocalTime` como `"2026-10-20"` / `"09:00"` | — |
 
 ```xml
-<!-- Serialização JSON -->
+<!-- API JSON para o app mobile -->
 <dependency>
     <groupId>com.fasterxml.jackson.core</groupId>
     <artifactId>jackson-databind</artifactId>
-    <version>2.18.2</version>
+    <version>2.22.4</version>
 </dependency>
-<dependency>  <!-- suporte a LocalDate/LocalTime -->
+<dependency>
     <groupId>com.fasterxml.jackson.datatype</groupId>
     <artifactId>jackson-datatype-jsr310</artifactId>
-    <version>2.18.2</version>
-</dependency>
-<!-- Token JWT para o app (stateless) -->
-<dependency>
-    <groupId>com.auth0</groupId>
-    <artifactId>java-jwt</artifactId>
-    <version>4.4.0</version>
+    <version>2.22.4</version>
 </dependency>
 ```
 
-### 3.4 Autenticação
+**Opcionais**
 
-O app não deve depender de `JSESSIONID`. A proposta é usar um **JWT**:
+| Biblioteca | Quando usar |
+| --- | --- |
+| `com.auth0:java-jwt` 4.6.2 | Se a equipe não quiser escrever o JWT à mão (3.4). Faz o mesmo com menos código próprio |
+| `com.zaxxer:HikariCP` 7.1.0 | Pool de conexões. Hoje cada chamada de DAO abre uma conexão nova pelo `DriverManager`; com o app gerando mais requisições, um pool reduz a latência. Mudaria só o `DatabaseConnection` |
 
-1. `POST /api/v1/auth/login` com `{ "cpf": "52998224725", "senha": "..." }`.
-2. O backend confere com `Passwords.matches` (BCrypt, que já existe) e devolve `{ "token": "eyJ...", "cliente": { "id": 1, "nome": "...", ... } }`.
-3. O token é assinado com HMAC (segredo em variável de ambiente `JWT_SECRET`, lido pelo `dotenv` que o projeto já usa), carrega `sub = id_cliente` e expira em algumas horas.
-4. Um **`ApiAuthFilter`** (`@WebFilter("/api/v1/*")`) valida o header `Authorization: Bearer <token>` em todas as rotas, exceto `/auth/*` e `GET /servicos`, e coloca o `idCliente` em `request.setAttribute("idCliente", ...)`.
-5. **O `idCliente` vem sempre do token, nunca do corpo da requisição.** Os métodos existentes já recebem `idCliente` (`listarVeiculos(idCliente)`, `cancelarAgendamento(idCliente, id)`), então um cliente não consegue mexer em dados de outro.
+**Não usar:** Spring / Spring Boot, JAX-RS (Jersey, RESTEasy), Lombok. Nenhum é necessário para o tamanho desta API.
 
-No app, o token fica salvo com `flutter_secure_storage`, que substitui o `Sessao.cpf`.
+### 3.3 Estrutura do pacote `com.splash.web.api`
+
+```
+api/
+  Json.java                 ObjectMapper único; ler(corpo), enviar(status, objeto), erro(status, mensagem)
+  Tokens.java               emitir(idCliente) e validar(token): JWT HS256 com javax.crypto
+  ApiAuthFilter.java        @WebFilter("/api/v1/*"): valida "Authorization: Bearer", põe idCliente no request
+  ApiSupport.java           segmentos do getPathInfo(), conversão de exceções em HTTP (tabela 3.7)
+  AuthApiServlet.java       /api/v1/auth/*          login (e cadastro, se o app tiver a tela)
+  PerfilApiServlet.java     /api/v1/me
+  ServicoApiServlet.java    /api/v1/servicos
+  VeiculoApiServlet.java    /api/v1/veiculos/*
+  AgendamentoApiServlet.java /api/v1/agendamentos/*
+  HorarioApiServlet.java    /api/v1/horarios
+  requisicao/               records de ENTRADA: LoginRequisicao, NovoVeiculo, NovoAgendamento...
+```
+
+Regras que seguem o `CLAUDE.md`:
+
+- Os servlets da API **chamam os DAOs direto**, como os servlets JSP (`new DAOVeiculo().listarPorCliente(id)`).
+- As **respostas** usam os DTOs de `model.dto` (`ServicoView`, `VeiculoView`, `AgendamentoView`...). O Jackson lê os `record` pelos componentes, e os getters `getX()` criados para o EL dão o mesmo nome de propriedade, então o JSON sai igual.
+- As **entradas** (corpo JSON) são `record`s próprios em `api.requisicao`, **nunca** os DTOs de `model.dto`. O servlet converte a entrada em argumentos do DAO ou em model (`new Cliente(...)`, que valida via `Validacao`).
+- Código, nomes e mensagens em português.
+
+### 3.4 Autenticação sem sessão (JWT HS256 com o JDK)
+
+O app não usa cookie `JSESSIONID`. Fluxo:
+
+1. `POST /api/v1/auth/login` com `{"cpf": "52998224725", "senha": "..."}`.
+2. O DAO confere com `Passwords.matches` e devolve `ClienteView`; a API responde `{"token": "...", "cliente": {"id": 1, "nome": "...", "email": "..."}}`.
+3. O app manda `Authorization: Bearer <token>` em toda chamada. O `ApiAuthFilter` libera sem token só `/api/v1/auth/*`, `GET /api/v1/servicos` e `OPTIONS`.
+4. **O `idCliente` vem sempre do token, nunca do corpo.** Os DAOs já recebem `idCliente` (`listarPorCliente`, `remover(idCliente, idVeiculo)`, `cancelar(idCliente, id)`), então um cliente não altera dados de outro.
+
+Token feito só com o JDK (`Tokens.java`):
+
+```java
+final class Tokens {
+
+    private static final Base64.Encoder B64 = Base64.getUrlEncoder().withoutPadding();
+    private static final Base64.Decoder B64D = Base64.getUrlDecoder();
+    private static final String CABECALHO = B64.encodeToString(
+            "{\"alg\":\"HS256\",\"typ\":\"JWT\"}".getBytes(StandardCharsets.UTF_8));
+    private static final Duration VALIDADE = Duration.ofHours(12);
+
+    static String emitir(int idCliente) {
+        long expira = Instant.now().plus(VALIDADE).getEpochSecond();
+        String corpo = B64.encodeToString(("{\"sub\":" + idCliente + ",\"exp\":" + expira + "}")
+                .getBytes(StandardCharsets.UTF_8));
+        String conteudo = CABECALHO + "." + corpo;
+        return conteudo + "." + B64.encodeToString(assinar(conteudo));
+    }
+
+    // Devolve o id do cliente, ou null se o token for inválido ou estiver expirado
+    static Integer validar(String token) {
+        try {
+            String[] partes = token.split("\\.");
+            if (partes.length != 3 || !partes[0].equals(CABECALHO)) {
+                return null;
+            }
+            byte[] esperada = assinar(partes[0] + "." + partes[1]);
+            if (!MessageDigest.isEqual(esperada, B64D.decode(partes[2]))) {   // tempo constante
+                return null;
+            }
+            JsonNode claims = Json.MAPPER.readTree(B64D.decode(partes[1]));
+            if (claims.path("exp").asLong() < Instant.now().getEpochSecond()) {
+                return null;
+            }
+            return claims.path("sub").asInt();
+        } catch (IllegalArgumentException | IOException exception) {
+            return null;
+        }
+    }
+
+    private static byte[] assinar(String conteudo) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(segredo(), "HmacSHA256"));
+            return mac.doFinal(conteudo.getBytes(StandardCharsets.UTF_8));
+        } catch (GeneralSecurityException exception) {
+            throw new IllegalStateException("Falha ao assinar o token.", exception);
+        }
+    }
+
+    private static byte[] segredo() {
+        String valor = System.getenv("JWT_SECRET");
+        if (valor == null || valor.length() < 32) {
+            throw new IllegalStateException("Defina JWT_SECRET com ao menos 32 caracteres.");
+        }
+        return valor.getBytes(StandardCharsets.UTF_8);
+    }
+}
+```
+
+- `JWT_SECRET`: gerar com `openssl rand -base64 48`, configurar no Render e localmente, e registrar em `miscelaneous/variaveis-de-ambiente.md`. Trocar o segredo desloga todo mundo.
+- Um `@WebListener` pode chamar `Tokens.emitir(0)` no `contextInitialized` para o deploy falhar logo se o segredo faltar, em vez de falhar no primeiro login.
+- Alternativa equivalente: `com.auth0:java-jwt` (`JWT.create().withSubject(...).withExpiresAt(...).sign(Algorithm.HMAC256(segredo))`).
+- Login por CPF: adicionar `DAOCliente.autenticarPorCpf(cpf, senha)` na seção de Listagem, igual a `autenticar` mas com `WHERE cpf = ?` (coluna já `UNIQUE`). Normalizar o CPF para só dígitos antes da consulta.
 
 ### 3.5 Endpoints (v1, área do cliente)
 
-| Método | Rota | Corpo / resposta | Usa (Java) | Substitui (Dart) |
+Base: `/api/v1`. Corpo e resposta em `application/json; charset=UTF-8`. Datas `yyyy-MM-dd`, horários `HH:mm`.
+
+| Método | Rota | Corpo → resposta | DAO | Substitui no app |
 | --- | --- | --- | --- | --- |
-| POST | `/api/v1/auth/cadastro` | `{nome, cpf, telefone, email, senha}` → `201` | `cadastrarCliente` | *(tela nova)* |
-| POST | `/api/v1/auth/login` | `{cpf, senha}` → `{token, cliente}` | `autenticarCliente*` | `LoginCliente._entrar` |
-| GET | `/api/v1/me` | → `{id, nome, cpf, telefone, email}` | `DAOCliente.getusuario` | nome fixo do Perfil |
-| PATCH | `/api/v1/me` | `{nome?, telefone?, email?}` | `DAOCliente.updateUsuarios` | *(novo)* |
-| GET | `/api/v1/servicos` | → `[{id, nome, descricao, preco}]` | `listarServicos` | `Repositorio.servicos` |
-| GET | `/api/v1/veiculos` | → `[{id, placa, marca, modelo, cor}]` | `listarVeiculos` | `Repositorio.veiculos` |
-| POST | `/api/v1/veiculos` | `{placa, marca, modelo, cor}` → `201` | `adicionarVeiculo` | `adicionarVeiculo` |
-| DELETE | `/api/v1/veiculos/{id}` | → `204` | `removerVeiculo` | *(novo)* |
-| GET | `/api/v1/agendamentos` | → `[{id, placa, veiculo, data, horario, status, total, statusPagamento, formaPagamento}]` | `listarAgendamentosCliente` | `Repositorio.agendamentos` |
-| POST | `/api/v1/agendamentos` | `{idVeiculo, data: "2026-10-20", horario: "09:00", idsServicos: [1,2]}` → `201` | `criarAgendamento` | `adicionarAgendamento` |
-| POST | `/api/v1/agendamentos/{id}/cancelar` | → `204` | `cancelarAgendamento` | `cancelarAgendamento` |
-| GET | `/api/v1/horarios?data=2026-10-20` | → `["08:00","08:30",...]` livres | *(novo método)* | corrige o E6 |
+| POST | `/auth/login` | `{cpf, senha}` → `200 {token, cliente}` | `DAOCliente.autenticarPorCpf` *(novo)* | senha fixa em `LoginCliente` |
+| POST | `/auth/cadastro` *(opcional)* | `{nome, cpf, telefone, email, senha}` → `201` | `new Cliente(...)` + `insertUsuario` | — (hoje o cadastro é no site) |
+| GET | `/me` | → `{id, nome, cpf, telefone, email}` | `DAOCliente.getusuario` | nome fixo do Perfil |
+| PATCH | `/me` | `{nome, telefone, email}` → `204` | `DAOCliente.updateUsuarios` | *(novo)* |
+| GET | `/servicos` *(pública)* | → `[{id, nome, descricao, preco}]` | `DAOServico.listar` | `Repositorio.definirServicos` |
+| GET | `/veiculos` | → `[{id, placa, marca, modelo, cor}]` | `DAOVeiculo.listarPorCliente` | `Repositorio.veiculos` |
+| POST | `/veiculos` | `{placa, marca, modelo, cor}` → `201` | `Validacao.placa` + `DAOVeiculo.inserir` | `adicionarVeiculo` |
+| PUT | `/veiculos/{id}` | `{placa, marca, modelo, cor}` → `204` | `DAOVeiculo` update *(novo)* | `atualizarVeiculo` |
+| DELETE | `/veiculos/{id}` | → `204`; `409` se tiver agendamento | `DAOVeiculo.remover` | `removerVeiculo` |
+| GET | `/agendamentos` | → `[{id, placa, veiculo, data, horario, status, total, statusPagamento, formaPagamento}]` | `DAOAgendamento.listarPorCliente` | `Repositorio.agendamentos` |
+| POST | `/agendamentos` | `{idVeiculo, data, horario, idsServicos: [1,2]}` → `201` | `DAOAgendamento.criar` | `adicionarAgendamento` |
+| POST | `/agendamentos/{id}/cancelar` | → `204`; `409` se não estiver `AGENDADO` | `DAOAgendamento.cancelar` | `cancelarAgendamento` |
+| GET | `/horarios?data=2026-10-23` | → `["08:00","08:30",...]` | *(novo)* | corrige E6 |
 
-Uma fase 2, se houver tempo, pode incluir pagamento (`PUT /agendamentos/{id}/pagamento {forma}`) e rotas de colaborador (`/api/v1/colaborador/*` com `NivelAcesso`), reaproveitando `listarAtendimentos` e `atualizarAtendimento`.
+Ajustes de DAO pedidos por esses endpoints:
 
-### 3.6 Padrão de servlet REST
+1. **`AgendamentoView` + `listarPorCliente`:** incluir `servicos` (`GROUP_CONCAT(s.nome)`) e `statusAtendimento` (`LEFT JOIN atendimento`). Só **acrescenta** componentes e getters, então as JSPs do painel não mudam.
+2. **`DAOVeiculo`:** update restrito ao dono (`WHERE id_cliente = ? AND id_veiculo = ?`).
+3. **Exclusão de veículo:** o banco usa `ON DELETE RESTRICT` em `agendamento`, então um veículo com **qualquer** agendamento (mesmo concluído ou cancelado) não sai: a API responde 409. A regra do app ("só bloqueia se houver serviço não concluído") precisa seguir a do banco.
+4. **Horários:** definir a regra (funcionamento, intervalo, quantos carros por horário). O `UNIQUE (id_veiculo, data, horario)` impede só o mesmo carro duas vezes no mesmo horário.
+
+**Fase 2:** `PUT /agendamentos/{id}/pagamento {forma}` (cliente escolhe a forma; o colaborador confirma `PAGO` no painel) e rotas do colaborador (`/api/v1/colaborador/*`, com o nível de acesso no token), reaproveitando `DAOAtendimento` e `DAOPagamento`.
+
+### 3.6 Padrão de código
+
+`Json.java`:
 
 ```java
-package com.splash.web.api;
+public final class Json {
 
-@WebServlet("/api/v1/veiculos/*")
-public class VeiculoApiServlet extends HttpServlet {
+    static final ObjectMapper MAPPER = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
+
+    private Json() {
+    }
+
+    static <T> T ler(HttpServletRequest request, Class<T> tipo) throws IOException {
+        try {
+            return MAPPER.readValue(request.getInputStream(), tipo);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalArgumentException("JSON inválido.");
+        }
+    }
+
+    static void enviar(HttpServletResponse response, int status, Object corpo) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        MAPPER.writeValue(response.getOutputStream(), corpo);
+    }
+
+    static void erro(HttpServletResponse response, int status, String mensagem) throws IOException {
+        enviar(response, status, Map.of("erro", mensagem));
+    }
+}
+```
+
+`ApiAuthFilter.java`:
+
+```java
+@WebFilter("/api/v1/*")
+public class ApiAuthFilter extends HttpFilter {
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        int idCliente = (int) req.getAttribute("idCliente");   // posto pelo ApiAuthFilter
+    protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        String rota = request.getRequestURI().substring(request.getContextPath().length());
+        if (rotaPublica(request.getMethod(), rota)) {
+            chain.doFilter(request, response);
+            return;
+        }
+        String cabecalho = request.getHeader("Authorization");
+        Integer idCliente = cabecalho != null && cabecalho.startsWith("Bearer ")
+                ? Tokens.validar(cabecalho.substring(7)) : null;
+        if (idCliente == null) {
+            Json.erro(response, HttpServletResponse.SC_UNAUTHORIZED, "Sessão expirada. Entre novamente.");
+            return;
+        }
+        request.setAttribute("idCliente", idCliente);
+        chain.doFilter(request, response);
+    }
+
+    private static boolean rotaPublica(String metodo, String rota) {
+        return "OPTIONS".equals(metodo) || rota.startsWith("/api/v1/auth/")
+                || ("GET".equals(metodo) && rota.equals("/api/v1/servicos"));
+    }
+}
+```
+
+`AgendamentoApiServlet.java` (resumo):
+
+```java
+@WebServlet("/api/v1/agendamentos/*")
+public class AgendamentoApiServlet extends HttpServlet {
+
+    record NovoAgendamento(Integer idVeiculo, LocalDate data, LocalTime horario, List<Integer> idsServicos) {
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int idCliente = (int) request.getAttribute("idCliente");
         try {
-            Json.ok(resp, LavaRapidoRepository.listarVeiculos(idCliente));
-        } catch (SQLException e) {
-            Json.erro(resp, 500, "Erro ao acessar o banco.");
+            Json.enviar(response, 200, new DAOAgendamento().listarPorCliente(idCliente));
+        } catch (SQLException exception) {
+            ApiSupport.erroBanco(request, response, exception);
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        int idCliente = (int) req.getAttribute("idCliente");
-        NovoVeiculoDto dto = Json.ler(req, NovoVeiculoDto.class);
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int idCliente = (int) request.getAttribute("idCliente");
+        String[] partes = ApiSupport.segmentos(request);   // "" -> [], "/12/cancelar" -> ["12", "cancelar"]
         try {
-            LavaRapidoRepository.adicionarVeiculo(idCliente, dto.placa(), dto.marca(), dto.modelo(), dto.cor());
-            resp.setStatus(201);
-        } catch (IllegalArgumentException e) {           // validação do model
-            Json.erro(resp, 400, e.getMessage());
-        } catch (SQLIntegrityConstraintViolationException e) {  // placa duplicada
-            Json.erro(resp, 409, "Placa já cadastrada.");
-        } catch (SQLException e) {
-            Json.erro(resp, 500, "Erro ao acessar o banco.");
+            if (partes.length == 0) {
+                NovoAgendamento corpo = Json.ler(request, NovoAgendamento.class);
+                if (corpo.idVeiculo() == null || corpo.data() == null || corpo.horario() == null
+                        || corpo.data().isBefore(LocalDate.now()) || corpo.idsServicos() == null) {
+                    throw new IllegalArgumentException("Selecione um veículo, ao menos um serviço e uma data válida.");
+                }
+                new DAOAgendamento().criar(idCliente, corpo.idVeiculo(), corpo.data(),
+                        corpo.horario().toString(), corpo.idsServicos());
+                response.setStatus(HttpServletResponse.SC_CREATED);
+            } else if (partes.length == 2 && "cancelar".equals(partes[1])) {
+                Integer id = ApiSupport.inteiro(partes[0]);
+                if (id == null || !new DAOAgendamento().cancelar(idCliente, id)) {
+                    Json.erro(response, 409, "Agendamento não encontrado ou não pode mais ser cancelado.");
+                    return;
+                }
+                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            } else {
+                Json.erro(response, 404, "Rota não encontrada.");
+            }
+        } catch (IllegalArgumentException exception) {
+            Json.erro(response, 400, exception.getMessage());
+        } catch (SQLException exception) {
+            ApiSupport.erroBanco(request, response, exception);   // SQLState 23xxx -> 409, resto -> 500
         }
     }
 }
 ```
 
-`Json` é um helper com um `ObjectMapper` único (com `JavaTimeModule` registrado e `WRITE_DATES_AS_TIMESTAMPS` desligado), que escreve `application/json; charset=UTF-8` e erros no formato padrão `{ "erro": "mensagem" }`. Os `record` que já existem em `LavaRapidoRepository` (`Veiculo`, `Servico`, `Agendamento`...) são serializados direto pelo Jackson.
+A validação de entrada repete a de `AgendamentoServlet`. Se os dois continuarem existindo, vale extrair essa checagem para um método comum; se o servlet JSP for removido (2.2), o problema some.
 
-**Mapeamento de erros (igual em toda a API):**
+### 3.7 Mapeamento de erros (igual em toda a API)
 
-| Exceção Java | HTTP |
+Formato: `{"erro": "mensagem para o usuário"}`.
+
+| Situação | HTTP |
 | --- | --- |
-| `IllegalArgumentException` (validação em `Validacao`) | 400 |
-| Token ausente ou inválido | 401 |
-| Recurso de outro cliente | 404 (não revela que o recurso existe) |
-| `SQLIntegrityConstraintViolationException` (CPF, e-mail ou placa duplicados; horário ocupado) | 409 |
+| `IllegalArgumentException` (JSON inválido, `Validacao`, regra do DAO) | 400 |
+| Token ausente, inválido ou expirado | 401 |
+| Recurso de outro cliente ou id inexistente | 404 (não revela que o recurso existe) |
+| `SQLException` com SQLState `23xxx` (CPF/e-mail/placa duplicados, veículo com agendamento, horário ocupado) | 409 |
+| `cancelar` devolve `false` (já cancelado ou concluído) | 409 |
 | `IllegalStateException` (transição de status inválida) | 422 |
-| `SQLException` genérica | 500 |
+| Outra `SQLException` | 500, com `getServletContext().log(...)` como em `WebSupport.erroBanco` |
 
-**CORS:** um filtro que responde `OPTIONS` e envia `Access-Control-Allow-Origin` só é necessário se o app também rodar como **Flutter Web**. Android e iOS nativos não usam CORS.
+**CORS:** só é necessário se o app rodar como **Flutter Web**. Android e iOS nativos não usam CORS. Se precisar, um `@WebFilter("/api/v1/*")` que responde `OPTIONS` e envia `Access-Control-Allow-Origin` / `-Headers: Authorization, Content-Type`.
 
-### 3.7 Mudanças no app Flutter
+### 3.8 Mudanças no app Flutter
 
-1. **`pubspec.yaml`:** adicionar `http`, `flutter_secure_storage` e `intl` (para a data ISO), e corrigir a restrição de SDK (E1).
-2. **Configuração da URL base** por `--dart-define`:
+1. **Pacotes:** `flutter pub add http flutter_secure_storage` (versões atuais do pub.dev). JSON usa `dart:convert` (já vem no SDK). Corrigir o SDK para `^3.13.0` (E1).
+2. **URL base por `--dart-define`:**
    ```dart
    const apiBaseUrl = String.fromEnvironment('API_URL',
-       defaultValue: 'http://10.0.2.2:8080/SplashFast/api/v1'); // 10.0.2.2 = localhost do PC visto do emulador Android
+       defaultValue: 'http://10.0.2.2:8080/SplashFast/api/v1'); // 10.0.2.2 = localhost do PC visto pelo emulador
    ```
-   No celular físico, use o IP do PC na rede local (`flutter run --dart-define=API_URL=http://192.168.0.10:8080/SplashFast/api/v1`).
-3. **`core/api/api_client.dart`:** um wrapper de `http.Client` que adiciona `Authorization: Bearer`, faz `jsonDecode`, converte respostas que não são 2xx em uma `ApiException(status, mensagem)` e, no 401, apaga o token e volta para o login.
-4. **Models com `fromJson`/`toJson`:**
-   - `Servico`: `id` vira `int`, `preco` vem de string ou num, e o ícone sai do model (um mapa `id`/nome → `IconData` na camada de UI).
-   - `Veiculo`: ganha `id` e `marca`.
-   - `Agendamento`: ganha `id`, `status` (enum Dart espelhando `StatusAgendamento`), `servicos: List<Servico>`, `total`, `statusPagamento`.
-5. **Trocar o `Repositorio` estático por repositórios assíncronos** (`AuthRepository`, `ServicoRepository`, `VeiculoRepository`, `AgendamentoRepository`). Para continuar no padrão atual, cada repositório pode manter o `ValueNotifier` e ganhar um `Future<void> carregar()` que preenche a lista a partir da API. As telas quase não mudam; só precisam tratar carregando/erro (`FutureBuilder` ou um `bool carregando`).
-6. **Telas:**
-   - `LoginCliente`: chamar `AuthRepository.login`, mostrar a mensagem do servidor e remover `_senhaDemo`.
-   - Criar a tela **Cadastro** (nome, CPF, telefone, e-mail, senha), reaproveitando `Cpf` e `CpfInputFormatter`.
-   - `NovoAgendamento`: permitir vários serviços (`FilterChip`) e buscar os horários livres.
-   - `Agendamentos`: mostrar o status com as cores do `AppTheme`; cancelar passa a chamar a API, e o item continua na lista como CANCELADO.
-   - `MeusVeiculos`: campo **Marca** e exclusão.
-   - `InicioCliente`: trocar *Ir para pagamento* por *Agendar este serviço*, que abre `NovoAgendamento` com o serviço já marcado (resolve o E4).
-   - Logout: apagar o token **e** limpar todos os repositórios (resolve o E2).
-7. **Android:**
-   - Adicionar `<uses-permission android:name="android.permission.INTERNET"/>` em `android/app/src/main/AndroidManifest.xml` (hoje a permissão só existe em debug e profile).
-   - Enquanto a API estiver em `http://` (sem TLS), usar `android:usesCleartextTraffic="true"` **só em debug**. Em produção, usar HTTPS.
+   Celular físico: IP do PC na rede (`--dart-define=API_URL=http://192.168.0.10:8080/SplashFast/api/v1`). Render: `https://<app>.onrender.com/api/v1` (WAR como `ROOT.war`, sem `/SplashFast`).
+3. **`core/api/api_client.dart`:** envolve `http.Client`, adiciona `Authorization: Bearer`, decodifica JSON, transforma não-2xx em `ApiException(status, erro)` e, no 401, apaga o token e volta ao login. Timeout generoso (cerca de 60 s): o Render gratuito "dorme" e a primeira chamada demora.
+4. **Models com `fromJson`:** `id` como `int` em todos; `Veiculo.marca`; `Agendamento` com `servicos`, `total`, `status`, `statusAtendimento` (→ `StatusServico`) e `pago` derivado de `statusPagamento`.
+5. **`Repositorio`:** manter os `ValueNotifier` e trocar os métodos síncronos por `Future`s que chamam a API e depois atualizam a lista (`carregarServicos`, `carregarVeiculos`, `carregarAgendamentos`). As telas continuam com `ValueListenableBuilder` e ganham estado de carregando/erro.
+6. **`Sessao`:** guardar o token no `flutter_secure_storage` em vez de `Sessao.cpf`; logout apaga o token **e** limpa os repositórios (E2).
+7. **Telas:** `LoginCliente` chama a API e mostra a mensagem do servidor; `NovoAgendamento` com vários serviços e horários de `GET /horarios`; `Agendamentos` mostra o status em vez de remover; `MeusVeiculos` com campo **Marca**; `AcompanharServicos` sem o botão de mudar status (L4); `Pagamento` deixa de marcar como pago localmente.
+8. **Android:** `<uses-permission android:name="android.permission.INTERNET"/>` em `android/app/src/main/AndroidManifest.xml`. Enquanto o teste local for em `http://`, `android:usesCleartextTraffic="true"` **só no manifest de debug**; produção (Render) já é HTTPS.
 
-### 3.8 Implantação (infraestrutura)
+### 3.9 Implantação
 
-**Desenvolvimento local**
+| Ambiente | URL da API | Observações |
+| --- | --- | --- |
+| Tomcat local (`webapps/SplashFast.war`) | `http://localhost:8080/SplashFast/api/v1` | `.env` em `/var/lib/tomcat10` (ver `CLAUDE.md`); exportar `JWT_SECRET` no ambiente do Tomcat |
+| Docker local (`docker build -t splashfast .`) | `http://localhost:10000/api/v1` | `docker run -p 10000:10000 -e ENV_DEV=PROD -e PROD_DB_URL=... -e JWT_SECRET=... splashfast` |
+| Render | `https://<app>.onrender.com/api/v1` | Adicionar `JWT_SECRET` nas variáveis do serviço. Nenhuma mudança no `Dockerfile` (opção A) |
 
-1. Rodar MySQL com `database/schema.sql` + `database/seed.sql`.
-2. Preencher o `.env` (`ENV_DEV=LOCAL`, `LOCAL_DB_URL`, `LOCAL_USER`, `LOCAL_PASS`, `JWT_SECRET`).
-3. `mvn package` → copiar `target/SplashFast.war` para o `webapps/` do Tomcat 11 (Jakarta Servlet 6.1).
-4. `flutter run --dart-define=API_URL=...`.
+Na opção B (`HttpServer`), seria preciso um segundo serviço no Render com outro `Dockerfile` rodando `java -jar api.jar`.
 
-**Docker (substitui o `Dockerfile` placeholder)**
+### 3.10 Testes
 
-```dockerfile
-# Build
-FROM maven:3.9-eclipse-temurin-21 AS build
-WORKDIR /app
-COPY pom.xml .
-RUN mvn -q dependency:go-offline
-COPY src ./src
-RUN mvn -q package -DskipTests
+- **Servlets da API:** JUnit + Mockito, mockando `HttpServletRequest`/`HttpServletResponse` (corpo via `getInputStream`, saída num `ByteArrayOutputStream`) e `mockStatic(DatabaseConnection.class)` como em `DAOClienteTest`.
+- **`Tokens`:** emitir/validar, token adulterado, token expirado, segredo ausente.
+- **Ponta a ponta:** `curl` ou `java.net.http.HttpClient` contra o Tomcat local com o `seed.sql` (ver `teste-ponta-a-ponta-tomcat-local.md`).
 
-# Runtime
-FROM tomcat:11.0-jdk21-temurin
-RUN rm -rf /usr/local/tomcat/webapps/*
-COPY --from=build /app/target/SplashFast.war /usr/local/tomcat/webapps/ROOT.war
-EXPOSE 8080
-```
+### 3.11 Ordem sugerida
 
-```yaml
-# docker-compose.yml
-services:
-  db:
-    image: mysql:8.4
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
-      MYSQL_DATABASE: lava_rapido
-    volumes:
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
-      - dbdata:/var/lib/mysql
-  api:
-    build: .
-    ports: ["8080:8080"]
-    environment:
-      ENV_DEV: PROD
-      PROD_DB_URL: jdbc:mysql://db:3306/lava_rapido
-      PROD_USER: root
-      PROD_PASS: ${DB_ROOT_PASS}
-      JWT_SECRET: ${JWT_SECRET}
-    depends_on: [db]
-volumes:
-  dbdata:
-```
-
-Observação: o `DatabaseConnection` lê as variáveis com `dotenv-java`, configurado com `ignoreIfMissing()`. Por padrão, o `dotenv-java` também consulta as variáveis de ambiente do sistema, então as `environment:` do compose funcionam sem `.env` dentro do container.
-
-Como o WAR é publicado como `ROOT.war`, a URL do app fica `https://<host>/api/v1`. Para produção, coloque um proxy reverso com TLS (Caddy/Nginx) na frente do Tomcat, ou use uma plataforma que já entrega HTTPS (Railway, Render, Fly.io).
-
-### 3.9 Ordem sugerida de execução
-
-1. Corrigir a compilação do backend e o conflito de `/cadastro` (seção 2.3).
-2. Adicionar Jackson, o helper `Json`, `ApiAuthFilter` e JWT.
-3. Implementar `auth/login`, `auth/cadastro` e `servicos`, e testar com `curl` ou Postman. Documentar no `miscelaneous/openapi.yml`, que hoje cobre só as rotas JSP.
-4. No app: `ApiClient`, login real, tela de cadastro e serviços vindos da API.
-5. Veículos (com marca) e depois agendamentos (multi-serviço, status, horários livres).
-6. Dockerfile + docker-compose, e permissão de INTERNET no manifest principal.
-7. Fase 2: pagamento e área do colaborador.
+1. Decidir A ou B (recomendado A) e apagar ou adaptar `api/Handler.java`.
+2. Adicionar Jackson ao `pom.xml`; criar `Json`, `Tokens`, `ApiAuthFilter`, `ApiSupport`; configurar `JWT_SECRET`.
+3. `DAOCliente.autenticarPorCpf` + `POST /auth/login` + `GET /servicos`; testar com `curl`. No app: `ApiClient`, login real e serviços da API.
+4. Veículos (com marca e update) e `GET /me`.
+5. Agendamentos: estender `AgendamentoView`, criar/listar/cancelar; depois `GET /horarios`.
+6. Documentar as rotas `/api/v1/*` no `openapi.yml` e remover os servlets JSP do cliente que ficaram sem tela (2.2).
+7. Permissão `INTERNET` no manifest principal e build *release* apontando para o Render.
+8. Fase 2: pagamento pelo cliente e área do colaborador no app.
