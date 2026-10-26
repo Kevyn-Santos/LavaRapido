@@ -40,6 +40,13 @@
 
     <!-- Hero Section com VÍDEO EM LOOP -->
     <section class="scene-hero reveal" id="topo">
+      
+      <!-- Vídeo do Opala 3D -->
+      <video id="hero-video" class="hero-bg-video" autoplay muted loop playsinline>
+        <source src="Assets/Video/lavagem-opala.mp4" type="video/mp4">
+      </video>
+      <div class="hero-overlay"></div>
+
       <div class="h-text">
         <h1 class="h-wm wm" aria-label="fast splash">
           <span class="wd-f f">fast</span> <span class="wd-s s">splash</span>
@@ -48,10 +55,6 @@
         <p class="sub">Lavagem de carros diversos. Crie sua conta e agende por lá.</p>
         <a class="btn" href="#cadastro">Criar conta</a>
       </div>
-
-      <video id="hero-video" class="hero-bg-video" autoplay muted loop playsinline>
-        <source src="Assets/Video/lavagem-opala.mp4" type="video/mp4">
-      </video>
     </section>
 
     <!-- 1. ONDA DE TRANSIÇÃO (Hero -> Serviços) Estilo Sobreposto -->

@@ -245,62 +245,40 @@ button, input, select { font: inherit; color: inherit; }
   position: sticky;
   top: 0;
   z-index: 1; /* Mantém no fundo para o parallax */
-  height: 100vh;
-  height: 100svh;
-  padding: 48px var(--pad) 88px;
-  background: var(--paper);
+  height: 100vh; 
+  padding-top: 80px;
+  padding-bottom: 20px;
+  background: var(--paper); /* Fallback */
   color: var(--navy);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: clamp(24px, 5vw, 72px);
   overflow: hidden; /* Mantém o vídeo contido */
 }
 
+/* O Vídeo de Fundo e a Sobreposição translúcida */
 .hero-bg-video {
-  position: relative;
-  display: block;
-  flex: 0 1 44%;
-  width: 44%;
-  height: auto;
-  aspect-ratio: 16 / 9;
-  max-height: 68vh;
-  object-fit: contain;
-  border-radius: 4px 32px 4px 4px;
-  filter: drop-shadow(0 20px 28px rgba(6, 38, 63, .16));
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(237, 243, 244, 0.85); /* Fundo claro translúcido */
+  z-index: -1;
 }
 
 /* Z-index para as outras secções passarem por cima do Vídeo/Hero */
 .sep, .svc, .cta-end, .info, .ft { position: relative; z-index: 2; }
 
-.h-text { position: relative; z-index: 1; flex: 1 1 56%; padding: 0; max-width: 760px; }
+.h-text { padding: 0 var(--pad); max-width: 760px; }
 .h-wm { font-size: clamp(3.2rem, 7.5vw, 6.2rem); margin-bottom: 16px; }
 .h-text .q { font-size: clamp(1.8rem, 3.5vw, 2.8rem); line-height: 1.05; color: #0E6BAA; }
 .h-text .sub { max-width: 44ch; color: #3E5B70; margin: 14px 0 28px; font-size: 1.12rem; }
-
-@media(max-width: 760px) {
-  .scene-hero {
-    position: relative;
-    height: auto;
-    min-height: 100vh;
-    min-height: 100svh;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: center;
-    padding: 92px var(--pad) 48px;
-    gap: 28px;
-  }
-
-  .h-text { flex: 0 1 auto; }
-  .h-wm { font-size: clamp(3rem, 12vw, 5rem); }
-  .hero-bg-video {
-    flex: 0 1 auto;
-    width: min(100%, 480px);
-    max-height: 36vh;
-    max-height: 36svh;
-    align-self: center;
-  }
-}
 
 /* 5.2 O resto do site (Z-index 2 desliza POR CIMA do Hero) */
 .sep, .svc, .cta-end, .info, .ft {
