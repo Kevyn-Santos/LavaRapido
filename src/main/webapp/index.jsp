@@ -41,7 +41,7 @@
     <!-- Hero Section com VÍDEO EM LOOP -->
     <section class="scene-hero reveal" id="topo">
       
-      <!-- Vídeo do Opala 3D -->
+      <!-- Vídeo do Opala 3D no fundo -->
       <video id="hero-video" class="hero-bg-video" autoplay muted loop playsinline>
         <source src="Assets/Video/lavagem-opala.mp4" type="video/mp4">
       </video>
