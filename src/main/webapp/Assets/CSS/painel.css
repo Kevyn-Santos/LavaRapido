@@ -102,6 +102,7 @@ button, input, select { font: inherit; color: inherit; }
 }
 
 .top .lock { font-size: 1.25rem; font-weight: 800; display: inline-flex; align-items: center; gap: .32em; }
+.top .logo-img { display: block; width: 140px; max-width: 42vw; height: auto; object-fit: contain; }
 
 /* ==========================================================================
    3. ESTRUTURA DO PAINEL E NAVEGAÇÃO DE SEPARADORES

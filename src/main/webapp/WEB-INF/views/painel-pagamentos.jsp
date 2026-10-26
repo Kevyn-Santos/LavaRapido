@@ -12,7 +12,7 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="lock" href="${pageContext.request.contextPath}/index.jsp"><span class="wm"><span class="f">fast</span> <span class="s">splash</span></span></a>
+    <a class="lock" href="${pageContext.request.contextPath}/index.jsp"><img src="${pageContext.request.contextPath}/Assets/Img/logo_fastsplash.png" alt="Fast Splash" class="logo-img"></a>
     <nav class="nav-panel"><a href="${pageContext.request.contextPath}/index.jsp" class="btn ghost sm">Sair</a></nav>
   </div>
 </header>
