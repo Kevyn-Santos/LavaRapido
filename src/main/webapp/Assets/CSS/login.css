@@ -1,0 +1,58 @@
+/* ==========================================================================
+   TELA DE LOGIN E AUTENTICAÇÃO (AUTH)
+   ========================================================================== */
+.auth {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  align-items: center;
+  gap: clamp(24px, 6vw, 96px);
+  padding: calc(60px + 6vh) var(--pad) 8vh;
+  background: linear-gradient(135deg, #0B3050 0%, #06263F 45%, #041A2D 100%);
+  color: #EDF3F4;
+}
+
+.auth-text { max-width: 560px; }
+
+.eyebrow {
+  font-weight: 800; font-size: .9rem; letter-spacing: .14em;
+  text-transform: uppercase; color: #8FC9E8; margin: 0 0 14px;
+}
+
+.auth h1 {
+  font-size: clamp(2.6rem, 5.6vw, 4.8rem); line-height: 1;
+  font-weight: 800; letter-spacing: -.03em; margin: 0 0 20px; color: #fff;
+}
+
+.auth .lead { color: #CFE0EC; font-size: 1.1rem; max-width: 40ch; margin: 0; }
+
+.auth-form { justify-self: end; width: min(100%, 520px); }
+
+/* Cartão do Formulário */
+.fcard {
+  background: var(--card, #fff);
+  border: 1px solid var(--line);
+  border-radius: 4px 36px 4px 4px;
+  padding: clamp(20px, 3.4vw, 34px);
+  max-width: 620px;
+  margin-bottom: 16px;
+}
+
+.fcard h2 {
+  font-size: clamp(1.6rem, 3vw, 2.1rem); line-height: 1;
+  font-weight: 800; margin-bottom: 18px;
+}
+
+.auth .fcard { background: #fff; color: #06263F; border: 0; max-width: none; margin: 0; }
+
+.auth-back {
+  display: inline-block; margin-top: 14px; color: #CFE0EC;
+  font-size: .95rem; text-decoration: none; transition: 0.2s;
+}
+
+.auth-back:hover { color: #fff; text-decoration: underline; }
+
+@media(max-width: 860px) {
+  .auth { grid-template-columns: 1fr; align-items: start; }
+  .auth-form { justify-self: stretch; }
+}
