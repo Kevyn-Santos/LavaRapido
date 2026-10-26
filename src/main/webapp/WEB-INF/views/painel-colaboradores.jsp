@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -19,7 +20,7 @@
 
 <main class="page">
   <div class="wrap">
-    <div class="who"><div><p class="small">Bem-vindo(a)</p><h1>Ana Paula</h1></div><span class="role admin">Administrador</span></div>
+    <div class="who"><div><p class="small">Bem-vindo(a)</p><h1><c:out value="${sessionScope.colaboradorNome}" /></h1></div><span class="role admin">Administrador</span></div>
 
     <nav class="ptabs" aria-label="Áreas do painel">
       <a href="painel.jsp">Início</a>

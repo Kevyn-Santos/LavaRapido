@@ -38,26 +38,29 @@
   <!-- Conteúdo Principal -->
   <main id="app" role="main">
 
-    <!-- Hero Section (FIXO NO FUNDO PARA O PARALLAX) -->
+    <!-- Hero Section com VÍDEO EM LOOP -->
     <section class="scene-hero reveal" id="topo">
       <div class="h-text">
         <h1 class="h-wm wm" aria-label="fast splash">
           <span class="wd-f f">fast</span> <span class="wd-s s">splash</span>
         </h1>
-        
+
         <p class="sub">Lavagem de carros diversos. Crie sua conta e agende por lá.</p>
         <a class="btn" href="#cadastro">Criar conta</a>
       </div>
+
+      <video id="hero-video" class="hero-bg-video" autoplay muted loop playsinline>
+        <source src="Assets/Video/lavagem-opala.mp4" type="video/mp4">
+      </video>
     </section>
 
-    <!-- 1. ONDA DE TRANSIÇÃO PARALELA (Hero -> Serviços) -->
-    <!-- Background transparente para permitir ver o Hero enquanto a onda sobe -->
+    <!-- 1. ONDA DE TRANSIÇÃO (Hero -> Serviços) Estilo Sobreposto -->
     <div class="sep" aria-hidden="true" style="background: transparent;">
-      <svg viewBox="0 0 1680 120" preserveAspectRatio="none">
-        <!-- Camada do meio (Azul Claro - Filete) -->
-        <path fill="var(--tide)" d="M0,40 Q 420,80 840,40 T 1680,40 L 1680,120 L 0,120 Z" />
-        <!-- Camada de baixo (Azul Serviços) desenhada exatamente 15px abaixo -->
-        <path fill="var(--blue)" d="M0,55 Q 420,95 840,55 T 1680,55 L 1680,120 L 0,120 Z" />
+      <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+        <!-- Onda traseira -->
+        <path fill="rgba(14, 107, 170, 0.4)" d="M0,60 C320,130 420,10 720,50 C1020,90 1120,30 1440,70 L1440,120 L0,120 Z"></path>
+        <!-- Onda frontal -->
+        <path fill="var(--blue)" d="M0,80 C320,150 420,30 720,70 C1020,110 1120,50 1440,90 L1440,120 L0,120 Z"></path>
       </svg>
     </div>
 

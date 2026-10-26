@@ -1,4 +1,5 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -25,7 +26,7 @@
     <div class="who">
       <div>
         <p class="small">Bem-vindo(a)</p>
-        <h1>Ana Paula</h1>
+        <h1><c:out value="${sessionScope.colaboradorNome}" /></h1>
       </div>
       <span class="role admin">Administrador</span>
     </div>
