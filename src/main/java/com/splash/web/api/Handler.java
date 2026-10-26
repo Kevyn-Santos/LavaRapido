@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 
-public class Handler {
+public class Handler extends HttpServlet{
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
