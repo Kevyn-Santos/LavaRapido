@@ -200,7 +200,7 @@
           <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
         </div>
       </div>
-      <a class="lantern" href="WEB-INF/views/acesso-colaborador.jsp"><i aria-hidden="true"></i>Acesso da equipe</a>
+      <a class="lantern" href="${pageContext.request.contextPath}/colaborador/login"><i aria-hidden="true"></i>Acesso da equipe</a>
     </div>
   </footer>
 

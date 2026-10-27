@@ -235,6 +235,115 @@ button, input, select { font: inherit; color: inherit; }
   text-underline-offset: 3px;
 }
 
+.staff-login {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
+  align-items: center;
+  gap: clamp(40px, 8vw, 120px);
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: calc(60px + clamp(32px, 6vw, 80px)) clamp(24px, 6vw, 80px) clamp(32px, 6vw, 80px);
+  background: var(--navy);
+  color: var(--paper);
+}
+
+.staff-login-copy {
+  width: min(100%, 640px);
+  justify-self: center;
+}
+
+.staff-login-kicker {
+  margin-bottom: 18px;
+  color: var(--tide);
+  font-size: .9rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.staff-login-copy h1 {
+  max-width: 13ch;
+  font-size: clamp(3rem, 5.4vw, 4.7rem);
+  font-weight: 800;
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+
+.staff-login-copy > p:last-child {
+  max-width: 42ch;
+  margin-top: 22px;
+  color: #D5E5EC;
+  font-size: clamp(1rem, 1.4vw, 1.15rem);
+}
+
+.staff-login-panel {
+  width: min(100%, 520px);
+  justify-self: end;
+}
+
+.staff-login-card {
+  padding: clamp(26px, 4vw, 42px);
+  border-radius: 4px 36px 4px 4px;
+  background: var(--card);
+  color: var(--ink);
+}
+
+.staff-login-card h2 {
+  margin-bottom: 22px;
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.staff-login-card .field { margin-bottom: 16px; }
+
+.staff-login-card .field input {
+  background: #fff;
+  border-color: rgba(6, 38, 63, .25);
+}
+
+.staff-login-card .field input:focus-visible {
+  border-color: var(--primary);
+  outline: 3px solid rgba(14, 107, 170, .18);
+  outline-offset: 1px;
+}
+
+.staff-login-card .btn { margin-top: 10px; }
+
+.staff-login-error {
+  margin-bottom: 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(179, 38, 30, .25);
+  border-radius: 4px;
+  background: #FFF1EF;
+  color: #9C2018;
+  font-size: .92rem;
+}
+
+.staff-login-back {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--paper);
+}
+
+.staff-login-back:hover {
+  color: var(--tide);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media(max-width: 760px) {
+  .staff-login {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 32px;
+    padding: clamp(32px, 8vw, 56px) var(--pad);
+  }
+
+  .staff-login-copy h1 { max-width: 16ch; }
+  .staff-login-panel { justify-self: center; }
+  .staff-login-card .btn { width: 100%; }
+}
+
 /* ==========================================================================
    5. PÁGINA INICIAL & EFEITO PARALLAX
    ========================================================================== */
