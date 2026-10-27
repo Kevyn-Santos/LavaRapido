@@ -24,7 +24,7 @@ CREATE TABLE veiculo (
 		FOREIGN KEY (id_cliente)
         REFERENCES cliente(id_cliente)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE CASCADE
 );
 CREATE TABLE servico(
 	id_servico INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,7 +56,7 @@ CREATE TABLE agendamento (
 		FOREIGN KEY (id_veiculo)
         REFERENCES veiculo(id_veiculo)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT
+        ON DELETE CASCADE
 );
 CREATE TABLE agendamento_servico (
 	id_agendamento INT NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE atendimento (
 		FOREIGN KEY (id_agendamento)
         REFERENCES agendamento(id_agendamento)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+        ON DELETE CASCADE,
         
 	CONSTRAINT chk_atendimento_datas
 		CHECK (
@@ -160,7 +160,7 @@ CREATE TABLE pagamento (
 		FOREIGN KEY (id_agendamento)
         REFERENCES agendamento(id_agendamento)
         ON UPDATE CASCADE
-        ON DELETE RESTRICT,
+        ON DELETE CASCADE,
         
 	CONSTRAINT chk_pagamento_valor
 		CHECK (valor >= 0),

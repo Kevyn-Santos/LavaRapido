@@ -200,6 +200,13 @@ INSERT INTO colaborador (
     senha_hash
 ) VALUES
 (
+    'Kelsey Luciano',
+    'Administrador',
+    'ADMINISTRADOR',
+    'kelsey@teste.com',
+    '$2y$12$o8zcFjk8GOCZySuf3Xxmkuaplgygpk/YgzNawWik.6DkuSII8cXp2'
+),
+(
     'Ana Souza',
     'Gerente',
     'ADMINISTRADOR',
@@ -260,15 +267,15 @@ INSERT INTO colaborador_atendimento (
     id_atendimento
 ) VALUES
 (
-    3,
+    4,
     1
 ),
 (
-    3,
+    4,
     2
 ),
 (
-    4,
+    5,
     2
 );
 
