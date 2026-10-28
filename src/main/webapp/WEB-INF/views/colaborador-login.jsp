@@ -13,14 +13,12 @@
 </head>
 <body>
 
-<header class="top">
+<header class="top staff-login-header">
   <div class="top-in">
-    <a class="lock" href="../../index.html" aria-label="Fast Splash, início">
-      <img src="../../Assets/Img/logo_fastsplash.png" alt="Fast Splash" class="logo-img">
+    <a class="lock" href="${pageContext.request.contextPath}/index.jsp" aria-label="Fast Splash, início">
+      <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav aria-label="Navegação principal">
-      <a href="../../index.html">Voltar ao site</a>
-    </nav>
+    <nav><a href="${pageContext.request.contextPath}/index.jsp">Voltar ao início</a></nav>
   </div>
 </header>
 

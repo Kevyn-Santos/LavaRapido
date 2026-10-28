@@ -21,10 +21,10 @@
 <body>
 
   <!-- Cabeçalho de Navegação -->
-  <header class="top">
+  <header class="top landing-header">
     <div class="top-in">
       <a class="lock" href="#topo" aria-label="Fast Splash, início">
-        <img src="Assets/Img/logo_fastsplash.png" alt="Logo Fast Splash" class="logo-img">
+        <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
       </a>
 
       <nav id="nav" aria-label="Navegação Principal">
@@ -39,7 +39,7 @@
   <main id="app" role="main">
 
     <!-- Hero Section com VÍDEO EM LOOP -->
-    <section class="scene-hero reveal" id="topo">
+    <section class="scene-hero" id="topo">
       
       <!-- Vídeo do Opala 3D no fundo -->
       <video id="hero-video" class="hero-bg-video" autoplay muted loop playsinline>
@@ -47,7 +47,7 @@
       </video>
       <div class="hero-overlay"></div>
 
-      <div class="h-text">
+      <div class="h-text reveal">
         <h1 class="h-wm wm" aria-label="fast splash">
           <span class="wd-f f">fast</span> <span class="wd-s s">splash</span>
         </h1>
@@ -114,7 +114,7 @@
           </article>
         </div>
 
-        <div class="how reveal">
+        <div class="how">
           <div class="reveal delay-1">
             <b>Crie sua conta</b>
             <p class="small">Nome, contato e o seu carro.</p>
@@ -143,8 +143,8 @@
     </div>
 
     <!-- Chamada para Cadastro -->
-    <section class="cta-end reveal" id="cadastro">
-      <div class="cta-card">
+    <section class="cta-end" id="cadastro">
+      <div class="cta-card reveal">
         <div>
           <h2>Crie sua conta e baixe o app.</h2>
           <p>Leva um minuto. Depois é só agendar pelo celular.</p>
@@ -155,8 +155,8 @@
 
     <!-- Seção de Contato e Localização -->
     <section class="info" id="contato">
-      <div class="wrap reveal">
-        <h2 class="svc-h">Como chegar.</h2>
+      <div class="wrap">
+        <h2 class="svc-h reveal">Como chegar.</h2>
         <div class="info-grid">
           <div class="reveal delay-1">
             <h3>Onde fica</h3>
@@ -193,14 +193,14 @@
   </main>
 
   <!-- Rodapé -->
-  <footer class="ft reveal">
+  <footer class="ft">
     <div class="wrap">
       <div>
         <div class="lock v-neg">
           <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
         </div>
       </div>
-      <a class="lantern" href="${pageContext.request.contextPath}/colaborador/login"><i aria-hidden="true"></i>Acesso da equipe</a>
+      <a class="lantern" href="colaborador/login"><i aria-hidden="true"></i>Acesso da equipe</a>
     </div>
   </footer>
 

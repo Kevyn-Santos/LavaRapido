@@ -71,7 +71,7 @@ button, input, select { font: inherit; color: inherit; }
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 30;
-  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  background: color-mix(in srgb, var(--muted) 90%, transparent);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
 }
@@ -90,6 +90,15 @@ button, input, select { font: inherit; color: inherit; }
 .top nav { display: flex; gap: 20px; margin-left: auto; align-items: center; }
 .top nav a:not(.btn) { font-weight: 600; font-size: .95rem; }
 .top nav a:not(.btn):hover { text-decoration: underline; text-underline-offset: 4px; }
+
+.landing-header .lock,
+.landing-header nav a:not(.btn) {
+  color: var(--paper);
+}
+
+.landing-header nav a:not(.btn):hover {
+  color: var(--tide);
+}
 
 /* ==========================================================================
    4. BOTÕES E FORMULÁRIOS
@@ -247,6 +256,20 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--paper);
 }
 
+.staff-login-header {
+  background: color-mix(in srgb, var(--navy) 92%, transparent);
+  border-bottom-color: rgba(237, 243, 244, .2);
+}
+
+.staff-login-header .lock,
+.staff-login-header nav a {
+  color: var(--paper);
+}
+
+.staff-login-header nav a:hover {
+  color: var(--tide);
+}
+
 .staff-login-copy {
   width: min(100%, 640px);
   justify-self: center;
@@ -342,6 +365,54 @@ button, input, select { font: inherit; color: inherit; }
   .staff-login-copy h1 { max-width: 16ch; }
   .staff-login-panel { justify-self: center; }
   .staff-login-card .btn { width: 100%; }
+}
+
+.registration-page .staff-login-copy h1 {
+  max-width: 12ch;
+}
+
+.registration-card .fgrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+
+.registration-card .field {
+  margin-bottom: 14px;
+}
+
+.registration-card .chk {
+  margin: 8px 0 22px;
+  color: var(--muted);
+}
+
+.registration-card .chk input {
+  margin-top: 3px;
+}
+
+.registration-card .btn {
+  width: auto;
+  margin-top: 0;
+}
+
+@media(max-width: 760px) {
+  .registration-page {
+    gap: 26px;
+  }
+
+  .registration-page .staff-login-copy h1 {
+    max-width: 16ch;
+  }
+}
+
+@media(max-width: 480px) {
+  .registration-card .fgrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .registration-card .btn {
+    width: 100%;
+  }
 }
 
 /* ==========================================================================
