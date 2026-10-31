@@ -57,8 +57,8 @@ src/main/java/com/splash/web/api/
 | --- | --- | --- |
 | POST | `/api/v1/auth/login` | `AuthApiServlet` |
 | POST | `/api/v1/auth/cadastro` | `AuthApiServlet` |
-| GET | `/api/v1/me` | `MeApiServlet` |
-| PATCH | `/api/v1/me` | `MeApiServlet` |
+| GET | `/api/v1/me` | `ClienteApiServlet` |
+| PATCH | `/api/v1/me` | `ClienteApiServlet` |
 | GET | `/api/v1/servicos` | `ServicoApiServlet` |
 | GET | `/api/v1/veiculos` | `VeiculoApiServlet` |
 | POST | `/api/v1/veiculos` | `VeiculoApiServlet` |

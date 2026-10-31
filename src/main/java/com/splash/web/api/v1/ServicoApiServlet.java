@@ -20,5 +20,6 @@ public class ServicoApiServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // TODO: DAOServico.listar()
         response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
+        return;
     }
 }

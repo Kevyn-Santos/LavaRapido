@@ -23,6 +23,7 @@ public class AgendamentoApiServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // TODO: DAOAgendamento.listarPorCliente(idCliente)
         response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
+        return;
     }
 
     @Override

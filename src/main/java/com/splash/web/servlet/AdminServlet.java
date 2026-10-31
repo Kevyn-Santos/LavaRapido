@@ -32,10 +32,8 @@ public class AdminServlet extends HttpServlet {
         String nivelNecessario = nivelNecessario(secao);
         if (nivelNecessario == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return;
         }
         if (WebSupport.colaboradorId(request, response, nivelNecessario) < 0) {
-            return;
         }
         try {
             request.setAttribute("secao", secao);

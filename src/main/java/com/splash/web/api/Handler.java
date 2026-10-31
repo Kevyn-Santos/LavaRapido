@@ -21,6 +21,7 @@ public class Handler extends HttpServlet{
         response.setCharacterEncoding("utf-8");
 
 
+        return;
     }
 
 }

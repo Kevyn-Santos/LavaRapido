@@ -23,6 +23,7 @@ public class VeiculoApiServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // TODO: DAOVeiculo.listarPorCliente(idCliente)
         response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
+        return;
     }
 
     @Override

@@ -26,6 +26,7 @@ public class VeiculoServlet extends HttpServlet {
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
         }
+        return;
     }
 
     @Override

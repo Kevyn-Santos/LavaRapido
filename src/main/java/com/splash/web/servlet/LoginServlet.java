@@ -20,6 +20,7 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+        return;
     }
 
     @Override

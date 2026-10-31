@@ -20,5 +20,6 @@ public class HorarioApiServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // TODO: calcular horários livres para a data informada (parâmetro "data")
         response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
+        return;
     }
 }
