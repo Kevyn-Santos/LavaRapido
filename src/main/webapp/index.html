@@ -38,34 +38,39 @@
   <!-- Conteúdo Principal -->
   <main id="app" role="main">
 
-    <!-- Hero Section com VÍDEO EM LOOP -->
-    <section class="scene-hero" id="topo">
-      
-      <!-- Vídeo do Opala 3D no fundo -->
-      <video id="hero-video" class="hero-bg-video" autoplay muted loop playsinline>
-        <source src="Assets/Video/lavagem-opala.mp4" type="video/mp4">
-      </video>
-      <div class="hero-overlay"></div>
+   <!-- Hero Section com Efeito Sticky & Parallax -->
+<section class="scene-hero" id="topo" data-scene="pin">
+  <div class="pin">
+    
+    <!-- Vídeo do Opala 3D no fundo -->
+    <video id="hero-video" class="hero-bg-video" autoplay muted loop playsinline>
+      <source src="Assets/Video/lavagem-opala.mp4" type="video/mp4">
+    </video>
+    <div class="hero-overlay"></div>
 
-      <div class="h-text reveal">
-        <h1 class="h-wm wm" aria-label="fast splash">
-          <span class="wd-f f">fast</span> <span class="wd-s s">splash</span>
-        </h1>
+    <!-- Hero Wordmark Monumental (fast splash) -->
+    <h1 class="h-wm wm" aria-label="fast splash">
+      <span class="wd-f f">fast</span> <span class="wd-s s">splash</span>
+    </h1>
 
-        <p class="sub">Lavagem de carros diversos. Crie sua conta e agende por lá.</p>
-        <a class="btn" href="#cadastro">Criar conta</a>
-      </div>
-    </section>
-
-    <!-- 1. ONDA DE TRANSIÇÃO (Hero -> Serviços) Estilo Sobreposto -->
-    <div class="sep" aria-hidden="true" style="background: transparent;">
-      <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
-        <!-- Onda traseira -->
-        <path fill="rgba(14, 107, 170, 0.4)" d="M0,60 C320,130 420,10 720,50 C1020,90 1120,30 1440,70 L1440,120 L0,120 Z"></path>
-        <!-- Onda frontal -->
-        <path fill="var(--blue)" d="M0,80 C320,150 420,30 720,70 C1020,110 1120,50 1440,90 L1440,120 L0,120 Z"></path>
+    <aside class="glass g1 glass-s" aria-label="Preço das lavagens">
+      <span class="gl-k">Lavagens a partir de</span>
+      <b>R$ 40,00</b>
+    </aside>
+    <div class="h-flood" aria-hidden="true">
+      <svg class="h-flood-wave" viewBox="0 0 1440 100" preserveAspectRatio="none">
+        <path class="we" d="M0,65 C240,100 420,20 720,55 C1000,90 1190,25 1440,60 L1440,100 L0,100 Z"></path>
       </svg>
     </div>
+
+    <!-- Bloco do Canto Esquerdo -->
+    <div class="h-text">
+      <p class="sub">Lavagem de carros diversos. Crie sua conta, baixe o app e agende por lá.</p>
+      <a class="btn ghost" href="#cadastro">Criar conta</a>
+    </div>
+
+  </div>
+</section>
 
     <!-- Seção de Serviços -->
     <section class="svc" id="servicos">

@@ -418,46 +418,264 @@ button, input, select { font: inherit; color: inherit; }
 /* ==========================================================================
    5. PÁGINA INICIAL & EFEITO PARALLAX
    ========================================================================== */
+/* Estilos da Hero Section (Assets/CSS/style.css) */
 
-
-/* Hero Section e Efeito Parallax */
 .scene-hero {
-  position: sticky;
-  top: 0;
-  z-index: 1; /* Mantém no fundo para o parallax */
-  height: 100vh; 
-  padding-top: 80px;
-  padding-bottom: 20px;
-  background: var(--paper); /* Fallback */
+  position: relative;
+  height: 230vh;
+  background: var(--paper);
   color: var(--navy);
-  display: flex;
-  align-items: center;
-  overflow: hidden; /* Mantém o vídeo contido */
 }
 
-/* O Vídeo de Fundo e a Sobreposição translúcida */
+.pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
 .hero-bg-video {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   z-index: -2;
 }
 
 .hero-overlay {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(237, 243, 244, 0.85); /* Fundo claro translúcido */
+  inset: 0;
+  background: rgba(237, 243, 244, 0.85);
   z-index: -1;
+}
+
+/* Wordmark / Título Monumental */
+.h-wm {
+  position: absolute;
+  left: -1vw;
+  right: -1vw;
+  top: 11vh;
+  z-index: 1;
+  margin: 0;
+  text-align: center;
+  font-size: 17.2vw;
+  line-height: 0.78;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.h-wm .wd-f {
+  display: inline-block;
+  color: var(--navy); /* #06263F */
+  transform: translateX(calc(var(--p, 0) * -8vw));
+  opacity: calc(1 - var(--f, 0));
+}
+
+.h-wm .wd-s {
+  display: inline-block;
+  color: var(--blue); /* #0E6BAA */
+  transform: translateX(calc(var(--p, 0) * 8vw));
+  opacity: calc(1 - var(--f, 0));
+}
+
+.h-flood {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #0E6BAA;
+  transform: translateY(calc((1 - var(--f, 0)) * (100% + 70px)));
+  will-change: transform;
+  pointer-events: none;
+}
+
+.h-flood-wave {
+  position: absolute;
+  top: -99px;
+  left: 0;
+  width: 100%;
+  height: 100px;
+}
+
+.h-flood-wave .we {
+  fill: #0E6BAA;
+}
+
+/* Conteúdo no canto inferior esquerdo */
+.h-text {
+  position: absolute;
+  left: var(--pad);
+  bottom: 22vh;
+  z-index: 4;
+  width: min(40vw, 560px);
+  text-align: left;
+  transform: translateY(calc(var(--p, 0) * -3vh));
+}
+
+/* Cards com efeito de vidro (Glassmorphism) */
+.glass {
+  position: absolute;
+  z-index: 4;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 4px 20px 4px 4px;
+  padding: 14px 18px;
+  display: grid;
+  gap: 2px;
+  color: var(--navy);
+  box-shadow: 0 18px 40px -22px rgba(6, 38, 63, 0.5);
+  opacity: calc(1 - var(--f, 0));
+}
+
+.glass.g1 {
+  left: auto;
+  right: 2.5vw;
+  top: 15%;
+  transform: translateY(calc(var(--p, 0) * -5vh));
+}
+
+.glass.g2 {
+  left: 42.5vw;
+  right: auto;
+  top: 53.5%;
+  transform: translateY(calc(var(--p, 0) * 4vh));
+}
+
+.glass-f {
+  background: #fff;
+  border-color: #fff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.glass .gl-k {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.glass b {
+  font-size: 1.25rem;
+}
+
+.gl-dots {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.gl-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tide);
+}
+
+.gl-dots i:first-child {
+  background: var(--lamp);
+}
+
+/* Barra de agendamento flutuante */
+.h-bar {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  bottom: 4.5vh;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr auto;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 4px 28px 4px 4px;
+  padding: 10px;
+  box-shadow: 0 22px 44px -26px rgba(6, 38, 63, 0.55);
+  opacity: calc(1 - var(--p, 0) * 3);
+}
+
+.h-bar label {
+  display: grid;
+  gap: 2px;
+  padding: 6px 18px;
+  border-right: 1px solid rgba(6, 38, 63, 0.14);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.h-bar select,
+.h-bar input {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--navy);
+  padding: 2px 0;
+  min-height: 28px;
+  width: 100%;
+}
+
+.h-bar .btn {
+  align-self: stretch;
+  border-radius: 4px 18px 4px 4px;
+  padding: 0 26px;
+}
+
+@media (max-width: 860px) {
+  .h-wm {
+    font-size: 18vw;
+    top: 12vh;
+  }
+  .h-text {
+    left: var(--pad);
+    right: var(--pad);
+    width: auto;
+    bottom: auto;
+    top: calc(12vh + 22vw);
+  }
+  .h-bar, .glass {
+    display: none;
+  }
+}
+JavaScript
+
+/* Suave desvanecimento do texto de apoio conforme o scroll desce */
+.h-text {
+  transform: translateY(calc(var(--p, 0) * -4vh));
+  opacity: calc(1 - var(--f, 0));
+  will-change: transform, opacity;
+}
+
+/* O Vídeo de Fundo e a Sobreposição translúcida */
+.hero-bg-video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(237, 243, 244, 0.85); /* Fundo claro translúcido */
+  z-index: 1;
 }
 
 /* Z-index para as outras secções passarem por cima do Vídeo/Hero */
 .sep, .svc, .cta-end, .info, .ft { position: relative; z-index: 2; }
 
-.h-text { padding: 0 var(--pad); max-width: 760px; }
-.h-wm { font-size: clamp(3.2rem, 7.5vw, 6.2rem); margin-bottom: 16px; }
-.h-text .q { font-size: clamp(1.8rem, 3.5vw, 2.8rem); line-height: 1.05; color: #0E6BAA; }
+.h-text .q { font-size: clamp(1.8rem, 3vw, 2.5rem); line-height: 1.05; color: #0E6BAA; }
 .h-text .sub { max-width: 44ch; color: #3E5B70; margin: 14px 0 28px; font-size: 1.12rem; }
 
 /* 5.2 O resto do site (Z-index 2 desliza POR CIMA do Hero) */
@@ -469,12 +687,13 @@ button, input, select { font: inherit; color: inherit; }
 /* Divisores em onda (Estilo Sobreposto) */
 .sep { height: 90px; overflow: hidden; margin-top: -1px; }
 .sep svg { position: absolute; left: 0; bottom: -1px; width: 100%; height: calc(100% + 2px); display: block; }
+.h-wm .wd-f, .h-wm .wd-s { will-change: transform; }
 
 /* Ondas decorativas da secção de contato */
 .bg-wave-decorative { margin: 40px 0; opacity: 0.3; }
 
 /* Serviços */
-.svc { background: #0E6BAA; color: #EDF3F4; padding: clamp(40px, 6vw, 80px) var(--pad); }
+.svc { position: relative; z-index: 3; background: #0E6BAA; color: #EDF3F4; padding: clamp(40px, 6vw, 80px) var(--pad); }
 .svc-h { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1; font-weight: 800; margin-bottom: 36px; }
 .svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .svc-card {
