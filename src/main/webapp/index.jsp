@@ -72,15 +72,25 @@
   </div>
 </section>
 
+    <div class="sep sep--blue-to-navy" aria-hidden="true">
+      <svg viewBox="0 0 1920 120" preserveAspectRatio="none">
+        <rect width="1920" height="120" fill="#0E6BAA" />
+        <path fill="#EDF3F4" opacity="0.85" d="M0,60 C160,59 200,74 360,69 C520,64 560,53 720,58 C880,64 960,75 1120,68 C1280,62 1360,51 1520,55 C1680,60 1800,71 1920,54 L1920,120 L0,120 Z"></path>
+        <path fill="#8FC9E8" opacity="0.8" d="M0,68 C180,78 250,57 430,61 C610,65 700,82 880,75 C1060,67 1140,55 1320,62 C1500,69 1600,83 1760,73 C1840,68 1880,58 1920,55 L1920,120 L0,120 Z"></path>
+        <path fill="#06263F" d="M0,84 C180,93 300,71 480,76 C660,81 740,98 920,90 C1100,82 1200,68 1380,76 C1560,84 1640,99 1800,86 C1860,80 1890,70 1920,68 L1920,120 L0,120 Z"></path>
+      </svg>
+    </div>
+
     <!-- Seção de Serviços -->
     <section class="svc" id="servicos">
       <div class="wrap">
-        <h2 class="svc-h reveal">Serviços disponíveis.</h2>
+        <h2 class="svc-h reveal">Quatro jeitos de lavar.</h2>
         <div class="svc-grid">
           
           <article class="svc-card reveal delay-1">
+            <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
             <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#0E6BAA" />
+              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
             </svg>
             <h3>Lavagem Simples</h3>
             <p class="small">Lavagem externa com secagem à mão.</p>
@@ -89,8 +99,9 @@
           </article>
 
           <article class="svc-card reveal delay-2">
+            <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
             <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#0E6BAA" />
+              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
             </svg>
             <h3>Lavagem Completa</h3>
             <p class="small">Externa e interna: aspiração, painel e vidros.</p>
@@ -99,8 +110,9 @@
           </article>
 
           <article class="svc-card reveal delay-3">
+            <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
             <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#0E6BAA" />
+              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
             </svg>
             <h3>Enceramento</h3>
             <p class="small">Cera aplicada à mão para proteger e dar brilho.</p>
@@ -109,8 +121,9 @@
           </article>
 
           <article class="svc-card reveal delay-4">
+            <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
             <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#0E6BAA" />
+              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
             </svg>
             <h3>Detalhamento Interno</h3>
             <p class="small">Bancos, carpetes e plásticos com limpeza cuidadosa.</p>
@@ -135,17 +148,6 @@
         </div>
       </div>
     </section>
-
-    <!-- 2. ONDA DE TRANSIÇÃO PARALELA (Serviços -> CTA) -->
-    <!-- Background azul para continuar a secção anterior sem quebrar -->
-    <div class="sep" aria-hidden="true" style="background: var(--blue);">
-      <svg viewBox="0 0 1680 120" preserveAspectRatio="none">
-        <!-- Camada do meio (Azul Claro - Filete) -->
-        <path fill="var(--tide)" d="M0,40 Q 420,80 840,40 T 1680,40 L 1680,120 L 0,120 Z" />
-        <!-- Camada de baixo (Azul Marinho CTA) -->
-        <path fill="var(--navy)" d="M0,55 Q 420,95 840,55 T 1680,55 L 1680,120 L 0,120 Z" />
-      </svg>
-    </div>
 
     <!-- Chamada para Cadastro -->
     <section class="cta-end" id="cadastro">
@@ -185,13 +187,13 @@
       </div>
     </section>
 
-    <!-- 3. ONDA DE TRANSIÇÃO PARALELA (Info -> Footer) -->
-    <div class="sep" aria-hidden="true" style="background: var(--paper-2);">
-      <svg viewBox="0 0 1680 120" preserveAspectRatio="none">
-        <!-- Camada do meio (Azul Claro - Filete) -->
-        <path fill="var(--tide)" d="M0,40 Q 420,80 840,40 T 1680,40 L 1680,120 L 0,120 Z" />
-        <!-- Camada de baixo (Azul Marinho Rodapé) -->
-        <path fill="var(--navy)" d="M0,55 Q 420,95 840,55 T 1680,55 L 1680,120 L 0,120 Z" />
+    <!-- Transição das informações para o rodapé -->
+    <div class="sep sep--contact-to-navy" aria-hidden="true">
+      <svg viewBox="0 0 1920 120" preserveAspectRatio="none">
+        <rect width="1920" height="120" fill="var(--wave-top)" />
+        <path fill="#8FC9E8" opacity="0.75" d="M0,60 C160,59 200,74 360,69 C520,64 560,53 720,58 C880,64 960,75 1120,68 C1280,62 1360,51 1520,55 C1680,60 1800,71 1920,54 L1920,120 L0,120 Z"></path>
+        <path fill="#0E6BAA" opacity="0.8" d="M0,68 C180,78 250,57 430,61 C610,65 700,82 880,75 C1060,67 1140,55 1320,62 C1500,69 1600,83 1760,73 C1840,68 1880,58 1920,55 L1920,120 L0,120 Z"></path>
+        <path fill="var(--wave-bottom)" d="M0,84 C180,93 300,71 480,76 C660,81 740,98 920,90 C1100,82 1200,68 1380,76 C1560,84 1640,99 1800,86 C1860,80 1890,70 1920,68 L1920,120 L0,120 Z"></path>
       </svg>
     </div>
 

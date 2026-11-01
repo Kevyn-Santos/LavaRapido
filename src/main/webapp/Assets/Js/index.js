@@ -12,6 +12,12 @@
     const card = document.createElement('article');
     card.className = 'svc-card';
 
+    const action = document.createElement('a');
+    action.className = 'go';
+    action.href = '#cadastro';
+    action.setAttribute('aria-label', 'Reservar serviço');
+    action.textContent = '↗';
+
     const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     icon.setAttribute('width', '30');
     icon.setAttribute('height', '30');
@@ -19,7 +25,7 @@
     icon.setAttribute('aria-hidden', 'true');
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('d', iconPath);
-    path.setAttribute('fill', '#0E6BAA');
+    path.setAttribute('fill', '#8FC9E8');
     icon.append(path);
 
     const name = document.createElement('h3');
@@ -31,7 +37,7 @@
     price.className = 'price';
     price.textContent = money.format(Number(service.price));
 
-    card.append(icon, name, description, price);
+    card.append(action, icon, name, description, price);
     if (Number.isFinite(Number(service.min)) && Number(service.min) > 0) {
       const duration = document.createElement('p');
       duration.className = 'small';

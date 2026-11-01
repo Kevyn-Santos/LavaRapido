@@ -14,6 +14,9 @@
   --lamp: #FF7A1A;
   --paper: #EDF3F4;
   --paper-2: #DDE9EC;
+  --cta-bg: #041C2C;
+  --cta-card: #082941;
+  --contact-bg: #0B2B40;
   --card: #FFFFFF;
   --ink: #06263F;
   --muted: #3E5B70;
@@ -685,20 +688,34 @@ JavaScript
 }
 
 /* Divisores em onda (Estilo Sobreposto) */
-.sep { height: 90px; overflow: hidden; margin-top: -1px; }
-.sep svg { position: absolute; left: 0; bottom: -1px; width: 100%; height: calc(100% + 2px); display: block; }
+.sep {
+  position: relative;
+  height: clamp(60px, 6vw, 100px);
+  width: 100%;
+  overflow: hidden;
+  margin-top: -2px;
+  margin-bottom: -1px;
+  z-index: 2;
+  background: var(--wave-top);
+}
+.sep svg { position: absolute; left: 0; bottom: -1px; width: 100%; height: 100%; display: block; }
+.sep--blue-to-navy { --wave-top: var(--blue); --wave-bottom: var(--navy); }
+.sep--navy { --wave-top: var(--navy); --wave-bottom: var(--navy); }
+.sep--contact-to-navy { --wave-top: var(--contact-bg); --wave-bottom: var(--navy); }
 .h-wm .wd-f, .h-wm .wd-s { will-change: transform; }
 
 /* Ondas decorativas da secção de contato */
 .bg-wave-decorative { margin: 40px 0; opacity: 0.3; }
 
 /* Serviços */
-.svc { position: relative; z-index: 3; background: #0E6BAA; color: #EDF3F4; padding: clamp(40px, 6vw, 80px) var(--pad); }
-.svc-h { font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 1; font-weight: 800; margin-bottom: 36px; }
+.svc { position: relative; z-index: 3; background: #06263F; color: #EDF3F4; margin-top: -1px; padding: clamp(40px, 6vw, 80px) var(--pad); }
+.svc-h { color: #EDF3F4; font-size: clamp(2.4rem, 5vw, 3.8rem); line-height: 1; font-weight: 800; margin-bottom: 36px; }
 .svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .svc-card {
-  background: #EDF3F4;
-  color: #06263F;
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  color: #EDF3F4;
   padding: 26px;
   border-radius: 4px 28px 4px 4px;
   display: flex;
@@ -707,11 +724,39 @@ JavaScript
   height: 100%;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+.svc-card::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: #0B3050;
+  content: "";
+  -webkit-mask: radial-gradient(circle 34px at 100% 0, transparent 33px, #000 34px);
+  mask: radial-gradient(circle 34px at 100% 0, transparent 33px, #000 34px);
+}
 .svc-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
-.svc-card h3 { font-size: 1.25rem; font-weight: 800; min-height: 2.5em; }
+.svc-card h3 { color: #EDF3F4; font-size: 1.25rem; font-weight: 800; min-height: 2.5em; }
 .svc-card > .small:first-of-type { flex: 1 0 auto; }
-.svc-card .price { font-size: 1.6rem; font-weight: 800; margin: auto 0 0; color: #0E6BAA; }
+.svc-card .small { color: #9FBACB; }
+.svc-card .price { font-size: 1.6rem; font-weight: 800; margin: auto 0 0; color: #EDF3F4; }
 .svc-card .price + .small { margin-top: -8px; }
+.svc-card .go {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #06263F;
+  color: #EDF3F4;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+.svc-card .go:hover,
+.svc-card .go:focus-visible { background: #FF7A1A; }
 
 .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 64px; }
 .how > div { border-top: 2px solid #EDF3F4; padding-top: 16px; }
@@ -721,16 +766,16 @@ JavaScript
 @media(max-width: 900px) { .svc-grid { grid-template-columns: 1fr 1fr; } }
 @media(max-width: 560px) { .svc-grid, .how { grid-template-columns: 1fr; } }
 
-/* Chamada para Registo (Invertido para combinar com a onda Marinho) */
+/* Chamada para registo */
 .cta-end { 
   padding: 60px var(--pad) 80px; 
-  background: var(--navy); 
+  background: var(--cta-bg); 
 }
 .cta-card {
   max-width: 1180px;
   margin: 0 auto;
-  background: var(--paper); 
-  color: var(--navy);
+  background: var(--cta-card); 
+  color: var(--foam);
   border-radius: 4px 44px 4px 4px;
   padding: clamp(28px, 4vw, 48px);
   display: flex;
@@ -739,8 +784,8 @@ JavaScript
   align-items: center;
   flex-wrap: wrap;
 }
-.cta-card h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; color: var(--navy); }
-.cta-card p { color: var(--muted); }
+.cta-card h2 { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; color: var(--foam); }
+.cta-card p { color: var(--foam); }
 .cta-card .btn { background: var(--lamp); border-color: var(--lamp); color: var(--navy); }
 
 /* Confirmação de cadastro e acesso ao aplicativo */
@@ -828,12 +873,15 @@ JavaScript
 /* ==========================================================================
    9. INFORMAÇÕES E CONTACTO
    ========================================================================== */
-.info { background: var(--paper-2); padding: clamp(60px, 8vw, 100px) var(--pad); }
+.info { background: var(--contact-bg); color: var(--foam); margin-top: -1px; padding: clamp(60px, 8vw, 100px) var(--pad); }
+.info .svc-h { color: var(--foam); }
 .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-.info-grid > div { border-top: 2px solid var(--ink); padding-top: 18px; display: grid; gap: 12px; align-content: start; }
+.info-grid > div { border-top: 2px solid rgba(237,243,244,.9); padding-top: 18px; display: grid; gap: 12px; align-content: start; }
 .info-grid h3 { font-size: 1.25rem; font-weight: 800; }
+.info .small { color: #B8CEDA; }
+.info .btn.ghost { color: var(--foam); border-color: var(--foam); }
 .hrs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.hrs li { display: flex; justify-content: space-between; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.hrs li { display: flex; justify-content: space-between; border-bottom: 1px solid rgba(237,243,244,.25); padding-bottom: 6px; }
 @media(max-width: 760px) { .info-grid { grid-template-columns: 1fr; } }
 
 /* ==========================================================================
