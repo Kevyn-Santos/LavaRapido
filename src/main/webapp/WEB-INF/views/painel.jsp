@@ -8,28 +8,45 @@
   <title>Painel — Fast Splash</title>
   <link rel="stylesheet" href="../../Assets/CSS/painel.css">
 </head>
-<body>
+<body class="panel-page panel-home">
 
-<header class="top">
+<header class="top panel-page-header">
   <div class="top-in">
-    <a class="lock" href="${pageContext.request.contextPath}/index.jsp">
-      <img src="${pageContext.request.contextPath}/Assets/Img/logo_fastsplash.png" alt="Fast Splash" class="logo-img">
+    <a class="lock" href="${pageContext.request.contextPath}/index.jsp" aria-label="Fast Splash, início">
+      <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav class="nav-panel">
-      <a href="${pageContext.request.contextPath}/index.jsp" class="btn ghost sm">Sair</a>
-    </nav>
+    <nav><a href="${pageContext.request.contextPath}/index.jsp">Voltar ao início</a></nav>
   </div>
 </header>
 
 <main class="page">
   <div class="wrap">
-    <div class="who">
-      <div>
-        <p class="small">Bem-vindo(a)</p>
-        <h1><c:out value="${sessionScope.colaboradorNome}" /></h1>
+    <section class="dashboard-welcome" aria-labelledby="dashboard-title">
+      <div class="dashboard-welcome-top">
+        <div class="dashboard-profile">
+          <span class="dashboard-avatar" id="collaborator-initials" aria-hidden="true"></span>
+          <div>
+            <h1 id="dashboard-title">
+              <span id="dashboard-greeting">Olá</span>,
+              <span id="collaborator-name"><c:out value="${sessionScope.colaboradorNome}" /></span>
+            </h1>
+            <p id="dashboard-date"></p>
+          </div>
+        </div>
+        <span class="dashboard-role role
+          ${sessionScope.nivelAcesso == 'ADMINISTRADOR' ? 'admin' : sessionScope.nivelAcesso == 'ATENDENTE' ? 'atendente' : 'operacional'}">
+          <c:choose>
+            <c:when test="${sessionScope.nivelAcesso == 'ADMINISTRADOR'}">Administrador</c:when>
+            <c:when test="${sessionScope.nivelAcesso == 'ATENDENTE'}">Atendente</c:when>
+            <c:otherwise>Operacional</c:otherwise>
+          </c:choose>
+        </span>
       </div>
-      <span class="role admin">Administrador</span>
-    </div>
+      <div class="dashboard-actions">
+        <a class="btn" href="painel-agendamentos.jsp">Novo agendamento</a>
+        <a class="btn btn-light" href="painel-atendimentos.jsp">Iniciar atendimento</a>
+      </div>
+    </section>
 
     <div class="phead">
       <div>
@@ -85,6 +102,39 @@
     </div>
   </div>
 </main>
+
+<script>
+  (() => {
+    const name = document.getElementById('collaborator-name');
+    const initials = document.getElementById('collaborator-initials');
+    const greeting = document.getElementById('dashboard-greeting');
+    const date = document.getElementById('dashboard-date');
+    const now = new Date();
+    const hour = now.getHours();
+    const collaboratorName = name ? name.textContent.trim() : '';
+
+    if (initials) {
+      const nameParts = collaboratorName.split(/\s+/).filter(Boolean);
+      initials.textContent = [nameParts[0], nameParts[nameParts.length - 1]]
+        .filter(Boolean)
+        .map(part => part.charAt(0).toLocaleUpperCase('pt-BR'))
+        .join('');
+    }
+
+    if (greeting) {
+      greeting.textContent = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+    }
+
+    if (date) {
+      const formattedDate = new Intl.DateTimeFormat('pt-BR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+      }).format(now);
+      date.textContent = formattedDate.replace(/(^|[\s-])\p{L}/gu, value => value.toLocaleUpperCase('pt-BR'));
+    }
+  })();
+</script>
 
 </body>
 </html>

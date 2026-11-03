@@ -13,16 +13,14 @@
     .tot b { font-size: 1.6rem; color: var(--ink); font-variation-settings: "wdth" 80; }
   </style>
 </head>
-<body>
+<body class="panel-page">
 
-<header class="top">
+<header class="top panel-page-header">
   <div class="top-in">
-    <a class="lock" href="${pageContext.request.contextPath}/index.jsp">
-      <img src="${pageContext.request.contextPath}/Assets/Img/logo_fastsplash.png" alt="Fast Splash" class="logo-img">
+    <a class="lock" href="${pageContext.request.contextPath}/index.jsp" aria-label="Fast Splash, início">
+      <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav class="nav-panel">
-      <a href="${pageContext.request.contextPath}/index.jsp" class="btn ghost sm">Sair</a>
-    </nav>
+    <nav><a href="${pageContext.request.contextPath}/index.jsp">Voltar ao início</a></nav>
   </div>
 </header>
 

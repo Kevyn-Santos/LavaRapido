@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../Assets/CSS/style.css">
 </head>
-<body>
+<body class="staff-login-page">
 
 <header class="top staff-login-header">
   <div class="top-in">

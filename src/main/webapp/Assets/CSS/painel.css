@@ -104,6 +104,177 @@ button, input, select { font: inherit; color: inherit; }
 .top .lock { font-size: 1.25rem; font-weight: 800; display: inline-flex; align-items: center; gap: .32em; }
 .top .logo-img { display: block; width: 140px; max-width: 42vw; height: auto; object-fit: contain; }
 
+body.panel-page .top.panel-page-header {
+  position: fixed;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--navy) 92%, transparent);
+  border-bottom-color: rgba(237, 243, 244, .2);
+  backdrop-filter: blur(12px);
+}
+
+body.panel-page .panel-page-header .top-in {
+  gap: 22px;
+  padding: 12px clamp(16px, 2vw, 28px);
+  max-width: 1440px;
+  min-height: 60px;
+}
+
+body.panel-page .panel-page-header .lock,
+body.panel-page .panel-page-header nav a {
+  color: var(--foam);
+}
+
+body.panel-page .panel-page-header nav a {
+  font-weight: 600;
+  font-size: .95rem;
+}
+
+body.panel-page .panel-page-header nav a:hover {
+  color: var(--tide);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+body.panel-page main.page {
+  padding-top: 92px;
+}
+
+body.panel-home .top.panel-home-header {
+  position: fixed;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--navy) 92%, transparent);
+  border-bottom-color: rgba(237, 243, 244, .2);
+  backdrop-filter: blur(12px);
+}
+
+body.panel-home .panel-home-header .top-in {
+  gap: 22px;
+  padding: 12px clamp(16px, 2vw, 28px);
+  max-width: 1440px;
+  min-height: 60px;
+}
+
+body.panel-home .panel-home-header .lock,
+body.panel-home .panel-home-header nav a {
+  color: var(--foam);
+}
+
+body.panel-home .panel-home-header nav a {
+  font-weight: 600;
+  font-size: .95rem;
+}
+
+body.panel-home .panel-home-header nav a:hover {
+  color: var(--tide);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+body.panel-home main.page {
+  padding-top: 92px;
+}
+
+body.panel-home .dashboard-welcome {
+  margin-bottom: 28px;
+  padding: 0 0 4px;
+  color: var(--ink);
+}
+
+body.panel-home .dashboard-welcome-top,
+body.panel-home .dashboard-profile {
+  display: flex;
+  align-items: center;
+}
+
+body.panel-home .dashboard-welcome-top {
+  justify-content: space-between;
+  gap: 20px;
+}
+
+body.panel-home .dashboard-profile {
+  min-width: 0;
+  gap: 15px;
+}
+
+body.panel-home .dashboard-avatar {
+  display: grid;
+  flex: 0 0 58px;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--tide);
+  color: var(--navy);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+body.panel-home .dashboard-profile h1 {
+  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  line-height: 1.05;
+  font-weight: 800;
+}
+
+body.panel-home #dashboard-date {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: .88rem;
+}
+
+body.panel-home .dashboard-role {
+  border-radius: 4px 12px 4px 4px;
+  background: #FFFFFF;
+  color: var(--navy);
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+body.panel-home .dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+body.panel-home .btn-light {
+  border-color: #FFFFFF;
+  background: #FFFFFF;
+  color: var(--navy);
+}
+
+body.panel-home .btn-light:hover {
+  background: #EDF3F4;
+}
+
+@media(max-width: 560px) {
+  body.panel-home .dashboard-welcome {
+    padding: 0 0 4px;
+  }
+
+  body.panel-home .dashboard-welcome-top {
+    flex-wrap: wrap;
+  }
+
+  body.panel-home .dashboard-profile {
+    flex: 1 1 100%;
+  }
+
+  body.panel-home .dashboard-avatar {
+    flex-basis: 50px;
+    width: 50px;
+    height: 50px;
+  }
+
+  body.panel-home .dashboard-profile h1 {
+    font-size: clamp(1.35rem, 6vw, 1.8rem);
+  }
+
+  body.panel-home .dashboard-welcome-top { gap: 10px; }
+}
+
 /* ==========================================================================
    3. ESTRUTURA DO PAINEL E NAVEGAÇÃO DE SEPARADORES
    ========================================================================== */
