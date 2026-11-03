@@ -1,25 +1,27 @@
 package com.splash.web.api.v1;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.stream.Collectors;
+
 
 import com.splash.web.api.ApiServlet;
 
+import com.splash.web.api.Json;
+import com.splash.web.api.dto.AtualizarPerfilRequest;
 import com.splash.web.db.DAOCliente;
 import com.splash.web.model.Cliente;
+import com.splash.web.api.dto.ClienteResumo;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.json.JSONObject;
 
 /**
  * <pre>
- * GET   /api/v1/me -> {id, nome, cpf, telefone, email}
- * PATCH /api/v1/me {nome?, telefone?, email?}
+ * GET   /api/v1/usuarios -> {id, nome, cpf, telefone, email}
+ * PATCH /api/v1/usuarios {nome?, telefone?, email?}
  * </pre>
  *
  * TODO: implementar usando DAOCliente. Ver miscelaneous/analise-app-mobile.md, seção 3.5.
@@ -29,17 +31,8 @@ public class ClienteApiServlet extends ApiServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // TODO: DAOCliente.getusuario(idClienteAutenticado(request))
-
-        // Configurações de resposta para o front
-        response.setContentType("application/json"); // Define a resposta como Json
-        response.setCharacterEncoding("UTF-8"); // Define a codificação de texto em UTF-8
-        response.setStatus(HttpServletResponse.SC_OK); // Define código HTTp 200 com o padrão da página
-
         // definição das variaveis utilizadas
         DAOCliente dao = new DAOCliente(); // Cria o objeto de DAO
-        Map<String, Object> payload = new HashMap<>(); // Cria um Hash para armazenar os retornos da api
-        PrintWriter out = response.getWriter(); // Cria um objeto para escrever a resposta
 
         /*
         * Possiveis erros:
@@ -55,47 +48,31 @@ public class ClienteApiServlet extends ApiServlet {
             /*
             * Retornar a lista
             * Iterar sobre a lista
-            * Montar um Hash ou payload chave-valor com os elementos da lista
+            * Montar o DTO de resposta com os elementos da lista
             * */
             for(Cliente item:dao.getUsuarios()){
-                payload.put("Id_Cliente", item.getId_cliente());
-                payload.put("Nome", item.getNome());
-                payload.put("CPF", item.getCpf());
-                payload.put("Email", item.getEmail());
-                payload.put("Telefone", item.getTelefone());
-            }
-
-            // cria um iterador a partir dos valores de payload
-            Iterator<Object> iter = payload.values().iterator();
-
-            // Enquanto o payload tiver valores, monta o JSON, retorna com "Out",
-            // captura essa iteração e passa para a proxima
-            while(iter.hasNext()) {
+                ClienteResumo resumo = new ClienteResumo(
+                        item.getId_cliente(), item.getNome(), item.getCpf(), item.getTelefone(), item.getEmail());
 
                 String json = """
                         {
                             "id": %d,
                             "nome": %s,
                             "cpf": %s,
-                            "email: %s,
+                            "email": %s,
                             "telefone": %s
                         }
                         """.formatted(
-                        (Integer) payload.get("Id_Cliente"),
-                        payload.get("Nome"),
-                        payload.get("CPF"),
-                        payload.get("Email"),
-                        payload.get("Telefone"));
-                // retorna a resposta para o mobile escrevendo o resultado da API
-                out.print(json);
-                out.flush();
-                Object nextValue = iter.next();
+                        resumo.id(),
+                        resumo.nome(),
+                        resumo.cpf(),
+                        resumo.email(),
+                        resumo.telefone());
+
+                Json.Response_enviar(response, HttpServletResponse.SC_OK ,json);
             }
-
-
-
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Um erro ocorreu no servidor da aplicação e a requisição não pode ser concluida");
         }
     }
 
@@ -103,6 +80,58 @@ public class ClienteApiServlet extends ApiServlet {
     protected void doPatch(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // TODO: DAOCliente.updateUsuarios(...)
-        response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
+        DAOCliente dao = new DAOCliente();
+
+        try {
+
+            String JsonMobile = request.getReader().lines().collect(Collectors.joining());
+            JSONObject jsonObject = new JSONObject(JsonMobile); // instancia um JSONObject para lidar com o envio de requisições do mobile
+
+            // Usa a DTO + JSONObject para receber as requisições do mobile. Os metodos "opt" são utilizados, pois nem todas as informações serão atualizadas sempre.
+            AtualizarPerfilRequest perfil = new AtualizarPerfilRequest(
+                    jsonObject.optString("nome", null), jsonObject.optString("telefone", null), jsonObject.optString("email", null));
+
+
+            // Cria o cliente a ser editado. Aqui puxa direto do mobile.
+            Cliente client = dao.getusuario(jsonObject.getInt("idcliente"));
+
+            // Verifica quais informações foram preenchidas na DTO, ou seja, quais o mobile enviou.
+            // Depois inclui esses valores em "Client"
+            if(perfil.nome() != null) client.setNome(perfil.nome());
+            if(perfil.telefone() != null) client.setTelefone(perfil.telefone());
+            if(perfil.email() != null) client.setEmail(perfil.email());
+
+            // depois, passa os valores para a DAO de atualização
+            dao.updateUsuarios(client.getId_cliente(), client.getNome(), client.getTelefone(), client.getEmail());
+
+            // Cria um json informando os dados atualizados
+            ClienteResumo resumo = new ClienteResumo(
+                    client.getId_cliente(),
+                    client.getNome(),
+                    client.getCpf(),
+                    client.getTelefone(),
+                    client.getEmail()
+            );
+            String json = """
+                        {
+                            "id": %d,
+                            "nome": %s,
+                            "cpf": %s,
+                            "email": %s,
+                            "telefone": %s
+                        }
+                        """.formatted(
+                    resumo.id(),
+                    resumo.nome(),
+                    resumo.cpf(),
+                    resumo.email(),
+                    resumo.telefone());
+
+            // por fim, manda o json para o mobile informando a atualização
+            Json.Response_enviar(response, HttpServletResponse.SC_OK, json);
+
+        } catch (SQLException e) {
+            Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro interno na atualização");
+        }
     }
 }

@@ -201,24 +201,7 @@ Nesse caso, o restante deste documento continua valendo; muda só a "casca" (`Ht
 
 **A adicionar**
 
-| Biblioteca | Versão (Maven Central, 22/10/2026) | Por quê | Alternativas |
-| --- | --- | --- | --- |
-| `com.fasterxml.jackson.core:jackson-databind` | 2.22.4 | Ler e escrever JSON. Serializa os `record` de `model.dto` direto e lê o corpo das requisições em `record`s. Escrever um *parser* JSON à mão não compensa | `gson` 2.14.0 (mais simples, precisa de adaptador para `LocalDate`); JSON-B com `org.eclipse:yasson` 3.0.5 (padrão Jakarta); Jackson 3 (`tools.jackson.core:jackson-databind` 3.2.4, já trata `java.time`, mas tem menos material de estudo) |
-| `com.fasterxml.jackson.datatype:jackson-datatype-jsr310` | 2.22.4 | `LocalDate`/`LocalTime` como `"2026-10-20"` / `"09:00"` | — |
-
-```xml
-<!-- API JSON para o app mobile -->
-<dependency>
-    <groupId>com.fasterxml.jackson.core</groupId>
-    <artifactId>jackson-databind</artifactId>
-    <version>2.22.4</version>
-</dependency>
-<dependency>
-    <groupId>com.fasterxml.jackson.datatype</groupId>
-    <artifactId>jackson-datatype-jsr310</artifactId>
-    <version>2.22.4</version>
-</dependency>
-```
+Nenhuma. Decisão do projeto: sem biblioteca de JSON. Leitura e escrita do corpo são manuais (montagem/parse de string em `Json.java`, seção 3.6), como já é feito em `ClienteApiServlet`.
 
 **Opcionais**
 
@@ -233,7 +216,7 @@ Nesse caso, o restante deste documento continua valendo; muda só a "casca" (`Ht
 
 ```
 api/
-  Json.java                 ObjectMapper único; ler(corpo), enviar(status, objeto), erro(status, mensagem)
+  Json.java                 JSON manual (sem biblioteca): ler(corpo) como texto, enviar(status, corpoJson), erro(status, mensagem)
   Tokens.java               emitir(idCliente) e validar(token): JWT HS256 com javax.crypto
   ApiAuthFilter.java        @WebFilter("/api/v1/*"): valida "Authorization: Bearer", põe idCliente no request
   ApiSupport.java           segmentos do getPathInfo(), conversão de exceções em HTTP (tabela 3.7)
@@ -249,7 +232,7 @@ api/
 Regras que seguem o `CLAUDE.md`:
 
 - Os servlets da API **chamam os DAOs direto**, como os servlets JSP (`new DAOVeiculo().listarPorCliente(id)`).
-- As **respostas** usam os DTOs de `model.dto` (`ServicoView`, `VeiculoView`, `AgendamentoView`...). O Jackson lê os `record` pelos componentes, e os getters `getX()` criados para o EL dão o mesmo nome de propriedade, então o JSON sai igual.
+- As **respostas** usam os DTOs de `model.dto` (`ServicoView`, `VeiculoView`, `AgendamentoView`...). O JSON é montado à mão em `Json.java` a partir dos componentes do `record` (ou dos getters `getX()` do EL, mesmo nome de propriedade).
 - As **entradas** (corpo JSON) são `record`s próprios em `api.requisicao`, **nunca** os DTOs de `model.dto`. O servlet converte a entrada em argumentos do DAO ou em model (`new Cliente(...)`, que valida via `Validacao`).
 - Código, nomes e mensagens em português.
 
@@ -292,14 +275,17 @@ final class Tokens {
             if (!MessageDigest.isEqual(esperada, B64D.decode(partes[2]))) {   // tempo constante
                 return null;
             }
-            JsonNode claims = Json.MAPPER.readTree(B64D.decode(partes[1]));
-            if (claims.path("exp").asLong() < Instant.now().getEpochSecond()) {
+            String corpo = new String(B64D.decode(partes[1]), StandardCharsets.UTF_8);
+            long expira = Long.parseLong(extrairCampo(corpo, "exp"));
+            if (expira < Instant.now().getEpochSecond()) {
                 return null;
             }
-            return claims.path("sub").asInt();
-        } catch (IllegalArgumentException | IOException exception) {
+            return Integer.parseInt(extrairCampo(corpo, "sub"));
+        } catch (IllegalArgumentException exception) {
             return null;
         }
+        // extrairCampo: parser manual simples, sem biblioteca de JSON
+        // (o corpo do token é só {"sub":N,"exp":N}, gerado pelo próprio Tokens.emitir)
     }
 
     private static byte[] assinar(String conteudo) {
@@ -358,37 +344,34 @@ Ajustes de DAO pedidos por esses endpoints:
 
 ### 3.6 Padrão de código
 
-`Json.java`:
+`Json.java` — sem biblioteca, montagem e leitura manuais (como já é feito em `ClienteApiServlet`):
 
 ```java
 public final class Json {
 
-    static final ObjectMapper MAPPER = JsonMapper.builder()
-            .addModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .build();
-
     private Json() {
     }
 
-    static <T> T ler(HttpServletRequest request, Class<T> tipo) throws IOException {
-        try {
-            return MAPPER.readValue(request.getInputStream(), tipo);
-        } catch (JsonProcessingException exception) {
-            throw new IllegalArgumentException("JSON inválido.");
-        }
-    }
-
-    static void enviar(HttpServletResponse response, int status, Object corpo) throws IOException {
+    // Monta o corpo manualmente (ex.: .formatted(...) com os campos do record/DTO,
+    // escapando aspas e barras do texto livre antes de inserir)
+    static void enviar(HttpServletResponse response, int status, String corpoJson) throws IOException {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        MAPPER.writeValue(response.getOutputStream(), corpo);
+        response.getWriter().print(corpoJson);
     }
 
     static void erro(HttpServletResponse response, int status, String mensagem) throws IOException {
-        enviar(response, status, Map.of("erro", mensagem));
+        enviar(response, status, "{\"erro\": \"%s\"}".formatted(escapar(mensagem)));
+    }
+
+    // Lê o corpo da requisição como texto; o parse dos campos é manual, por rota
+    static String ler(HttpServletRequest request) throws IOException {
+        return request.getReader().lines().reduce("", (a, b) -> a + b);
+    }
+
+    private static String escapar(String texto) {
+        return texto.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }
 ```
@@ -438,7 +421,9 @@ public class AgendamentoApiServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         int idCliente = (int) request.getAttribute("idCliente");
         try {
-            Json.enviar(response, 200, new DAOAgendamento().listarPorCliente(idCliente));
+            // Monta o array JSON manualmente a partir da lista de AgendamentoView
+            String corpoJson = AgendamentoApiSupport.paraJson(new DAOAgendamento().listarPorCliente(idCliente));
+            Json.enviar(response, 200, corpoJson);
         } catch (SQLException exception) {
             ApiSupport.erroBanco(request, response, exception);
         }
@@ -450,7 +435,9 @@ public class AgendamentoApiServlet extends HttpServlet {
         String[] partes = ApiSupport.segmentos(request);   // "" -> [], "/12/cancelar" -> ["12", "cancelar"]
         try {
             if (partes.length == 0) {
-                NovoAgendamento corpo = Json.ler(request, NovoAgendamento.class);
+                // Corpo lido como texto (Json.ler) e campos extraídos à mão (sem biblioteca)
+                String corpoJson = Json.ler(request);
+                NovoAgendamento corpo = NovoAgendamento.extrairDe(corpoJson); // parser manual próprio da rota
                 if (corpo.idVeiculo() == null || corpo.data() == null || corpo.horario() == null
                         || corpo.data().isBefore(LocalDate.now()) || corpo.idsServicos() == null) {
                     throw new IllegalArgumentException("Selecione um veículo, ao menos um serviço e uma data válida.");
@@ -530,7 +517,7 @@ Na opção B (`HttpServer`), seria preciso um segundo serviço no Render com out
 ### 3.11 Ordem sugerida
 
 1. Decidir A ou B (recomendado A) e apagar ou adaptar `api/Handler.java`.
-2. Adicionar Jackson ao `pom.xml`; criar `Json`, `Tokens`, `ApiAuthFilter`, `ApiSupport`; configurar `JWT_SECRET`.
+2. Criar `Json` (JSON manual, sem biblioteca), `Tokens`, `ApiAuthFilter`, `ApiSupport`; configurar `JWT_SECRET`.
 3. `DAOCliente.autenticarPorCpf` + `POST /auth/login` + `GET /servicos`; testar com `curl`. No app: `ApiClient`, login real e serviços da API.
 4. Veículos (com marca e update) e `GET /me`.
 5. Agendamentos: estender `AgendamentoView`, criar/listar/cancelar; depois `GET /horarios`.

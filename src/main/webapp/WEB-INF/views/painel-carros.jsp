@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Carros — Fast Splash</title>
-  <link rel="stylesheet" href="../../Assets/CSS/painel.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/Assets/CSS/painel.css">
 </head>
 <body class="panel-page">
 
@@ -27,14 +27,14 @@
     </div>
 
     <nav class="ptabs" aria-label="Áreas do painel">
-      <a href="painel.jsp">Início</a>
-      <a href="painel-clientes.jsp">Clientes</a>
-      <a href="painel-carros.jsp" class="on" aria-current="page">Carros</a>
-      <a href="painel-agendamentos.jsp">Agendamentos</a>
-      <a href="painel-atendimentos.jsp">Atendimentos</a>
-      <a href="painel-pagamentos.jsp">Pagamentos</a>
-      <a href="painel-colaboradores.jsp">Colaboradores</a>
-      <a href="painel-servicos.jsp">Serviços</a>
+      <a href="${pageContext.request.contextPath}/admin/inicio">Início</a>
+      <a href="${pageContext.request.contextPath}/painel/clientes">Clientes</a>
+      <a href="${pageContext.request.contextPath}/painel/carros" class="on" aria-current="page">Carros</a>
+      <a href="${pageContext.request.contextPath}/painel/agendamentos">Agendamentos</a>
+      <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
+      <a href="${pageContext.request.contextPath}/painel/pagamentos">Pagamentos</a>
+      <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
+      <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
     </nav>
 
     <!-- 1. TELA DA LISTA DE CARROS -->
@@ -55,7 +55,7 @@
     <div id="view-form" class="hide">
       <div class="fcard">
         <h2 id="form-title">Novo carro</h2>
-        <form id="form-car">
+        <form id="form-car" action="${pageContext.request.contextPath}/veiculos" method="post">
           <input type="hidden" id="car-id">
 
           <div class="field">
@@ -91,6 +91,6 @@
   </div>
 </main>
 
-<script src="../../Assets/Js/painel.js"></script>
+<script src="${pageContext.request.contextPath}/Assets/Js/painel.js"></script>
 </body>
 </html>

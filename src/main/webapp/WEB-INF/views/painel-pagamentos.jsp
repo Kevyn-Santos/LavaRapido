@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pagamentos — Fast Splash</title>
-  <link rel="stylesheet" href="../../Assets/CSS/painel.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/Assets/CSS/painel.css">
 </head>
 <body class="panel-page">
 
@@ -27,14 +27,14 @@
     </div>
 
     <nav class="ptabs" aria-label="Áreas do painel">
-      <a href="painel.jsp">Início</a>
-      <a href="painel-clientes.jsp">Clientes</a>
-      <a href="painel-carros.jsp">Carros</a>
-      <a href="painel-agendamentos.jsp">Agendamentos</a>
-      <a href="painel-atendimentos.jsp">Atendimentos</a>
-      <a href="painel-pagamentos.jsp" class="on" aria-current="page">Pagamentos</a>
-      <a href="painel-colaboradores.jsp">Colaboradores</a>
-      <a href="painel-servicos.jsp">Serviços</a>
+      <a href="${pageContext.request.contextPath}/admin/inicio">Início</a>
+      <a href="${pageContext.request.contextPath}/painel/clientes">Clientes</a>
+      <a href="${pageContext.request.contextPath}/painel/carros">Carros</a>
+      <a href="${pageContext.request.contextPath}/painel/agendamentos">Agendamentos</a>
+      <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
+      <a href="${pageContext.request.contextPath}/painel/pagamentos" class="on" aria-current="page">Pagamentos</a>
+      <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
+      <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
     </nav>
 
     <div class="phead">
@@ -50,6 +50,6 @@
   </div>
 </main>
 
-<script src="../../Assets/Js/painel.js?v=2"></script>
+<script src="${pageContext.request.contextPath}/Assets/Js/painel.js?v=2"></script>
 </body>
 </html>
