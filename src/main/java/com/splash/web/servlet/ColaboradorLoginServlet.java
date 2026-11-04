@@ -18,7 +18,7 @@ public class ColaboradorLoginServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/WEB-INF/views/acesso-colaborador.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/colaborador-login.jsp").forward(request, response);
     }
 
     @Override

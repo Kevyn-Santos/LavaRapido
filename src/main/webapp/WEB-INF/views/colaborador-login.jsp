@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../Assets/CSS/style.css">
+  <link rel="stylesheet" href="../Assets/CSS/style.css">
 </head>
 <body class="staff-login-page">
 
@@ -42,7 +42,7 @@
         </div>
         <div class="field">
           <label for="staff-password">Senha</label>
-          <input id="staff-password" name="senha" type="password" autocomplete="current-password" required>
+          <input id="staff-password" name="pass" type="password" autocomplete="current-password" required>
         </div>
         <button class="btn" type="submit">Entrar no painel</button>
       </form>
