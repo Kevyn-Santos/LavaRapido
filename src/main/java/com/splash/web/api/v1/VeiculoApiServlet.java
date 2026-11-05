@@ -119,7 +119,21 @@ public class VeiculoApiServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // TODO: DAOVeiculo.remover(idCliente, id) com o id lido do pathInfo (/{id})
+        // TODO: DAOVeiculo.remover(idCliente, idVeiculo) com o id lido do pathInfo (/{idCliente}=?{idVeiculo})
+
+        DAOVeiculo dao = new DAOVeiculo();
+        try{
+            String jsonMobile = request.getReader().lines().collect(Collectors.joining());
+            JSONObject jsonObject = new JSONObject(jsonMobile);
+            int client = jsonObject.getInt("idcliente");
+
+
+
+
+        } catch (RuntimeException e) {
+            throw new RuntimeException(e);
+        }
+
         response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
     }
 }
