@@ -1,4 +1,3 @@
-const STORAGE_KEY = "fastSplashAgendamentos";
 const form = document.querySelector("#booking-form");
 
 if (form) {
@@ -68,31 +67,8 @@ if (form) {
       return;
     }
 
-    const selectedClient = client.selectedOptions[0];
-    const booking = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      client: selectedClient.dataset.name,
-      car: selectedClient.dataset.car,
-      services: chosenServices,
-      total: chosenServices.reduce((sum, service) => sum + service.price, 0),
-      date: date.value,
-      time: time.value,
-      status: "Agendado",
-    };
-
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      if (!Array.isArray(saved)) throw new Error("Dados de agendamento inválidos.");
-      saved.push(booking);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-      feedback.textContent = "Agendamento criado. Ele já aparece na página de agendamentos.";
-      feedback.classList.remove("error");
-      createButton.textContent = "Agendamento criado";
-      createButton.disabled = true;
-    } catch (error) {
-      feedback.textContent = `Não foi possível salvar o agendamento: ${error.message}`;
-      feedback.classList.add("error");
-    }
+    feedback.textContent = "A integração com a API REST ainda não está disponível. O agendamento não foi enviado nem salvo.";
+    feedback.classList.add("error");
   });
 
   updateSummary();
@@ -100,53 +76,8 @@ if (form) {
 
 const createdBookings = document.querySelector("#created-bookings");
 if (createdBookings) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    if (!Array.isArray(saved)) throw new Error("Dados de agendamento inválidos.");
-
-    for (const booking of saved) {
-      if (!booking || typeof booking.client !== "string" ||
-          typeof booking.date !== "string" || typeof booking.time !== "string" ||
-          !Array.isArray(booking.services)) {
-        throw new Error("Há um agendamento salvo com dados incompletos.");
-      }
-
-      const card = document.createElement("article");
-      card.className = "booking-card";
-
-      const clientDetails = document.createElement("div");
-      clientDetails.className = "booking-client";
-      const clientName = document.createElement("b");
-      clientName.textContent = booking.client;
-      const car = document.createElement("span");
-      car.textContent = booking.car || "";
-      clientDetails.append(clientName, car);
-
-      const serviceDetails = document.createElement("div");
-      serviceDetails.className = "booking-service";
-      const serviceNames = document.createElement("b");
-      serviceNames.textContent = booking.services.map((service) => service.label).join(" + ");
-      const price = document.createElement("span");
-      price.textContent = `${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(booking.total)} — ${booking.status || "Agendado"}`;
-      serviceDetails.append(serviceNames, price);
-
-      const dateTime = document.createElement("div");
-      dateTime.className = "booking-client";
-      const dateLabel = document.createElement("b");
-      const [year, month, day] = booking.date.split("-").map(Number);
-      dateLabel.textContent = new Intl.DateTimeFormat("pt-BR").format(new Date(year, month - 1, day));
-      const timeLabel = document.createElement("span");
-      timeLabel.textContent = booking.time;
-      dateTime.append(dateLabel, timeLabel);
-
-      card.append(clientDetails, serviceDetails, dateTime);
-      createdBookings.append(card);
-    }
-  } catch (error) {
-    const message = document.createElement("p");
-    message.className = "booking-feedback";
-    message.classList.add("error");
-    message.textContent = `Não foi possível carregar os agendamentos criados: ${error.message}`;
-    createdBookings.append(message);
-  }
+  const message = document.createElement("p");
+  message.className = "booking-feedback";
+  message.textContent = "Os agendamentos serão carregados pela API REST.";
+  createdBookings.append(message);
 }

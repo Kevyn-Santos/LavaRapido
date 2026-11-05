@@ -50,7 +50,10 @@ public class AdminServlet extends HttpServlet {
                 default -> {
                 }
             }
-            request.getRequestDispatcher("/WEB-INF/views/admin.jsp").forward(request, response);
+            String view = "inicio".equals(secao)
+                    ? "/WEB-INF/views/painel.jsp"
+                    : "/WEB-INF/views/admin.jsp";
+            request.getRequestDispatcher(view).forward(request, response);
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
         }
