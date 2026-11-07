@@ -12,10 +12,10 @@
 
 <header class="top panel-page-header">
   <div class="top-in">
-    <a class="lock" href="${pageContext.request.contextPath}/index.jsp" aria-label="Fast Splash, início">
+    <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
       <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav><a href="${pageContext.request.contextPath}/index.jsp">Voltar ao início</a></nav>
+    <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
   </div>
 </header>
 

@@ -12,10 +12,10 @@
 
 <header class="top panel-page-header">
   <div class="top-in">
-    <a class="lock" href="${pageContext.request.contextPath}/index.jsp" aria-label="Fast Splash, início">
+    <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
       <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav><a href="${pageContext.request.contextPath}/index.jsp">Voltar ao início</a></nav>
+    <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
   </div>
 </header>
 
@@ -54,14 +54,51 @@
         <input type="search" id="input-search" placeholder="Buscar por nome, e-mail ou CPF...">
       </div>
 
-      <div id="clients-table-container"></div>
+      <div id="clients-table-container">
+        <c:if test="${empty clientes}">
+          <p class="small">Nenhum cliente cadastrado.</p>
+        </c:if>
+        <c:if test="${not empty clientes}">
+          <div class="tbl">
+            <div class="thead trow crow">
+              <div>Cliente</div>
+              <div>Telefone</div>
+              <div>Carros</div>
+              <div>Ações</div>
+            </div>
+            <c:forEach items="${clientes}" var="cliente">
+              <div class="trow crow" data-id="${cliente.id_cliente}">
+                <div data-l="Cliente">
+                  <strong><c:out value="${cliente.nome}" /></strong>
+                  <p class="small"><c:out value="${cliente.email}" /></p>
+                </div>
+                <div data-l="Telefone"><c:out value="${cliente.telefone}" /></div>
+                <div data-l="Carros">
+                  <c:choose>
+                    <c:when test="${empty cliente.veiculos}">—</c:when>
+                    <c:otherwise>
+                      <c:forEach items="${cliente.veiculos}" var="veiculo" varStatus="vs">
+                        <c:if test="${not vs.first}">, </c:if><c:out value="${veiculo.marca} ${veiculo.modelo}" />
+                      </c:forEach>
+                    </c:otherwise>
+                  </c:choose>
+                </div>
+                <div class="acts" data-l="Ações">
+                  <button type="button" class="btn sm ghost">Editar</button>
+                  <button type="button" class="btn sm danger">Remover</button>
+                </div>
+              </div>
+            </c:forEach>
+          </div>
+        </c:if>
+      </div>
     </div>
 
     <!-- 2. TELA DO FORMULÁRIO -->
     <div id="view-form" class="hide">
       <div class="fcard">
         <h2 id="form-title">Novo cliente</h2>
-        <form id="form-client" action="${pageContext.request.contextPath}/cadastro" method="post">
+        <form id="form-client" action="/cadastro" method="post">
           <input type="hidden" id="client-id">
 
           <div class="field">

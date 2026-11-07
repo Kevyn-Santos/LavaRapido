@@ -15,6 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 
+import javax.lang.model.UnknownEntityException;
+
 /**
  * <pre>
  * GET    /api/v1/veiculos      -> [{id, placa, marca, modelo, cor}]
@@ -38,9 +40,10 @@ public class VeiculoApiServlet extends HttpServlet {
             // Cria um JsonObject para lidar com as informações enviadas pelo mobile
             String jsonMobile = request.getReader().lines().collect(Collectors.joining());
             JSONObject jsonObject = new JSONObject(jsonMobile);
+            int client = jsonObject.getInt("idcliente");
 
             // cria uma lista de veículos advindas da DAO "listarPorCliente"
-            List<VeiculoView> veiculos = dao.listarPorCliente(jsonObject.getInt("idcliente"));
+            List<VeiculoView> veiculos = dao.listarPorCliente(client);
 
             for(VeiculoView item:veiculos) { // Itera sobre cada ítem da lista
 
@@ -126,14 +129,18 @@ public class VeiculoApiServlet extends HttpServlet {
             String jsonMobile = request.getReader().lines().collect(Collectors.joining());
             JSONObject jsonObject = new JSONObject(jsonMobile);
             int client = jsonObject.getInt("idcliente");
+            int veiculo = jsonObject.getInt("idveiculo");
 
+            boolean removidos = dao.remover(client, veiculo);
 
+            if (removidos) {
+                Json.Response_ok(response, "Veículo %d excluído com sucesso!".formatted(veiculo));
+            }else{
+                Json.erro(response, HttpServletResponse.SC_UNPROCESSABLE_CONTENT, "Veículo ou cliente não encontrado na base");
+            }
 
-
-        } catch (RuntimeException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException _) {
         }
 
-        response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
     }
 }

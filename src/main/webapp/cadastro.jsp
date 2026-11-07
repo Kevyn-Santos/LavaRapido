@@ -13,10 +13,10 @@
 
 <header class="top staff-login-header">
   <div class="top-in">
-    <a class="lock" href="index.html" aria-label="Fast Splash, início">
+    <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
       <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav><a href="index.html">Voltar ao início</a></nav>
+    <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
   </div>
 </header>
 

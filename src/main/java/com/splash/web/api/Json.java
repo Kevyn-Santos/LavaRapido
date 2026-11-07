@@ -1,9 +1,13 @@
 package com.splash.web.api;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.json.JSONObject;
 
 /**
  * Helper central de serialização JSON da API. Foramtações constanxtes de resposta, corretas ou com erros, podem ser feitos por aqui, por exemplo:

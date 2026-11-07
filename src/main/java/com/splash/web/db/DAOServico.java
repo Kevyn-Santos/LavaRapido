@@ -20,7 +20,7 @@ public class DAOServico {
     --------------------------------------*/
 
     public List<ServicoView> listar() throws SQLException {
-        String sql = "SELECT id_servico, nome, descricao, preco FROM servico ORDER BY nome";
+        String sql = "SELECT id_servico, nome, descricao, preco FROM servico ORDER BY id_servico";
         List<ServicoView> servicos = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);

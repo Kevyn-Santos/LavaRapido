@@ -1,7 +1,10 @@
 package com.splash.web.servlet;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Map;
+
+import com.splash.web.db.DAOCliente;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -34,6 +37,16 @@ public class PainelServlet extends HttpServlet {
         if (WebSupport.colaboradorId(request, response, "OPERACIONAL") < 0) {
             return;
         }
+
+        if ("clientes".equals(secao)) {
+            try {
+                request.setAttribute("clientes", new DAOCliente().getUsuariosComVeiculos());
+            } catch (SQLException e) {
+                WebSupport.erroBanco(request, response, e);
+                return;
+            }
+        }
+
         request.getRequestDispatcher(pagina).forward(request, response);
     }
 }

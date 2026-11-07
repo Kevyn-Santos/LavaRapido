@@ -7,10 +7,12 @@ import java.time.LocalDate;
  * DTO de leitura de um agendamento do cliente: junta veículo, total dos serviços (SUM) e pagamento.
  * Só carrega dados: nunca é usado para gravar.
  */
-public record AgendamentoView(int id, String placa, String veiculo, LocalDate data, String horario,
+public record AgendamentoView(int id_cliente, int id_veiculo, int id_servico, String placa, String veiculo, LocalDate data, String horario,
         String status, BigDecimal total, String statusPagamento, String formaPagamento) {
     // Getters no padrão JavaBean para a EL das JSPs (${agendamento.total})
-    public int getId() { return id; }
+    public int getIdCliente() { return id_cliente; }
+    public int getidVeiculo() { return id_veiculo; }
+    public int getIdServico() { return id_servico; }
     public String getPlaca() { return placa; }
     public String getVeiculo() { return veiculo; }
     public LocalDate getData() { return data; }
