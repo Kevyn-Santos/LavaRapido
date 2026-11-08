@@ -6,7 +6,7 @@ Mudança só no front. A lógica do servlet `/editarCadastro` ainda não foi imp
 
 ## O que mudou
 
-### `src/main/webapp/index.jsp`
+### `../src/main/webapp/WEB-INF/views/index.jsp`
 - Novo formulário **Editar cadastro** abaixo de "Deletar cadastro":
   - `action="editarCadastro"`, `method="post"`.
   - `<select name="IdUser">` (obrigatório) para escolher o usuário. As opções vêm de

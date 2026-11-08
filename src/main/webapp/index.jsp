@@ -1,5 +1,7 @@
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<fmt:setLocale value="pt_BR" />
 <!doctype html>
 <html lang="pt-BR">
 
@@ -41,7 +43,7 @@
    <!-- Hero Section com Efeito Sticky & Parallax -->
 <section class="scene-hero" id="topo" data-scene="pin">
   <div class="pin">
-    
+
     <!-- Vídeo do Opala 3D no fundo -->
     <video id="hero-video" class="hero-bg-video" autoplay muted loop playsinline>
       <source src="Assets/Video/lavagem-opala.mp4" type="video/mp4">
@@ -86,50 +88,19 @@
       <div class="wrap">
         <h2 class="svc-h reveal">Quatro jeitos de lavar.</h2>
         <div class="svc-grid">
-          
-          <article class="svc-card reveal delay-1">
-            <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
-            <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
-            </svg>
-            <h3>Lavagem Simples</h3>
-            <p class="small">Lavagem externa com secagem à mão.</p>
-            <p class="price">R$ 40,00</p>
-            <p class="small">cerca de 30 min</p>
-          </article>
 
-          <article class="svc-card reveal delay-2">
-            <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
-            <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
-            </svg>
-            <h3>Lavagem Completa</h3>
-            <p class="small">Externa e interna: aspiração, painel e vidros.</p>
-            <p class="price">R$ 70,00</p>
-            <p class="small">cerca de 60 min</p>
-          </article>
-
-          <article class="svc-card reveal delay-3">
-            <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
-            <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
-            </svg>
-            <h3>Enceramento</h3>
-            <p class="small">Cera aplicada à mão para proteger e dar brilho.</p>
-            <p class="price">R$ 90,00</p>
-            <p class="small">cerca de 60 min</p>
-          </article>
-
-          <article class="svc-card reveal delay-4">
-            <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
-            <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
-              <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
-            </svg>
-            <h3>Detalhamento Interno</h3>
-            <p class="small">Bancos, carpetes e plásticos com limpeza cuidadosa.</p>
-            <p class="price">R$ 150,00</p>
-            <p class="small">cerca de 90 min</p>
-          </article>
+          <c:forEach var="servico" items="${servicos}" varStatus="st">
+            <article class="svc-card reveal delay-${(st.index % 4) + 1}">
+              <a class="go" href="#cadastro" aria-label="Reservar serviço">↗</a>
+              <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M20 3C20 3 7 17 7 25a13 13 0 0 0 26 0C33 17 20 3 20 3z" fill="#8FC9E8" />
+              </svg>
+              <h3>${servico.nome}</h3>
+              <p class="small">${servico.descricao}</p>
+              <p class="price"><fmt:formatNumber value="${servico.preco}" type="currency" currencySymbol="R$ " /></p>
+              <p class="small">Consulte o tempo no agendamento</p>
+            </article>
+          </c:forEach>
         </div>
 
         <div class="how">

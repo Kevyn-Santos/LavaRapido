@@ -9,16 +9,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../../Assets/CSS/style.css">
+  <link rel="stylesheet" href="../Assets/CSS/style.css">
 </head>
 <body class="staff-login-page">
 
 <header class="top staff-login-header">
   <div class="top-in">
-    <a class="lock" href="${pageContext.request.contextPath}/index.jsp" aria-label="Fast Splash, início">
-      <img class="logo-fastsplash" src="${pageContext.request.contextPath}/Assets/Img/logo_fastsplash.png" alt="Fast Splash">
+    <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
+      <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
     </a>
-    <nav><a href="${pageContext.request.contextPath}/index.jsp">Voltar ao início</a></nav>
+    <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
   </div>
 </header>
 
@@ -42,7 +42,7 @@
         </div>
         <div class="field">
           <label for="staff-password">Senha</label>
-          <input id="staff-password" name="senha" type="password" autocomplete="current-password" required>
+          <input id="staff-password" name="pass" type="password" autocomplete="current-password" required>
         </div>
         <button class="btn" type="submit">Entrar no painel</button>
       </form>

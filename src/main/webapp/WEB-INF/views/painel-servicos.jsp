@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Serviços — Fast Splash</title>
   <link rel="stylesheet" href="${pageContext.request.contextPath}/Assets/CSS/painel.css">
+  <style> .hide { display: none !important; } </style>
 </head>
 <body class="panel-page">
 <header class="top panel-page-header"><div class="top-in">
@@ -26,6 +27,12 @@
   <div class="phead">
     <div><h2>Serviços e preços</h2><p class="small">Cadastre, edite ou remova os serviços oferecidos.</p></div>
     <a class="btn" href="${pageContext.request.contextPath}/servicos">Novo serviço</a>
+<header class="top panel-page-header">
+  <div class="top-in">
+    <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
+      <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
+    </a>
+    <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
   </div>
   <c:if test="${not empty erro}"><p class="err" role="alert"><c:out value="${erro}" /></p></c:if>
   <c:if test="${param.sucesso == '1'}"><p class="ok" role="status">Serviço salvo com sucesso.</p></c:if>

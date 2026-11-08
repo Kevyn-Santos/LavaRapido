@@ -25,7 +25,7 @@ public class ColaboradorLoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String email = WebSupport.campo(request, "email");
-        String senha = request.getParameter("senha");
+        String senha = request.getParameter("pass");
         if (!WebSupport.preenchidos(email, senha)) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro", "Preencha e-mail e senha.");

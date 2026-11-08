@@ -37,7 +37,6 @@
   function plateValue(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7); }
   function validPlate(v) { return /^[A-Z]{3}\d[A-Z]\d{2}$/.test(v); }
 
-  const pendingMessage = 'Integração com a API REST pendente. Nenhum dado foi enviado ou salvo.';
   const modules = [
     { container: 'clients-table-container', form: 'form-client', add: 'btn-add-client', cancel: 'btn-cancel-client' },
     { container: 'cars-table-container', form: 'form-car', add: 'btn-add-car', cancel: 'btn-cancel-car' },
@@ -47,14 +46,6 @@
     { container: 'queues-container' },
     { container: 'payments-container' }
   ];
-
-  function showPending(container) {
-    const message = document.createElement('div');
-    message.className = 'empty';
-    message.setAttribute('role', 'status');
-    message.textContent = 'Os dados deste módulo serão carregados pela API REST.';
-    container.replaceChildren(message);
-  }
 
   function showFormMessage(form, message) {
     let feedback = form.querySelector('[role="alert"]');
@@ -137,7 +128,6 @@
           .forEach(input => input.setCustomValidity(''));
         list.classList.add('hide');
         formView.classList.remove('hide');
-        showFormMessage(form, pendingMessage);
       });
     }
     if (cancelButton) {
@@ -147,39 +137,39 @@
       });
     }
     form.addEventListener('submit', event => {
-      event.preventDefault();
-
       const cpfInput = document.getElementById('client-cpf');
       const phoneInput = document.getElementById('client-phone');
       const plateInput = document.getElementById('car-plate');
       if (cpfInput && !validCPF(cpfInput.value)) {
         cpfInput.setCustomValidity('Informe um CPF válido com 11 dígitos.');
         cpfInput.reportValidity();
+        event.preventDefault();
         return;
       }
       if (phoneInput && ![10, 11].includes(phoneDigits(phoneInput.value).length)) {
         phoneInput.setCustomValidity('Informe um telefone com DDD e 8 ou 9 dígitos.');
         phoneInput.reportValidity();
+        event.preventDefault();
         return;
       }
       if (plateInput && !validPlate(plateValue(plateInput.value))) {
         plateInput.setCustomValidity('Informe uma placa válida no formato ABC1D23.');
         plateInput.reportValidity();
+        event.preventDefault();
         return;
       }
-      if (!form.reportValidity()) return;
-      showFormMessage(form, pendingMessage);
+      if (!form.reportValidity()) {
+        event.preventDefault();
+        return;
+      }
+      // válido: segue envio nativo do form (POST) pra servlet no atributo action.
     });
   }
 
   function init() {
     setupClientMasks();
     setupPlateMask();
-    modules.forEach(module => {
-      const container = document.getElementById(module.container);
-      if (container) showPending(container);
-      setupForm(module);
-    });
+    modules.forEach(module => setupForm(module));
   }
 
   if (document.readyState === 'loading') {

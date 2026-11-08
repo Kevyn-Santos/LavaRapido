@@ -22,10 +22,11 @@ public class VeiculoServlet extends HttpServlet {
         }
         try {
             request.setAttribute("veiculos", new DAOVeiculo().listarPorCliente(clienteId));
-            request.getRequestDispatcher("/WEB-INF/views/veiculos.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/painel-carros.jsp").forward(request, response);
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
         }
+        return;
     }
 
     @Override

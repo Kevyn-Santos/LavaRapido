@@ -25,5 +25,6 @@ public class PortalServlet extends HttpServlet {
             return;
         }
         response.sendRedirect(request.getContextPath() + "/");
+        return;
     }
 }

@@ -27,22 +27,31 @@ public class DAOAgendamento {
     /*--------------------------------------
     Listagem de agendamentos
     --------------------------------------*/
-
-    public List<AgendamentoView> listarPorCliente(int idCliente) throws SQLException {
-        String sql = "SELECT a.id_agendamento, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
+/*
+* "SELECT a.id_agendamento, v.id_veiculo, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
                 + "a.data, a.horario, a.status, COALESCE(SUM(ags.valor_praticado), 0) AS total, "
                 + "MAX(p.status_pagamento) AS status_pagamento, MAX(p.forma_pagamento) AS forma_pagamento "
                 + "FROM agendamento a JOIN veiculo v ON v.id_veiculo = a.id_veiculo "
                 + "LEFT JOIN agendamento_servico ags ON ags.id_agendamento = a.id_agendamento "
                 + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
                 + "WHERE v.id_cliente = ? GROUP BY a.id_agendamento ORDER BY a.data DESC, a.horario DESC";
+* */
+
+
+    public List<AgendamentoView> listarPorCliente(int idCliente) throws SQLException {
+        String sql = "SELECT a.id_agendamento, v.id_veiculo, GROUP_CONCAT(s.id_servico) as servicos, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, " +
+                "a.data, a.horario, a.status, COALESCE(SUM(ags.valor_praticado), 0) AS total,  MAX(p.status_pagamento) AS status_pagamento, MAX(p.forma_pagamento) AS forma_pagamento " +
+                "FROM agendamento a JOIN veiculo v ON v.id_veiculo = a.id_veiculo LEFT JOIN agendamento_servico ags ON ags.id_agendamento = a.id_agendamento " +
+                "LEFT JOIN servico s ON s.id_servico = ags.id_servico " +
+                "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento " +
+                "WHERE v.id_cliente = ? GROUP BY a.id_agendamento ORDER BY a.data DESC, a.horario DESC;";
         List<AgendamentoView> agendamentos = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, idCliente);
             try (ResultSet result = statement.executeQuery()) {
                 while (result.next()) {
-                    agendamentos.add(new AgendamentoView(result.getInt("id_agendamento"),
+                    agendamentos.add(new AgendamentoView(result.getInt("id_agendamento"), result.getInt("id_veiculo"), result.getInt("id_servico"),
                             result.getString("placa"), result.getString("veiculo"),
                             result.getDate("data").toLocalDate(), result.getString("horario"),
                             result.getString("status"), result.getBigDecimal("total"),

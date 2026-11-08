@@ -30,10 +30,11 @@ public class AgendamentoServlet extends HttpServlet {
         try {
             carregarDados(request, clienteId);
             request.setAttribute("dataMinima", LocalDate.now());
-            request.getRequestDispatcher("/WEB-INF/views/agendamentos.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/painel-agendamentos.jsp").forward(request, response);
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
         }
+        return;
     }
 
     @Override

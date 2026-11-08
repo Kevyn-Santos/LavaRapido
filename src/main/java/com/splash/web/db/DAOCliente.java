@@ -132,6 +132,32 @@ public class DAOCliente {
         }
     }
 
+    public List<Cliente> getUsuariosComVeiculos() throws SQLException {
+        String sql = """
+                SELECT
+                c.id_cliente, c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa
+                FROM cliente c
+                LEFT JOIN veiculo v
+                ON c.id_cliente = v.id_cliente
+                ORDER BY c.nome;""";
+        Map<Integer, Cliente> clientes = new LinkedHashMap<>();
+
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                int id = rs.getInt("id_cliente");
+                Cliente cliente = clientes.get(id);
+                if (cliente == null) {
+                    cliente = mapearCliente(rs);
+                    clientes.put(id, cliente);
+                }
+                if (rs.getString("placa") != null) {
+                    cliente.cadastrarVeiculo(rs.getString("placa"), rs.getString("marca"), rs.getString("modelo"), rs.getString("cor"));
+                }
+            }
+            return new ArrayList<>(clientes.values());
+        }
+    }
+
     public Cliente getUsuarioveiculo(int id) throws SQLException {
         String sql = """
                 SELECT
