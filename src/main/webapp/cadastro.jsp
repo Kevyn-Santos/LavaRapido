@@ -13,18 +13,18 @@
 
 <header class="top staff-login-header">
   <div class="top-in">
-    <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
-      <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
+    <a class="lock" href="index.jsp" aria-label="Fast Splash, início">
+      <img class="logo-fastsplash" src="Assets/Img/logo_fastsplash.png" alt="Fast Splash">
     </a>
-    <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
+    <nav><a href="index.jsp">Voltar ao inicio</a></nav>
   </div>
 </header>
 
 <main class="staff-login registration-page">
   <section class="staff-login-copy" aria-labelledby="registration-title">
     <p class="staff-login-kicker">Crie sua conta</p>
-    <h1 id="registration-title">Lavagem rápida, com tempo para olhar.</h1>
-    <p>Cadastre-se em um minuto, baixe o app e agende por lá. O carro você informa no app, na hora de agendar.</p>
+    <h1 id="registration-title">Lavagem rapida, com tempo para olhar.</h1>
+    <p>Cadastre-se em um minuto, baixe o app e agende por la. O carro voce informa no app, na hora de agendar.</p>
   </section>
 
   <section class="staff-login-panel" aria-labelledby="registration-form-title">
@@ -53,7 +53,7 @@
         </div>
 
         <div class="field">
-          <label for="rp">Senha (mínimo 8 caracteres)</label>
+          <label for="rp">Senha (minimo 8 caracteres)</label>
           <input id="rp" name="pass" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
         </div>
 
@@ -62,10 +62,10 @@
           <span>Aceito que meus dados sejam usados para agendamentos e para falar sobre minhas lavagens.</span>
         </label>
 
-        <button class="btn" type="submit">Criar conta e baixar o app</button>
+        <button class="btn" type="submit">Criar conta e baixar o app</b utton>
       </form>
     </div>
-    <a class="staff-login-back" href="index.html">← Voltar ao site</a>
+    <a class="staff-login-back" href="index.jsp"><- Voltar ao site</a>
   </section>
 </main>
 

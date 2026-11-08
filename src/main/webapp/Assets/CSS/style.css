@@ -60,6 +60,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .lock { display: inline-flex; align-items: center; gap: .32em; color: inherit; }
 .lock .mk { width: 2.6em; height: 1.095em; display: block; flex: none; }
+.logo-fastsplash { display: block; width: 180px; height: auto; }
 
 .m-air { fill: var(--m-air, #8FC9E8); }
 .m-water { fill: var(--m-water, #0E6BAA); }

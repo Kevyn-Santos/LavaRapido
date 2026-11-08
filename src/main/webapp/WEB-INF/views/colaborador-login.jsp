@@ -47,7 +47,7 @@
         <button class="btn" type="submit">Entrar no painel</button>
       </form>
     </div>
-    <a class="staff-login-back" href="../../index.html">← Voltar ao site</a>
+    <a class="staff-login-back" href="../../index.jsp"><- Voltar ao site</a>
   </section>
 </main>
 

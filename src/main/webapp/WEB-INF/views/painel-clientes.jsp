@@ -138,8 +138,22 @@
     </div>
 
   </div>
-</main>
 
-<script src="${pageContext.request.contextPath}/Assets/Js/painel.js"></script>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Nome</th><th>CPF</th><th>Telefone</th><th>E-mail</th><th>Ações</th></tr></thead>
+    <tbody><c:forEach var="cliente" items="${clientes}">
+      <tr>
+        <td><c:out value="${cliente.nome}" /></td><td><c:out value="${cliente.cpf}" /></td>
+        <td><c:out value="${cliente.telefone}" /></td><td><c:out value="${cliente.email}" /></td>
+        <td><a class="btn ghost" href="${pageContext.request.contextPath}/clientes?editar=${cliente.id_cliente}">Editar</a>
+          <form method="post" action="${pageContext.request.contextPath}/clientes" style="display:inline">
+            <input type="hidden" name="acao" value="remover"><input type="hidden" name="idCliente" value="${cliente.id_cliente}">
+            <button class="btn ghost" type="submit" onclick="return confirm('Remover este cliente e os registros vinculados?')">Excluir</button>
+          </form>
+        </td>
+      </tr>
+    </c:forEach></tbody>
+  </table></div>
+</div></main>
 </body>
 </html>

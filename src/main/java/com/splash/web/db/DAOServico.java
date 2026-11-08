@@ -33,6 +33,21 @@ public class DAOServico {
         return servicos;
     }
 
+    public ServicoView buscar(int id) throws SQLException {
+        String sql = "SELECT id_servico, nome, descricao, preco FROM servico WHERE id_servico = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, id);
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) {
+                    throw new IllegalArgumentException("Serviço não encontrado.");
+                }
+                return new ServicoView(result.getInt("id_servico"), result.getString("nome"),
+                        result.getString("descricao"), result.getBigDecimal("preco"));
+            }
+        }
+    }
+
     /*--------------------------------------
     Inserção e update de serviços
     --------------------------------------*/

@@ -26,7 +26,7 @@
   <header class="top landing-header">
     <div class="top-in">
       <a class="lock" href="#topo" aria-label="Fast Splash, início">
-        <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
+        <img class="logo-fastsplash" src="Assets/Img/logo_fastsplash.png" alt="Fast Splash">
       </a>
 
       <nav id="nav" aria-label="Navegação Principal">
@@ -127,7 +127,7 @@
           <h2>Crie sua conta e baixe o app.</h2>
           <p>Leva um minuto. Depois é só agendar pelo celular.</p>
         </div>
-        <a class="btn" href="cadastro.jsp">Criar conta</a>
+        <a class="btn" href="${pageContext.request.contextPath}/cadastro.jsp">Criar conta</a>
       </div>
     </section>
 
@@ -178,33 +178,11 @@
           <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
         </div>
       </div>
-      <a class="lantern" href="colaborador/login"><i aria-hidden="true"></i>Acesso da equipe</a>
+      <a class="lantern" href="${pageContext.request.contextPath}/colaborador/login"><i aria-hidden="true"></i>Acesso da equipe</a>
     </div>
   </footer>
 
-  <script src="${pageContext.request.contextPath}/Assets/Js/index.js"></script>
-  
-  <!-- SCRIPT PARA A ANIMAÇÃO (REVEAL) -->
-  <script>
-    function revealElements() {
-      const reveals = document.querySelectorAll('.reveal');
-      const windowHeight = window.innerHeight;
-      
-      reveals.forEach(element => {
-        const elementTop = element.getBoundingClientRect().top;
-        const revealPoint = 80;
-        
-        if (elementTop < windowHeight - revealPoint) {
-          element.classList.add('active');
-        }
-      });
-    }
-
-    // Ouve o scroll para disparar a animação
-    window.addEventListener('scroll', revealElements);
-    
-    // Dispara imediatamente para o conteúdo que já está na tela
-    window.addEventListener('load', revealElements);
-  </script>
+  <script src="Assets/Js/index.js"></script>
+  <script src="Assets/Js/reveal.js"></script>
 </body>
 </html>
