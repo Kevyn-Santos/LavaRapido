@@ -58,7 +58,7 @@ public class CadastroClienteServlet extends HttpServlet {
             if (path.equals("/cadastro.jsp")) {
                 response.sendRedirect(request.getContextPath() + "/baixar-app");
             } else if (path.equals("/cadastro")) {
-                request.getRequestDispatcher("/painel/clientes").forward(request, response);
+                response.sendRedirect(request.getContextPath() + "/painel/clientes");
             }
 
         } catch (IllegalArgumentException exception) {

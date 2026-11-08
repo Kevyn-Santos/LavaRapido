@@ -103,7 +103,7 @@
   </div>
 </main>
 
-<script src="../../Assets/Js/bdPainel.js"></script>
+<script src="${pageContext.request.contextPath}/Assets/Js/bdPainel.js"></script>
 
 </body>
 </html>

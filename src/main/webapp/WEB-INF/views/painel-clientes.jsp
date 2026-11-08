@@ -98,28 +98,33 @@
     <div id="view-form" class="hide">
       <div class="fcard">
         <h2 id="form-title">Novo cliente</h2>
-        <form id="form-client" action="/cadastro" method="post">
+        <form id="form-client" action="${pageContext.request.contextPath}/cadastro" method="post">
           <input type="hidden" id="client-id">
 
           <div class="field">
             <label for="client-name">Nome completo</label>
-            <input type="text" id="client-name" required placeholder="Ex: Marina Alves">
+            <input type="text" id="client-name" name="name" required placeholder="Ex: Marina Alves">
           </div>
 
           <div class="fgrid">
             <div class="field">
               <label for="client-cpf">CPF</label>
-              <input type="text" id="client-cpf" required placeholder="000.000.000-00" maxlength="14">
+              <input type="text" id="client-cpf" name="cpf" required placeholder="000.000.000-00" maxlength="14">
             </div>
             <div class="field">
               <label for="client-phone">Telefone</label>
-              <input type="tel" id="client-phone" required placeholder="(11) 99999-0000">
+              <input type="tel" id="client-phone" name="phone" required placeholder="(11) 99999-0000">
             </div>
           </div>
 
           <div class="field">
             <label for="client-email">E-mail</label>
-            <input type="email" id="client-email" required placeholder="cliente@exemplo.com">
+            <input type="email" id="client-email" name="email" required placeholder="cliente@exemplo.com">
+          </div>
+
+          <div class="field">
+            <label for="client-pass">Senha</label>
+            <input type="password" id="client-pass" name="pass" required autocomplete="new-password" minlength="8" maxlength="72">
           </div>
 
           <p class="err" id="form-error" role="alert"></p>
