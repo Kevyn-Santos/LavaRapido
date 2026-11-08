@@ -204,6 +204,38 @@ public class DAOCliente {
         }
     }
 
+    /**
+     * Persiste um cliente do painel. Em uma edição, a senha só é alterada quando
+     * um novo hash é informado.
+     */
+    public void salvar(Integer id, Cliente cliente, String senhaHash) throws SQLException {
+        if (id == null) {
+            insertUsuario(cliente);
+            return;
+        }
+
+        boolean trocarSenha = senhaHash != null && !senhaHash.isBlank();
+        String sql = trocarSenha
+                ? "UPDATE cliente SET nome = ?, cpf = ?, telefone = ?, email = ?, senha_hash = ? WHERE id_cliente = ?"
+                : "UPDATE cliente SET nome = ?, cpf = ?, telefone = ?, email = ? WHERE id_cliente = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, cliente.getNome());
+            stmt.setString(2, cliente.getCpf());
+            stmt.setString(3, cliente.getTelefone());
+            stmt.setString(4, cliente.getEmail());
+            int indiceId = 5;
+            if (trocarSenha) {
+                stmt.setString(5, senhaHash);
+                indiceId = 6;
+            }
+            stmt.setInt(indiceId, id);
+            if (stmt.executeUpdate() != 1) {
+                throw new IllegalArgumentException("Cliente não encontrado.");
+            }
+        }
+    }
+
     /*--------------------------------------
     Update de usuários
     --------------------------------------*/
@@ -278,12 +310,16 @@ public class DAOCliente {
     Remoção de usuarios
     --------------------------------------*/
 
-    public void deleteusuario(int Id) throws SQLException {
+    public boolean remover(int id) throws SQLException {
         String sql = "DELETE FROM cliente WHERE id_cliente=?";
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, Id);
-            stmt.executeUpdate();
+            stmt.setInt(1, id);
+            return stmt.executeUpdate() == 1;
         }
+    }
+
+    public void deleteusuario(int id) throws SQLException {
+        remover(id);
     }
 
 //    public void deleteusuariosTotal(int Id) throws SQLException {

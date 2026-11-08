@@ -56,7 +56,7 @@
     </div>
 
     <div class="pgrid">
-      <a class="pcard" href="painel-clientes.jsp">
+      <a class="pcard" href="${pageContext.request.contextPath}/clientes">
         <svg class="pi" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 3-5.5 6-5.5s6 2 6 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14.5c2.5 0 4.5 1.5 4.5 4"/></svg>
         <b class="pt">Clientes</b>
         <span class="pc">Cadastre, edite e remova os clientes do lava-rápido.</span>
@@ -93,7 +93,7 @@
         <span class="pc">Gerencie quem trabalha aqui e o nível de acesso de cada pessoa.</span>
       </a>
 
-      <a class="pcard" href="painel-servicos.jsp">
+      <a class="pcard" href="${pageContext.request.contextPath}/servicos">
         <i class="pdot" title="Exclusivo do administrador"></i>
         <svg class="pi" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="8" cy="8" r="1.4"/></svg>
         <b class="pt">Serviços</b>

@@ -16,7 +16,7 @@
 <header class="top staff-login-header">
   <div class="top-in">
     <a class="lock" href="${pageContext.request.contextPath}/index.jsp" aria-label="Fast Splash, início">
-      <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
+      <img class="logo-fastsplash" src="${pageContext.request.contextPath}/Assets/Img/logo_fastsplash.png" alt="Fast Splash">
     </a>
     <nav><a href="${pageContext.request.contextPath}/index.jsp">Voltar ao início</a></nav>
   </div>
@@ -47,7 +47,7 @@
         <button class="btn" type="submit">Entrar no painel</button>
       </form>
     </div>
-    <a class="staff-login-back" href="../../index.html">← Voltar ao site</a>
+    <a class="staff-login-back" href="../../index.jsp"><- Voltar ao site</a>
   </section>
 </main>
 
