@@ -2,6 +2,8 @@ package com.splash.web.db;
 
 import com.splash.web.model.dto.AgendamentoView;
 import com.splash.web.model.dto.ServicoView;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -19,29 +21,109 @@ import java.util.Set;
 /**
  * DAO que realiza o CRUD na tabela {@code agendamento}
  *
- * <p>As transações que partem do agendamento ({@code criar} e {@code cancelar}) ficam inteiras aqui,
- * mesmo gravando em {@code agendamento_servico}, {@code atendimento} e {@code pagamento}.</p>
+ * <p>
+ * As transações que partem do agendamento ({@code criar} e {@code cancelar})
+ * ficam inteiras aqui,
+ * mesmo gravando em {@code agendamento_servico}, {@code atendimento} e
+ * {@code pagamento}.
+ * </p>
  */
 public class DAOAgendamento {
 
     /*--------------------------------------
     Listagem de agendamentos
     --------------------------------------*/
-/*
-* "SELECT a.id_agendamento, v.id_veiculo, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
-                + "a.data, a.horario, a.status, COALESCE(SUM(ags.valor_praticado), 0) AS total, "
-                + "MAX(p.status_pagamento) AS status_pagamento, MAX(p.forma_pagamento) AS forma_pagamento "
-                + "FROM agendamento a JOIN veiculo v ON v.id_veiculo = a.id_veiculo "
-                + "LEFT JOIN agendamento_servico ags ON ags.id_agendamento = a.id_agendamento "
-                + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
-                + "WHERE v.id_cliente = ? GROUP BY a.id_agendamento ORDER BY a.data DESC, a.horario DESC";
-* */
+    /*
+     * "SELECT a.id_agendamento, v.id_veiculo, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
+     * +
+     * "a.data, a.horario, a.status, COALESCE(SUM(ags.valor_praticado), 0) AS total, "
+     * +
+     * "MAX(p.status_pagamento) AS status_pagamento, MAX(p.forma_pagamento) AS forma_pagamento "
+     * + "FROM agendamento a JOIN veiculo v ON v.id_veiculo = a.id_veiculo "
+     * +
+     * "LEFT JOIN agendamento_servico ags ON ags.id_agendamento = a.id_agendamento "
+     * + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
+     * +
+     * "WHERE v.id_cliente = ? GROUP BY a.id_agendamento ORDER BY a.data DESC, a.horario DESC"
+     * ;
+     */
 
+    /**
+     * Lista todos os agendamentos para o painel administrativo.
+     */
+    public List<Map<String, Object>> listarTodos() throws SQLException {
+
+        String sql = """
+                SELECT
+                    a.id_agendamento,
+                    c.nome AS cliente,
+                    v.placa,
+                    CONCAT(v.marca, ' ', v.modelo) AS veiculo,
+                    a.data,
+                    a.horario,
+                    a.status,
+                    COALESCE(ags.total, 0) AS total,
+                    COALESCE(ags.servicos, '') AS servicos,
+                    p.status_pagamento
+                FROM agendamento a
+                JOIN veiculo v
+                    ON v.id_veiculo = a.id_veiculo
+                JOIN cliente c
+                    ON c.id_cliente = v.id_cliente
+                LEFT JOIN (
+                    SELECT
+                        ags.id_agendamento,
+                        SUM(ags.valor_praticado) AS total,
+                        GROUP_CONCAT(
+                            s.nome ORDER BY s.nome SEPARATOR ', '
+                        ) AS servicos
+                    FROM agendamento_servico ags
+                    JOIN servico s
+                        ON s.id_servico = ags.id_servico
+                    GROUP BY ags.id_agendamento
+                ) ags
+                    ON ags.id_agendamento = a.id_agendamento
+                LEFT JOIN pagamento p
+                    ON p.id_agendamento = a.id_agendamento
+                ORDER BY a.data DESC, a.horario DESC
+                """;
+
+        List<Map<String, Object>> agendamentos = new ArrayList<>();
+
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql);
+                ResultSet result = statement.executeQuery()) {
+
+            while (result.next()) {
+
+                Map<String, Object> agendamento = new LinkedHashMap<>();
+
+                agendamento.put("id", result.getInt("id_agendamento"));
+                agendamento.put("cliente", result.getString("cliente"));
+                agendamento.put("placa", result.getString("placa"));
+                agendamento.put("veiculo", result.getString("veiculo"));
+                agendamento.put("data", result.getDate("data").toLocalDate());
+                agendamento.put("horario", result.getString("horario"));
+                agendamento.put("status", result.getString("status"));
+                agendamento.put("total", result.getBigDecimal("total"));
+                agendamento.put("servicos", result.getString("servicos"));
+                agendamento.put("statusPagamento",
+                        result.getString("status_pagamento"));
+
+                agendamentos.add(agendamento);
+            }
+        }
+
+        return agendamentos;
+    }
 
     public List<AgendamentoView> listarPorCliente(int idCliente) throws SQLException {
-        String sql = "SELECT a.id_agendamento, v.id_veiculo, GROUP_CONCAT(s.id_servico) as servicos, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, " +
-                "a.data, a.horario, a.status, COALESCE(SUM(ags.valor_praticado), 0) AS total,  MAX(p.status_pagamento) AS status_pagamento, MAX(p.forma_pagamento) AS forma_pagamento " +
-                "FROM agendamento a JOIN veiculo v ON v.id_veiculo = a.id_veiculo LEFT JOIN agendamento_servico ags ON ags.id_agendamento = a.id_agendamento " +
+        String sql = "SELECT a.id_agendamento, v.id_veiculo, GROUP_CONCAT(s.id_servico) as servicos, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
+                +
+                "a.data, a.horario, a.status, COALESCE(SUM(ags.valor_praticado), 0) AS total,  MAX(p.status_pagamento) AS status_pagamento, MAX(p.forma_pagamento) AS forma_pagamento "
+                +
+                "FROM agendamento a JOIN veiculo v ON v.id_veiculo = a.id_veiculo LEFT JOIN agendamento_servico ags ON ags.id_agendamento = a.id_agendamento "
+                +
                 "LEFT JOIN servico s ON s.id_servico = ags.id_servico " +
                 "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento " +
                 "WHERE v.id_cliente = ? GROUP BY a.id_agendamento ORDER BY a.data DESC, a.horario DESC;";
@@ -51,7 +133,8 @@ public class DAOAgendamento {
             statement.setInt(1, idCliente);
             try (ResultSet result = statement.executeQuery()) {
                 while (result.next()) {
-                    agendamentos.add(new AgendamentoView(result.getInt("id_agendamento"), result.getInt("id_veiculo"), result.getInt("id_servico"),
+                    agendamentos.add(new AgendamentoView(result.getInt("id_agendamento"), result.getInt("id_veiculo"),
+                            result.getInt("id_servico"),
                             result.getString("placa"), result.getString("veiculo"),
                             result.getDate("data").toLocalDate(), result.getString("horario"),
                             result.getString("status"), result.getBigDecimal("total"),

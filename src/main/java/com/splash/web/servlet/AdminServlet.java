@@ -20,10 +20,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/admin/*")
 public class AdminServlet extends HttpServlet {
 
-    private static final Set<String> STATUS_ATENDIMENTO =
-            Set.of("AGUARDANDO", "EM_LAVAGEM", "FINALIZADO", "ENTREGUE");
-    private static final Set<String> FORMAS_PAGAMENTO =
-            Set.of("DINHEIRO", "PIX", "CREDITO", "DEBITO");
+    private static final Set<String> STATUS_ATENDIMENTO = Set.of("AGUARDANDO", "EM_LAVAGEM", "FINALIZADO", "ENTREGUE");
+    private static final Set<String> FORMAS_PAGAMENTO = Set.of("DINHEIRO", "PIX", "CREDITO", "DEBITO");
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -32,8 +30,11 @@ public class AdminServlet extends HttpServlet {
         String nivelNecessario = nivelNecessario(secao);
         if (nivelNecessario == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
         }
+
         if (WebSupport.colaboradorId(request, response, nivelNecessario) < 0) {
+            return;
         }
         try {
             request.setAttribute("secao", secao);
@@ -48,9 +49,14 @@ public class AdminServlet extends HttpServlet {
                 default -> {
                 }
             }
-            String view = "inicio".equals(secao)
-                    ? "/WEB-INF/views/painel.jsp"
-                    : "/WEB-INF/views/admin.jsp";
+            String view = switch (secao) {
+                case "inicio" -> "/WEB-INF/views/painel.jsp";
+                case "servicos" -> "/WEB-INF/views/painel-servicos.jsp";
+                case "colaboradores" -> "/WEB-INF/views/painel-colaboradores.jsp";
+                case "atendimentos" -> "/WEB-INF/views/painel-atendimentos.jsp";
+                case "pagamentos" -> "/WEB-INF/views/painel-pagamentos.jsp";
+                default -> null;
+            };
             request.getRequestDispatcher(view).forward(request, response);
         } catch (SQLException exception) {
             WebSupport.erroBanco(request, response, exception);
@@ -80,7 +86,13 @@ public class AdminServlet extends HttpServlet {
                     return;
                 }
             }
-            response.sendRedirect(request.getContextPath() + "/admin/" + secao + "?sucesso=1");
+            if ("colaboradores".equals(secao)) {
+                response.sendRedirect(
+                        request.getContextPath() + "/painel/colaboradores?sucesso=1");
+            } else {
+                response.sendRedirect(
+                        request.getContextPath() + "/admin/" + secao + "?sucesso=1");
+            }
         } catch (IllegalArgumentException exception) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro", exception.getMessage());
@@ -88,7 +100,8 @@ public class AdminServlet extends HttpServlet {
         } catch (SQLException exception) {
             if (exception.getSQLState() != null && exception.getSQLState().startsWith("23")) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);
-                request.setAttribute("erro", "A operação viola uma restrição de dados (e-mail duplicado ou registro em uso).");
+                request.setAttribute("erro",
+                        "A operação viola uma restrição de dados (e-mail duplicado ou registro em uso).");
                 doGet(request, response);
                 return;
             }
@@ -133,7 +146,8 @@ public class AdminServlet extends HttpServlet {
         if (!WebSupport.preenchidos(nome, cargo, email, senha) || nome.length() > 100
                 || cargo.length() > 60 || email.length() > 150 || senha.length() < 8
                 || !Set.of("ADMINISTRADOR", "ATENDENTE", "OPERACIONAL").contains(nivel)) {
-            throw new IllegalArgumentException("Confira os dados do colaborador; a senha deve ter ao menos 8 caracteres.");
+            throw new IllegalArgumentException(
+                    "Confira os dados do colaborador; a senha deve ter ao menos 8 caracteres.");
         }
         new DAOColaborador().inserir(nome, cargo, nivel, email, senha);
     }

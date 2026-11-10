@@ -1,123 +1,278 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Agendamentos — Fast Splash</title>
-  <link rel="stylesheet" href="${pageContext.request.contextPath}/Assets/CSS/painel.css">
-  <style>
-    .hide { display: none !important; }
-    .tot { font-size: 1.05rem; margin: 14px 0 8px; color: var(--muted); }
-    .tot b { font-size: 1.6rem; color: var(--ink); font-variation-settings: "wdth" 80; }
-  </style>
-</head>
-<body class="panel-page">
+  <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+    <!doctype html>
+    <html lang="pt-BR">
 
-<header class="top panel-page-header">
-  <div class="top-in">
-    <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
-      <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
-    </a>
-    <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
-  </div>
-</header>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Agendamentos — Fast Splash</title>
+      <link rel="stylesheet" href="${pageContext.request.contextPath}/Assets/CSS/painel.css">
+      <style>
+        .hide {
+          display: none !important;
+        }
 
-<main class="page">
-  <div class="wrap">
-    <div class="who">
-      <div>
-        <p class="small">Bem-vindo(a)</p>
-        <h1><c:out value="${sessionScope.colaboradorNome}" /></h1>
-      </div>
-      <span class="role admin">Administrador</span>
-    </div>
+        .tot {
+          font-size: 1.05rem;
+          margin: 14px 0 8px;
+          color: var(--muted);
+        }
 
-    <nav class="ptabs" aria-label="Áreas do painel">
-      <a href="${pageContext.request.contextPath}/admin/inicio">Início</a>
-      <a href="${pageContext.request.contextPath}/painel/clientes">Clientes</a>
-      <a href="${pageContext.request.contextPath}/painel/carros">Carros</a>
-      <a href="${pageContext.request.contextPath}/painel/agendamentos" class="on" aria-current="page">Agendamentos</a>
-      <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
-      <a href="${pageContext.request.contextPath}/painel/pagamentos">Pagamentos</a>
-      <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
-      <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
-    </nav>
+        .tot b {
+          font-size: 1.6rem;
+          color: var(--ink);
+          font-variation-settings: "wdth" 80;
+        }
+      </style>
+    </head>
 
-    <!-- 1. TELA DA LISTA DE AGENDAMENTOS -->
-    <div id="view-list">
-      <div class="phead">
-        <div>
-          <h2>Agendamentos</h2>
-          <p class="small">Crie, edite e gerencie agendamentos dos clientes.</p>
+    <body class="panel-page">
+
+      <header class="top panel-page-header">
+        <div class="top-in">
+          <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
+            <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
+          </a>
+          <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
         </div>
-        <button type="button" class="btn" id="btn-add-booking">Novo agendamento</button>
-      </div>
+      </header>
 
-      <div class="search">
-        <input type="search" id="input-search" placeholder="Buscar por cliente, carro ou data...">
-      </div>
-
-      <div id="bookings-table-container"></div>
-    </div>
-
-    <!-- 2. TELA DO FORMULÁRIO -->
-    <div id="view-form" class="hide">
-      <div class="fcard">
-        <h2 id="form-title">Novo agendamento</h2>
-        <form id="form-booking" method="post" action="${pageContext.request.contextPath}/agendamentos">
-          <input type="hidden" id="bk-id">
-
-          <div class="field">
-            <label for="bk-client">Cliente</label>
-            <select id="bk-client" required></select>
-          </div>
-
-          <div class="field">
-            <label for="bk-car">Veículo</label>
-            <select id="bk-car" required><option value="">Selecione o cliente primeiro</option></select>
-          </div>
-
-          <div class="field">
-            <label>Serviços Escolhidos</label>
-            <div id="services-checkboxes"></div>
-          </div>
-
-          <div class="fgrid">
-            <div class="field">
-              <label for="bk-date">Data</label>
-              <input type="date" id="bk-date" required>
+      <main class="page">
+        <div class="wrap">
+          <div class="who">
+            <div>
+              <p class="small">Bem-vindo(a)</p>
+              <h1>
+                <c:out value="${sessionScope.colaboradorNome}" />
+              </h1>
             </div>
-            <div class="field">
-              <label for="bk-slot">Horário</label>
-              <select id="bk-slot" required>
-                <option value="08:00">08:00</option>
-                <option value="09:00">09:00</option>
-                <option value="10:00">10:00</option>
-                <option value="11:00">11:00</option>
-                <option value="13:00">13:00</option>
-                <option value="14:00">14:00</option>
-                <option value="15:00">15:00</option>
-                <option value="16:00">16:00</option>
-                <option value="17:00">17:00</option>
-              </select>
+            <span class="role admin">Administrador</span>
+          </div>
+
+          <nav class="ptabs" aria-label="Áreas do painel">
+            <a href="${pageContext.request.contextPath}/admin/inicio">Início</a>
+            <a href="${pageContext.request.contextPath}/painel/clientes">Clientes</a>
+            <a href="${pageContext.request.contextPath}/painel/carros">Carros</a>
+            <a href="${pageContext.request.contextPath}/painel/agendamentos" class="on"
+              aria-current="page">Agendamentos</a>
+            <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
+            <a href="${pageContext.request.contextPath}/painel/pagamentos">Pagamentos</a>
+            <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
+            <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
+          </nav>
+
+          <!-- 1. TELA DA LISTA DE AGENDAMENTOS -->
+          <div id="view-list">
+            <div class="phead">
+              <div>
+                <h2>Agendamentos</h2>
+                <p class="small">Crie, edite e gerencie agendamentos dos clientes.</p>
+              </div>
+              <button type="button" class="btn" id="btn-add-booking">Novo agendamento</button>
             </div>
+
+            <div class="search">
+              <input type="search" id="input-search" placeholder="Buscar por cliente, carro ou data...">
+            </div>
+
+
+
+            <div id="bookings-table-container">
+
+              <c:choose>
+                <c:when test="${empty agendamentos}">
+                  <p class="small">Nenhum agendamento cadastrado.</p>
+                </c:when>
+
+                <c:otherwise>
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Cliente</th>
+                          <th>Veículo</th>
+                          <th>Placa</th>
+                          <th>Data</th>
+                          <th>Horário</th>
+                          <th>Serviços</th>
+                          <th>Valor</th>
+                          <th>Status</th>
+                          <th>Pagamento</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        <c:forEach var="agendamento" items="${agendamentos}">
+                          <tr>
+                            <td>
+                              <c:out value="${agendamento.id}" />
+                            </td>
+                            <td>
+                              <c:out value="${agendamento.cliente}" />
+                            </td>
+                            <td>
+                              <c:out value="${agendamento.veiculo}" />
+                            </td>
+                            <td>
+                              <c:out value="${agendamento.placa}" />
+                            </td>
+                            <td>
+                              <c:out value="${agendamento.data}" />
+                            </td>
+                            <td>
+                              <c:out value="${agendamento.horario}" />
+                            </td>
+                            <td>
+                              <c:out value="${agendamento.servicos}" />
+                            </td>
+                            <td>R$
+                              <c:out value="${agendamento.total}" />
+                            </td>
+                            <td>
+                              <c:out value="${agendamento.status}" />
+                            </td>
+                            <td>
+                              <c:out value="${agendamento.statusPagamento}" />
+                            </td>
+                          </tr>
+                        </c:forEach>
+                      </tbody>
+                    </table>
+                  </div>
+                </c:otherwise>
+              </c:choose>
+
+            </div>
+
+            <c:choose>
+              <c:when test="${empty agendamentos}">
+                <p class="small">Nenhum agendamento cadastrado.</p>
+              </c:when>
+
+              <c:otherwise>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Veículo</th>
+                        <th>Placa</th>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Serviços</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th>Pagamento</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      <c:forEach var="agendamento" items="${agendamentos}">
+                        <tr>
+                          <td>
+                            <c:out value="${agendamento.id}" />
+                          </td>
+                          <td>
+                            <c:out value="${agendamento.cliente}" />
+                          </td>
+                          <td>
+                            <c:out value="${agendamento.veiculo}" />
+                          </td>
+                          <td>
+                            <c:out value="${agendamento.placa}" />
+                          </td>
+                          <td>
+                            <c:out value="${agendamento.data}" />
+                          </td>
+                          <td>
+                            <c:out value="${agendamento.horario}" />
+                          </td>
+                          <td>
+                            <c:out value="${agendamento.servicos}" />
+                          </td>
+                          <td>R$
+                            <c:out value="${agendamento.total}" />
+                          </td>
+                          <td>
+                            <c:out value="${agendamento.status}" />
+                          </td>
+                          <td>
+                            <c:out value="${agendamento.statusPagamento}" />
+                          </td>
+                        </tr>
+                      </c:forEach>
+                    </tbody>
+                  </table>
+                </div>
+              </c:otherwise>
+            </c:choose>
+
           </div>
+        </div>
 
-          <p class="tot">Total do Agendamento: <b id="bk-total">R$ 0,00</b></p>
-          <p class="err" id="form-error" role="alert" style="color: #B3261E; font-size: 0.9rem; margin-top: 8px;"></p>
+        <!-- 2. TELA DO FORMULÁRIO -->
+        <div id="view-form" class="hide">
+          <div class="fcard">
+            <h2 id="form-title">Novo agendamento</h2>
+            <form id="form-booking" method="post" action="${pageContext.request.contextPath}/agendamentos">
+              <input type="hidden" id="bk-id">
 
-          <div class="facts">
-            <button class="btn" type="submit">Salvar Agendamento</button>
-            <button class="btn ghost" type="button" id="btn-cancel-booking">Cancelar</button>
+              <div class="field">
+                <label for="bk-client">Cliente</label>
+                <select id="bk-client" required></select>
+              </div>
+
+              <div class="field">
+                <label for="bk-car">Veículo</label>
+                <select id="bk-car" required>
+                  <option value="">Selecione o cliente primeiro</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Serviços Escolhidos</label>
+                <div id="services-checkboxes"></div>
+              </div>
+
+              <div class="fgrid">
+                <div class="field">
+                  <label for="bk-date">Data</label>
+                  <input type="date" id="bk-date" required>
+                </div>
+                <div class="field">
+                  <label for="bk-slot">Horário</label>
+                  <select id="bk-slot" required>
+                    <option value="08:00">08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                    <option value="11:00">11:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                  </select>
+                </div>
+              </div>
+
+              <p class="tot">Total do Agendamento: <b id="bk-total">R$ 0,00</b></p>
+              <p class="err" id="form-error" role="alert" style="color: #B3261E; font-size: 0.9rem; margin-top: 8px;">
+              </p>
+
+              <div class="facts">
+                <button class="btn" type="submit">Salvar Agendamento</button>
+                <button class="btn ghost" type="button" id="btn-cancel-booking">Cancelar</button>
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</main>
+        </div>
+        </div>
+      </main>
 
-<script src="${pageContext.request.contextPath}/Assets/Js/painel.js"></script>
-</body>
-</html>
+      <script src="${pageContext.request.contextPath}/Assets/Js/painel.js"></script>
+    </body>
+
+    </html>

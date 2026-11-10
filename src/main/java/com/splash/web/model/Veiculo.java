@@ -17,6 +17,24 @@ public class Veiculo extends EntidadeBase {
         setCor(cor);
     }
 
+    /**
+     * Reconstrói um veículo existente no banco sem revalidar
+     * dados históricos. Novos cadastros continuam validados.
+     */
+    static Veiculo carregar(Cliente cliente, String placa,
+            String marca, String modelo, String cor) {
+        return new Veiculo(cliente, placa, marca, modelo, cor, true);
+    }
+
+    private Veiculo(Cliente cliente, String placa, String marca,
+            String modelo, String cor, boolean doBanco) {
+        this.cliente = Validacao.obrigatorio(cliente, "Cliente");
+        this.placa = placa;
+        this.marca = marca;
+        this.modelo = modelo;
+        this.cor = cor;
+    }
+
     public Cliente getCliente() {
         return cliente;
     }

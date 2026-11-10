@@ -1,3 +1,4 @@
+
 package com.splash.web.servlet;
 
 import java.io.IOException;
@@ -5,6 +6,11 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import com.splash.web.db.DAOCliente;
+import com.splash.web.db.DAOAtendimento;
+import com.splash.web.db.DAOPagamento;
+import com.splash.web.db.DAOColaborador;
+import com.splash.web.db.DAOServico;
+import com.splash.web.db.DAOAgendamento;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -25,28 +31,95 @@ public class PainelServlet extends HttpServlet {
             "servicos", "/WEB-INF/views/painel-servicos.jsp");
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request,
+            HttpServletResponse response)
             throws ServletException, IOException {
+
         String pathInfo = request.getPathInfo();
-        String secao = pathInfo == null || pathInfo.length() < 2 ? "" : pathInfo.substring(1);
+
+        String secao = pathInfo == null || pathInfo.length() < 2
+                ? ""
+                : pathInfo.substring(1);
+
         String pagina = PAGINAS.get(secao);
+
         if (pagina == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        if (WebSupport.colaboradorId(request, response, "OPERACIONAL") < 0) {
+
+        String nivelNecessario = switch (secao) {
+            case "servicos", "colaboradores" -> "ADMINISTRADOR";
+            case "pagamentos" -> "ATENDENTE";
+            default -> "OPERACIONAL";
+        };
+
+        if (WebSupport.colaboradorId(
+                request, response, nivelNecessario) < 0) {
             return;
         }
 
-        if ("clientes".equals(secao)) {
-            try {
-                request.setAttribute("clientes", new DAOCliente().getUsuariosComVeiculos());
-            } catch (SQLException e) {
-                WebSupport.erroBanco(request, response, e);
-                return;
-            }
-        }
+        try {
+            switch (secao) {
 
-        request.getRequestDispatcher(pagina).forward(request, response);
+                case "clientes" -> {
+                    request.setAttribute(
+                            "clientes",
+                            new DAOCliente().getUsuariosComVeiculos());
+                }
+
+                case "carros" -> {
+                    request.setAttribute(
+                            "clientes",
+                            new DAOCliente().getUsuariosComVeiculos());
+                }
+
+                case "agendamentos" -> {
+                    request.setAttribute(
+                            "agendamentos",
+                            new DAOAgendamento().listarTodos());
+                }
+
+                case "atendimentos" -> {
+                    request.setAttribute(
+                            "atendimentos",
+                            new DAOAtendimento().listar());
+
+                    request.setAttribute(
+                            "colaboradores",
+                            new DAOColaborador().listar());
+                }
+
+                case "pagamentos" -> {
+                    request.setAttribute(
+                            "pagamentos",
+                            new DAOPagamento().listar());
+                }
+
+                case "colaboradores" -> {
+                    request.setAttribute(
+                            "colaboradores",
+                            new DAOColaborador().listar());
+                }
+
+                case "servicos" -> {
+                    request.setAttribute(
+                            "servicos",
+                            new DAOServico().listar());
+                }
+
+                default -> {
+                    // Carros e agendamentos serão
+                    // integrados nas próximas etapas.
+                }
+            }
+
+            request.getRequestDispatcher(pagina)
+                    .forward(request, response);
+
+        } catch (SQLException exception) {
+            WebSupport.erroBanco(
+                    request, response, exception);
+        }
     }
 }

@@ -21,8 +21,12 @@ public class Cliente extends Pessoa {
         super();
     }
 
-    /* Reconstrói um cliente vindo do banco: os dados já foram validados na gravação, então não são revalidados.
-       Um registro fora do padrão no banco não deve derrubar a leitura. Para dados novos, use o construtor completo ou os setters. */
+    /*
+     * Reconstrói um cliente vindo do banco: os dados já foram validados na
+     * gravação, então não são revalidados.
+     * Um registro fora do padrão no banco não deve derrubar a leitura. Para dados
+     * novos, use o construtor completo ou os setters.
+     */
     public static Cliente carregar(int id, String nome, String cpf, String telefone, String email) {
         Cliente cliente = new Cliente();
         cliente.carregarDadosPessoa(nome, email);
@@ -57,13 +61,27 @@ public class Cliente extends Pessoa {
         this.telefone = Validacao.telefone(telefone);
     }
 
-
-    /* Único caminho para criar um Veiculo garante que todo veículo pertence a um cliente e aparece na lista dele.*/
+    /*
+     * Único caminho para criar um Veiculo garante que todo veículo pertence a um
+     * cliente e aparece na lista dele.
+     */
     public Veiculo cadastrarVeiculo(String placa, String marca, String modelo, String cor) {
         if (possuiVeiculoComPlaca(placa)) {
             throw new IllegalArgumentException("Este cliente já possui um veículo com essa placa.");
         }
         Veiculo veiculo = new Veiculo(this, placa, marca, modelo, cor);
+        veiculos.add(veiculo);
+        return veiculo;
+    }
+
+    /**
+     * Carrega um veículo já existente no banco de dados.
+     */
+    public Veiculo carregarVeiculo(String placa, String marca,
+            String modelo, String cor) {
+        Veiculo veiculo = Veiculo.carregar(
+                this, placa, marca, modelo, cor);
+
         veiculos.add(veiculo);
         return veiculo;
     }

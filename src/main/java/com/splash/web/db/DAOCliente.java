@@ -19,7 +19,6 @@ package com.splash.web.db;
 Stmt é um container assim como request, ele armazena todas as informações passadas e executa todas de uma vez
  */
 
-
 import com.splash.web.model.Cliente;
 import com.splash.web.model.dto.ClienteView;
 import com.splash.web.security.Passwords;
@@ -46,7 +45,9 @@ public class DAOCliente {
         String sql = "SELECT id_cliente, nome, cpf, telefone, email FROM cliente";
         List<Cliente> listaclientes = new ArrayList<>();
 
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 listaclientes.add(mapearCliente(rs));
             }
@@ -56,11 +57,13 @@ public class DAOCliente {
 
     public Cliente getusuario(int id) throws SQLException {
         String sql = "SELECT id_cliente, nome, cpf, telefone, email FROM cliente WHERE id_cliente=?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql);) {
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);) {
             stmt.setInt(1, id);
 
             try (ResultSet rs = stmt.executeQuery()) {
-                if (!rs.next()) throw new IllegalArgumentException("nenhum usuario encontrado com este ID");
+                if (!rs.next())
+                    throw new IllegalArgumentException("nenhum usuario encontrado com este ID");
                 ;
                 return mapearCliente(rs);
             }
@@ -69,32 +72,36 @@ public class DAOCliente {
 
     /*
      * Query de clientes com veículos
-     * */
+     */
 
-    /*TODO:
-     *  Atualmente ha métodos para cadastrar os veiculos, mas o retorno deles do banco esta confuso
-     *  Query para retornar veículos junto dos usuarios
-     *  Onde colocar o veículo
-     *  Onde colocar os serviços*/
+    /*
+     * TODO:
+     * Atualmente ha métodos para cadastrar os veiculos, mas o retorno deles do
+     * banco esta confuso
+     * Query para retornar veículos junto dos usuarios
+     * Onde colocar o veículo
+     * Onde colocar os serviços
+     */
 
     // SELECT c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa
     // FROM cliente c
     // INNER JOIN veiculo v ON c.id_cliente = v.id_cliente
 
-
-    //SELECT c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa
+    // SELECT c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa
     // FROM cliente c
     // INNER JOIN veiculo v ON c.id_cliente = v.id_cliente
     // WHERE c.id_cliente=1;
 
-    // SELECT c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa, a.data, a.horario, a.status
+    // SELECT c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa,
+    // a.data, a.horario, a.status
     // FROM cliente c
     // INNER JOIN veiculo v
     // ON c.id_cliente = v.id_cliente
     // INNER JOIN agendamento a
     // ON a.id_veiculo = v.id_veiculo
 
-    // SELECT c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa, a.data, a.horario, a.status
+    // SELECT c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa,
+    // a.data, a.horario, a.status
     // FROM cliente c
     // INNER JOIN veiculo v
     // ON c.id_cliente = v.id_cliente
@@ -111,20 +118,26 @@ public class DAOCliente {
                 ON c.id_cliente = v.id_cliente;""";
         Map<Integer, Cliente> clientes = new LinkedHashMap<>(); // Par chave-valor ordenado
 
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) { // enquanto houver retorno da query
 
-                // capture o id e tente pegar o valor associado a ele, criando um objeto 'cliente' a partir da classe "Cliente"
+                // capture o id e tente pegar o valor associado a ele, criando um objeto
+                // 'cliente' a partir da classe "Cliente"
                 int id = rs.getInt("id_cliente");
                 Cliente cliente = clientes.get(id);
 
-                // Se não houver nada no objeto crie um cliente com 'mapearCliente' e o inclua no map com o 'id'
+                // Se não houver nada no objeto crie um cliente com 'mapearCliente' e o inclua
+                // no map com o 'id'
                 if (cliente == null) {
                     cliente = mapearCliente(rs);
                     clientes.put(id, cliente);
                 }
-                // Após criado o cliente, use a função 'cadastrarVeiculo' para incluir na lista de veículos da classe 'Cliente' o retorno [de veículos] do banco
-                cliente.cadastrarVeiculo(rs.getString("placa"), rs.getString("marca"), rs.getString("modelo"), rs.getString("cor"));
+                // Após criado o cliente, use a função 'cadastrarVeiculo' para incluir na lista
+                // de veículos da classe 'Cliente' o retorno [de veículos] do banco
+                cliente.cadastrarVeiculo(rs.getString("placa"), rs.getString("marca"), rs.getString("modelo"),
+                        rs.getString("cor"));
             }
 
             // por fim, retorne uma lista com os valores do map.
@@ -142,7 +155,9 @@ public class DAOCliente {
                 ORDER BY c.nome;""";
         Map<Integer, Cliente> clientes = new LinkedHashMap<>();
 
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 int id = rs.getInt("id_cliente");
                 Cliente cliente = clientes.get(id);
@@ -151,7 +166,11 @@ public class DAOCliente {
                     clientes.put(id, cliente);
                 }
                 if (rs.getString("placa") != null) {
-                    cliente.cadastrarVeiculo(rs.getString("placa"), rs.getString("marca"), rs.getString("modelo"), rs.getString("cor"));
+                    cliente.carregarVeiculo(
+                            rs.getString("placa"),
+                            rs.getString("marca"),
+                            rs.getString("modelo"),
+                            rs.getString("cor"));
                 }
             }
             return new ArrayList<>(clientes.values());
@@ -165,18 +184,22 @@ public class DAOCliente {
                  FROM cliente c
                 LEFT JOIN veiculo v ON c.id_cliente = v.id_cliente
                 WHERE c.id_cliente=?;""";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql);) {
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);) {
             stmt.setInt(1, id);
 
             try (ResultSet rs = stmt.executeQuery()) {
-                if (!rs.next()) throw new IllegalArgumentException("nenhum usuario encontrado com este ID");
+                if (!rs.next())
+                    throw new IllegalArgumentException("nenhum usuario encontrado com este ID");
 
                 // Crie o cliente uma vez usando a função 'mapearCliente'
                 Cliente cliente = mapearCliente(rs);
 
                 do {
-                    // Use a função 'CadastrarVeiculo' para registrar ao menos um veículo na lista de veículos de Cliente.
-                    cliente.cadastrarVeiculo(rs.getString("placa"), rs.getString("marca"), rs.getString("modelo"), rs.getString("cor"));
+                    // Use a função 'CadastrarVeiculo' para registrar ao menos um veículo na lista
+                    // de veículos de Cliente.
+                    cliente.cadastrarVeiculo(rs.getString("placa"), rs.getString("marca"), rs.getString("modelo"),
+                            rs.getString("cor"));
                 } while (rs.next()); // Repita o processo enquanto o banco retornar resultados
 
                 return cliente; // Retorne o objeto cliente.
@@ -184,7 +207,8 @@ public class DAOCliente {
         }
     }
 
-    // Devolve a DTO ClienteView (id, nome, email), usada no login. Substitui ClienteRepository.autenticar
+    // Devolve a DTO ClienteView (id, nome, email), usada no login. Substitui
+    // ClienteRepository.autenticar
     public ClienteView autenticar(String email, String senha) throws SQLException {
         String sql = "SELECT id_cliente, nome, email, senha_hash FROM cliente WHERE email = ?";
         try (Connection connection = DatabaseConnection.getConnection();
@@ -200,9 +224,11 @@ public class DAOCliente {
         }
     }
 
-    // Converte a linha atual do ResultSet em Cliente sem revalidar (ver Cliente.carregar)
+    // Converte a linha atual do ResultSet em Cliente sem revalidar (ver
+    // Cliente.carregar)
     private Cliente mapearCliente(ResultSet rs) throws SQLException {
-        return Cliente.carregar(rs.getInt("id_cliente"), rs.getString("nome"), rs.getString("cpf"), rs.getString("telefone"), rs.getString("email"));
+        return Cliente.carregar(rs.getInt("id_cliente"), rs.getString("nome"), rs.getString("cpf"),
+                rs.getString("telefone"), rs.getString("email"));
     }
 
     /*--------------------------------------
@@ -210,17 +236,25 @@ public class DAOCliente {
     --------------------------------------*/
 
     /**
-     * Único INSERT de cliente (antigo {@code LavaRapidoRepository.cadastrarCliente}, ver separacao-daos.md 6.1).
+     * Único INSERT de cliente (antigo
+     * {@code LavaRapidoRepository.cadastrarCliente}, ver separacao-daos.md 6.1).
      *
-     * <p>Grava os dados como estão no {@link Cliente}: a normalização (trim, e-mail em minúsculas, CPF e telefone
-     * só com dígitos) já foi feita pelos setters via {@code Validacao}. A senha precisa chegar com hash,
-     * gerado antes por {@code Passwords.hash}.</p>
+     * <p>
+     * Grava os dados como estão no {@link Cliente}: a normalização (trim, e-mail em
+     * minúsculas, CPF e telefone
+     * só com dígitos) já foi feita pelos setters via {@code Validacao}. A senha
+     * precisa chegar com hash,
+     * gerado antes por {@code Passwords.hash}.
+     * </p>
      *
-     * @throws java.sql.SQLIntegrityConstraintViolationException Se o CPF ou o e-mail já estiverem cadastrados.
+     * @throws java.sql.SQLIntegrityConstraintViolationException Se o CPF ou o
+     *                                                           e-mail já estiverem
+     *                                                           cadastrados.
      */
     public void insertUsuario(Cliente cliente) throws SQLException {
         String sql = "INSERT INTO cliente (nome, cpf, telefone, email, senha_hash) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, cliente.getNome());
             stmt.setString(2, cliente.getCpf());
             stmt.setString(3, cliente.getTelefone());
@@ -269,13 +303,18 @@ public class DAOCliente {
     /**
      * Atualiza os {@code clientes} a partir dos valores passados na função.
      *
-     * <p>Apenas valores não nulos e não vazios entram no banco. Demais valores permanecem iguais</p>
+     * <p>
+     * Apenas valores não nulos e não vazios entram no banco. Demais valores
+     * permanecem iguais
+     * </p>
      *
      * @param Id       Identificador do cliente. Obrigatório.
      * @param nome     Novo nome do cliente. {@code null} mantém o nome atual.
-     * @param telefone Novo telefone do cliente. {@code null} mantém o telefone atual.
+     * @param telefone Novo telefone do cliente. {@code null} mantém o telefone
+     *                 atual.
      * @param email    Novo email do cliente. {@code null} mantém o email atual.
-     * @throws IllegalArgumentException Se {@code id} for nulo ou se nenhum valor for preenchido para as colunas.
+     * @throws IllegalArgumentException Se {@code id} for nulo ou se nenhum valor
+     *                                  for preenchido para as colunas.
      * @throws SQLException             Se houver algum erro de acesso ao banco.
      *
      */
@@ -283,7 +322,8 @@ public class DAOCliente {
     public void updateUsuarios(Integer Id, String nome, String telefone, String email) throws SQLException {
 
         // verifica se Id é nulo, se for já bloqueia a operação
-        // Pode ser necessário tratar isso no back ou front para não interromper a operação.
+        // Pode ser necessário tratar isso no back ou front para não interromper a
+        // operação.
         if (Id == null) {
             throw new IllegalArgumentException("Um Id precisa ser selecionado para edição");
         }
@@ -307,18 +347,22 @@ public class DAOCliente {
             valores.add(email);
         }
 
-        // Verifica se "colunas" está vazio, se estiver não é possível realizar a query, pois não terão valores para o "SET".
+        // Verifica se "colunas" está vazio, se estiver não é possível realizar a query,
+        // pois não terão valores para o "SET".
         if (colunas.isEmpty()) {
             throw new IllegalArgumentException("Ao menos um valor precisa ser preenchido para edição no Banco");
         }
 
-        // Monta a query concatenando a raiz "UPDATE cliente SET ... WHERE id_cliente=?" com os valores de "colunas", os separando por vírgulas
+        // Monta a query concatenando a raiz "UPDATE cliente SET ... WHERE id_cliente=?"
+        // com os valores de "colunas", os separando por vírgulas
         String sql = "UPDATE cliente SET " + String.join(", ", colunas) + " WHERE id_cliente=?";
         valores.add(Id);
 
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql);) {
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql);) {
 
-            // Itera sobre os valores de "Valores", e os atribue para cada coluna declarada anteriormente.
+            // Itera sobre os valores de "Valores", e os atribue para cada coluna declarada
+            // anteriormente.
             // Como a relação Colunas X valores é de 1:1, não haverá colunas sem valores.
             for (int i = 0; i < valores.size(); i++) {
                 stmt.setObject(i + 1, valores.get(i));
@@ -338,7 +382,8 @@ public class DAOCliente {
 
     public boolean remover(int id) throws SQLException {
         String sql = "DELETE FROM cliente WHERE id_cliente=?";
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
             return stmt.executeUpdate() == 1;
         }
@@ -348,12 +393,13 @@ public class DAOCliente {
         remover(id);
     }
 
-//    public void deleteusuariosTotal(int Id) throws SQLException {
-//        String sqlCliente = "DELETE FROM cliente WHERE id_cliente=?";
-//        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sqlCliente)) {
-//            stmt.setInt(1, Id);
-//            stmt.executeUpdate();
-//        }
-//    }
+    // public void deleteusuariosTotal(int Id) throws SQLException {
+    // String sqlCliente = "DELETE FROM cliente WHERE id_cliente=?";
+    // try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement
+    // stmt = conn.prepareStatement(sqlCliente)) {
+    // stmt.setInt(1, Id);
+    // stmt.executeUpdate();
+    // }
+    // }
 
 }
