@@ -43,6 +43,9 @@ public class ClienteServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        request.setCharacterEncoding("UTF-8");
+
         if (WebSupport.colaboradorId(request, response, "OPERACIONAL") < 0) {
             return;
         }
@@ -67,7 +70,8 @@ public class ClienteServlet extends HttpServlet {
             } else {
                 throw new IllegalArgumentException("Ação de cliente inválida.");
             }
-            response.sendRedirect(request.getContextPath() + "/clientes?sucesso=1");
+            response.sendRedirect(
+                    request.getContextPath() + "/painel/clientes?sucesso=1");
         } catch (IllegalArgumentException exception) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             request.setAttribute("erro", exception.getMessage());

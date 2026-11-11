@@ -132,7 +132,7 @@ public class DAOAtendimento {
     /*--------------------------------------
     Remoção de atendimentos
     --------------------------------------*/
-    Public Void remover(int idAtendimento) throws SQLException {
+    public void remover(int idAtendimento) throws SQLException {
         String sql = "DELETE FROM atendimento WHERE id_atendimento = ?";
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {

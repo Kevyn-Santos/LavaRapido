@@ -10,7 +10,9 @@ CREATE TABLE cliente (
     cpf CHAR(11) NOT NULL UNIQUE,
     telefone VARCHAR(20) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
-    senha_hash VARCHAR(255) NOT NULL
+    senha_hash VARCHAR(255) NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    excluido_em DATETIME NULL
 );
 CREATE TABLE veiculo (
 	id_veiculo INT AUTO_INCREMENT PRIMARY KEY,
@@ -19,6 +21,8 @@ CREATE TABLE veiculo (
     marca VARCHAR(60) NOT NULL,
     modelo VARCHAR(60) NOT NULL,
     cor VARCHAR(30),
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    excluido_em DATETIME NULL,
 
     CONSTRAINT fk_veiculo_cliente
 		FOREIGN KEY (id_cliente)
@@ -31,6 +35,8 @@ CREATE TABLE servico(
 	nome VARCHAR(100) NOT NULL,
     descricao VARCHAR(255),
     preco DECIMAL(10,2) NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    excluido_em DATETIME NULL,
     
     CONSTRAINT chk_servico_preco
 		CHECK (preco >= 0)
@@ -90,7 +96,9 @@ CREATE TABLE colaborador (
         'OPERACIONAL'
 	) NOT NULL DEFAULT 'OPERACIONAL',
     email VARCHAR(150) NOT NULL UNIQUE,
-    senha_hash VARCHAR(255) NOT NULL
+    senha_hash VARCHAR(255) NOT NULL,
+    ativo BOOLEAN NOT NULL DEFAULT TRUE,
+    excluido_em DATETIME NULL
 );
 CREATE TABLE atendimento (
 	id_atendimento INT AUTO_INCREMENT PRIMARY KEY,

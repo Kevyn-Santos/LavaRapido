@@ -56,7 +56,7 @@
         <nav class="ptabs" aria-label="Áreas do painel">
             <a href="${pageContext.request.contextPath}/admin/inicio">Início</a>
             <a href="${pageContext.request.contextPath}/painel/clientes">Clientes</a>
-            <a href="${pageContext.request.contextPath}/painel/carros">Carros</a>
+            <a href="${pageContext.request.contextPath}/painel/carros">Veículos</a>
             <a href="${pageContext.request.contextPath}/painel/agendamentos">Agendamentos</a>
             <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
             <a href="${pageContext.request.contextPath}/painel/pagamentos">Pagamentos</a>

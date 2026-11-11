@@ -26,10 +26,15 @@ import static org.mockito.Mockito.*;
 /**
  * Testes unitários da {@link DAOCliente}.
  *
- * <p>Nenhum banco real é usado: {@link DatabaseConnection#getConnection()} é mockado
- * estaticamente e devolve uma {@link Connection} falsa. Assim os testes verificam
- * apenas a lógica da DAO (SQL gerado, parâmetros enviados, mapeamento do ResultSet,
- * validações e fechamento dos recursos).</p>
+ * <p>
+ * Nenhum banco real é usado: {@link DatabaseConnection#getConnection()} é
+ * mockado
+ * estaticamente e devolve uma {@link Connection} falsa. Assim os testes
+ * verificam
+ * apenas a lógica da DAO (SQL gerado, parâmetros enviados, mapeamento do
+ * ResultSet,
+ * validações e fechamento dos recursos).
+ * </p>
  */
 @ExtendWith(MockitoExtension.class)
 class DAOClienteTest {
@@ -187,7 +192,10 @@ class DAOClienteTest {
             when(stmt.executeQuery()).thenReturn(rs);
         }
 
-        /** Simula uma linha válida no ResultSet (o modelo valida nome/email/telefone nos setters). */
+        /**
+         * Simula uma linha válida no ResultSet (o modelo valida nome/email/telefone nos
+         * setters).
+         */
         private void stubLinhaValida() throws SQLException {
             lenient().when(rs.next()).thenReturn(true);
             lenient().when(rs.getInt("id_cliente")).thenReturn(7);
@@ -265,7 +273,8 @@ class DAOClienteTest {
 
         private Cliente novoCliente() {
             // Usa setters em vez do construtor completo para isolar a DAO do modelo
-            // (o construtor de Pessoa lança NPE em super.getId(); ver resumo em miscelaneous/).
+            // (o construtor de Pessoa lança NPE em super.getId(); ver resumo em
+            // miscelaneous/).
             Cliente cliente = new Cliente();
             cliente.setNome("Diego");
             cliente.setCPF("12345678901");
@@ -307,7 +316,8 @@ class DAOClienteTest {
         @Test
         @DisplayName("propaga a SQLException original (permite ao servlet tratar SQLIntegrityConstraintViolationException)")
         void propagaSQLExceptionOriginal() throws SQLException {
-            java.sql.SQLIntegrityConstraintViolationException original = new java.sql.SQLIntegrityConstraintViolationException("cpf duplicado");
+            java.sql.SQLIntegrityConstraintViolationException original = new java.sql.SQLIntegrityConstraintViolationException(
+                    "cpf duplicado");
             when(conn.prepareStatement(anyString())).thenReturn(stmt);
             when(stmt.executeUpdate()).thenThrow(original);
 
@@ -429,7 +439,11 @@ class DAOClienteTest {
 
             dao.deleteusuario(3);
 
-            verify(conn).prepareStatement("DELETE FROM cliente WHERE id_cliente=?");
+            verify(conn).prepareStatement(
+                    org.mockito.ArgumentMatchers.argThat(sql -> sql.contains("UPDATE cliente")
+                            && sql.contains("ativo = FALSE")
+                            && sql.contains("excluido_em = CURRENT_TIMESTAMP")
+                            && sql.contains("WHERE id_cliente = ?")));
             InOrder ordem = inOrder(stmt);
             ordem.verify(stmt).setInt(1, 3);
             ordem.verify(stmt).executeUpdate();

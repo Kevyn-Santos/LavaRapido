@@ -1,14 +1,14 @@
-(function() {
+(function () {
   'use strict';
 
   function safeLow(str) { return String(str || '').toLowerCase().trim(); }
-  function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+  function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
   function fmtMoney(v) { return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
   function maskCPF(v) {
     let d = String(v || '').replace(/\D/g, '').slice(0, 11);
-    if (d.length > 9) return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6,9)+'-'+d.slice(9);
-    if (d.length > 6) return d.slice(0,3)+'.'+d.slice(3,6)+'.'+d.slice(6);
-    if (d.length > 3) return d.slice(0,3)+'.'+d.slice(3);
+    if (d.length > 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+    if (d.length > 6) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+    if (d.length > 3) return d.slice(0, 3) + '.' + d.slice(3);
     return d;
   }
   function validCPF(value) {
@@ -35,8 +35,11 @@
     return area + d.slice(2, 7) + (d.length > 7 ? `-${d.slice(7)}` : '');
   }
   function plateValue(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7); }
-  function validPlate(v) { return /^[A-Z]{3}\d[A-Z]\d{2}$/.test(v); }
-
+  function validPlate(v) {
+    return /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(
+      plateValue(v)
+    );
+  }
   const modules = [
     { container: 'clients-table-container', form: 'form-client', add: 'btn-add-client', cancel: 'btn-cancel-client' },
     { container: 'cars-table-container', form: 'form-car', add: 'btn-add-car', cancel: 'btn-cancel-car' },

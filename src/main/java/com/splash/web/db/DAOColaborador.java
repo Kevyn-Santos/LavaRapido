@@ -20,8 +20,12 @@ public class DAOColaborador {
     --------------------------------------*/
 
     public List<ColaboradorView> listar() throws SQLException {
-        String sql = "SELECT id_colaborador, nome, cargo, nivel_acesso, email "
-                + "FROM colaborador ORDER BY nome";
+        String sql = """
+                SELECT id_colaborador, nome, cargo, nivel_acesso, email
+                FROM colaborador
+                WHERE ativo = TRUE
+                ORDER BY nome
+                """;
         List<ColaboradorView> colaboradores = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
@@ -39,11 +43,16 @@ public class DAOColaborador {
      * Função que valida o usuário no banco.
      *
      * @param email Email do usuário no formato {@code user@domínio.com}.
-     * @param senha Senha do usuário. Necessário passar senha hasheada para comparação com banco.
-     * */
+     * @param senha Senha do usuário. Necessário passar senha hasheada para
+     *              comparação com banco.
+     */
     public ColaboradorView autenticar(String email, String senha) throws SQLException {
-        String sql = "SELECT id_colaborador, nome, cargo, nivel_acesso, email, senha_hash "
-                + "FROM colaborador WHERE email = ?";
+        String sql = """
+                SELECT id_colaborador, nome, cargo, nivel_acesso, email, senha_hash
+                FROM colaborador
+                WHERE email = ?
+                  AND ativo = TRUE
+                """;
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email.trim().toLowerCase());
@@ -64,7 +73,8 @@ public class DAOColaborador {
         }
     }
 
-    // Recebe a conexão para rodar na mesma sessão que segura o GET_LOCK em criarAdministradorInicial
+    // Recebe a conexão para rodar na mesma sessão que segura o GET_LOCK em
+    // criarAdministradorInicial
     private boolean existeAdministrador(Connection connection) throws SQLException {
         String sql = "SELECT 1 FROM colaborador WHERE nivel_acesso = 'ADMINISTRADOR' LIMIT 1";
         try (PreparedStatement statement = connection.prepareStatement(sql);
@@ -96,24 +106,28 @@ public class DAOColaborador {
      * Função que cria o primeiro administrador do sistema
      *
      * <p>
-     *     Essa função ocorre em quatro etapas:
-     *     1. É criado um {@code Lock} de 5 segundos para a realização da operação.
-     *     2. É verificado se já existe um usuário ADM ativo
-     *     3. É criado um usuário já com status ADMINISTRADOR
-     *     4. É liberado o {@code Lock}  para outras operações
+     * Essa função ocorre em quatro etapas:
+     * 1. É criado um {@code Lock} de 5 segundos para a realização da operação.
+     * 2. É verificado se já existe um usuário ADM ativo
+     * 3. É criado um usuário já com status ADMINISTRADOR
+     * 4. É liberado o {@code Lock} para outras operações
      * </p>
      *
-     * @param nome Nome do administrador que será criado
+     * @param nome  Nome do administrador que será criado
      * @param cargo Cargo do administrador que será criado
      * @param email Email do administrador que será criado
-     * @param senha Senha em Plaintext do administrador que será criado. Ela será hasheada automaticamente.
+     * @param senha Senha em Plaintext do administrador que será criado. Ela será
+     *              hasheada automaticamente.
      *
-     * */
+     */
     public void criarAdministradorInicial(String nome, String cargo, String email, String senha)
             throws SQLException {
-        // Um lock é uma trava imposta para que dois usuários não realizem uma mesma operação ao mesmo tempo.
-        // Com essa trava quem chegar primeiro realiza a operação em X segundos, o segundo aguarda a liberação nesse tempo.
-        // Quando a operação for finalizada pelo primeiro usuário o segundo utilizará os dados atualizados
+        // Um lock é uma trava imposta para que dois usuários não realizem uma mesma
+        // operação ao mesmo tempo.
+        // Com essa trava quem chegar primeiro realiza a operação em X segundos, o
+        // segundo aguarda a liberação nesse tempo.
+        // Quando a operação for finalizada pelo primeiro usuário o segundo utilizará os
+        // dados atualizados
 
         try (Connection connection = DatabaseConnection.getConnection()) {
             try (PreparedStatement lock = connection.prepareStatement("SELECT GET_LOCK(?, 5)")) {
@@ -150,77 +164,112 @@ public class DAOColaborador {
     Update de colaboradores
     --------------------------------------*/
 
-    public void atualizar(int idColaborador, String nome, String cargo, String nivelAcesso, String email, String senha) throws SQLException {
-        
-        if(idColaborador <= 0) {
-            throw new IllegalArgumentException("ID do colaborador inválido.");
+    public void atualizar(int idColaborador, String nome, String cargo,
+            String nivelAcesso, String email, String senha)
+            throws SQLException {
+
+        if (idColaborador <= 0) {
+            throw new IllegalArgumentException(
+                    "ID do colaborador inválido.");
         }
-        
-        ArrayList<String> colunas = new ArrayList<>();
-        ArrayList<String> valores = new ArrayList<>();
 
-if (nome != null && !nome.isBlank()) {
-                    colunas.add("nome = ?");
-                    valores.add(nome.trim());
-                }
+        List<String> colunas = new ArrayList<>();
+        List<String> valores = new ArrayList<>();
 
-                if (cargo != null && !cargo.isBlank()) {
-                    colunas.add("cargo = ?");
-                    valores.add(cargo.trim());
-                }
-            if (nivelAcesso != null && !nivelAcesso.isBlank()) {
-                colunas.add("nivel_acesso = ?");
-                valores.add(nivelAcesso);
-            }
-            
-           if (email != null && !email.isBlank()) {
-                colunas.add("email = ?");
-                valores.add(email.trim().toLowerCase());
-            }
-           if (senha != null && !senha.isBlank()) {
-                colunas.add("senha_hash = ?");
-                valores.add(Passwords.hash(senha)); 
-            }
-            else {
-                colunas.add("senha_hash = CASE WHEN ? THEN ? ELSE senha_hash END");
-                valores.add(null);
-                valores.add(null);
-            }
-
-            if (colunas.isEmpty()) {
-            throw new IllegalArgumentException("Ao menos um valor precisa ser preenchido para edição no Banco");
+        if (nome != null && !nome.isBlank()) {
+            colunas.add("nome = ?");
+            valores.add(nome.trim());
         }
-        String sql = "UPDATE colaborador SET " + String.join(", ", colunas) + " WHERE id_colaborador = ?";
-        valores.add((String.valueOf(idColaborador)));
-        
+
+        if (cargo != null && !cargo.isBlank()) {
+            colunas.add("cargo = ?");
+            valores.add(cargo.trim());
+        }
+
+        if (nivelAcesso != null && !nivelAcesso.isBlank()) {
+            if (!java.util.Set.of(
+                    "ADMINISTRADOR",
+                    "ATENDENTE",
+                    "OPERACIONAL").contains(nivelAcesso)) {
+                throw new IllegalArgumentException(
+                        "Nível de acesso inválido.");
+            }
+
+            colunas.add("nivel_acesso = ?");
+            valores.add(nivelAcesso);
+        }
+
+        if (email != null && !email.isBlank()) {
+            colunas.add("email = ?");
+            valores.add(email.trim().toLowerCase());
+        }
+
+        // A senha só será modificada se uma nova for informada.
+        if (senha != null && !senha.isBlank()) {
+            if (senha.length() < 8) {
+                throw new IllegalArgumentException(
+                        "A senha deve ter ao menos 8 caracteres.");
+            }
+
+            colunas.add("senha_hash = ?");
+            valores.add(Passwords.hash(senha));
+        }
+
+        if (colunas.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Informe ao menos um campo para atualizar.");
+        }
+
+        String sql = "UPDATE colaborador SET "
+                + String.join(", ", colunas)
+                + " WHERE id_colaborador = ?";
+
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            
-                    for (int i = 0; i < valores.size(); i++) {
-                statement.setObject(i + 1, valores.get(i));}
-                
-        if (statement.executeUpdate() != 1) {
-            throw new IllegalArgumentException("Colaborador não encontrado.");
-        } 
+
+            int indice = 1;
+
+            for (String valor : valores) {
+                statement.setString(indice++, valor);
+            }
+
+            statement.setInt(indice, idColaborador);
+
+            if (statement.executeUpdate() != 1) {
+                throw new IllegalArgumentException(
+                        "Colaborador não encontrado ou nenhuma linha alterada.");
+            }
         }
     }
-    
-    
+
     // Nenhuma operação de update de colaborador ainda
 
     /*--------------------------------------
     Remoção de colaboradores
     --------------------------------------*/
+
     public boolean remover(int idColaborador) throws SQLException {
-        String sql = "DELETE FROM colaborador WHERE id_colaborador = ?";
+
+        if (idColaborador <= 0) {
+            throw new IllegalArgumentException(
+                    "ID do colaborador inválido.");
+        }
+
+        String sql = """
+                UPDATE colaborador
+                SET ativo = FALSE,
+                    excluido_em = CURRENT_TIMESTAMP
+                WHERE id_colaborador = ?
+                  AND ativo = TRUE
+                """;
+
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
+
             statement.setInt(1, idColaborador);
+
             return statement.executeUpdate() == 1;
         }
     }
-
-    // Nenhuma operação de remoção de colaborador ainda
-
 
 }

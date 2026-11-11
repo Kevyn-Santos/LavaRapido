@@ -19,8 +19,13 @@ public class DAOVeiculo {
     --------------------------------------*/
 
     public List<VeiculoView> listarPorCliente(int idCliente) throws SQLException {
-        String sql = "SELECT id_veiculo, placa, marca, modelo, cor FROM veiculo "
-                + "WHERE id_cliente = ? ORDER BY placa";
+        String sql = """
+                SELECT id_veiculo, placa, marca, modelo, cor
+                FROM veiculo
+                WHERE id_cliente = ?
+                  AND ativo = TRUE
+                ORDER BY placa
+                """;
         List<VeiculoView> veiculos = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -41,15 +46,25 @@ public class DAOVeiculo {
 
     public void inserir(int idCliente, String placa, String marca, String modelo, String cor)
             throws SQLException {
-        String sql = "INSERT INTO veiculo (id_cliente, placa, marca, modelo, cor) VALUES (?, ?, ?, ?, ?)";
+        String sql = """
+                INSERT INTO veiculo (id_cliente, placa, marca, modelo, cor)
+                SELECT id_cliente, ?, ?, ?, ?
+                FROM cliente
+                WHERE id_cliente = ?
+                  AND ativo = TRUE
+                """;
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, idCliente);
-            statement.setString(2, placa.trim().toUpperCase());
-            statement.setString(3, marca.trim());
-            statement.setString(4, modelo.trim());
-            statement.setString(5, cor == null || cor.isBlank() ? null : cor.trim());
-            statement.executeUpdate();
+            statement.setString(1, placa.trim().toUpperCase());
+            statement.setString(2, marca.trim());
+            statement.setString(3, modelo.trim());
+            statement.setString(4, cor == null || cor.isBlank() ? null : cor.trim());
+            statement.setInt(5, idCliente);
+
+            if (statement.executeUpdate() != 1) {
+                throw new IllegalArgumentException(
+                        "Cliente não encontrado ou inativo.");
+            }
         }
     }
 
@@ -59,16 +74,64 @@ public class DAOVeiculo {
 
     // Nenhuma operação de update de veículo ainda
 
+    public boolean atualizar(int idCliente, int idVeiculo,
+            String placa, String marca, String modelo, String cor)
+            throws SQLException {
+
+        String sql = """
+                UPDATE veiculo v
+                JOIN cliente c
+                    ON c.id_cliente = v.id_cliente
+                SET v.placa = ?,
+                    v.marca = ?,
+                    v.modelo = ?,
+                    v.cor = ?
+                WHERE v.id_veiculo = ?
+                  AND v.id_cliente = ?
+                  AND v.ativo = TRUE
+                  AND c.ativo = TRUE
+                """;
+
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, placa);
+            statement.setString(2, marca);
+            statement.setString(3, modelo);
+            statement.setString(4, cor.isBlank() ? null : cor);
+            statement.setInt(5, idVeiculo);
+            statement.setInt(6, idCliente);
+
+            return statement.executeUpdate() == 1;
+        }
+    }
+
     /*--------------------------------------
     Remoção de veículos
     --------------------------------------*/
 
     public boolean remover(int idCliente, int idVeiculo) throws SQLException {
-        String sql = "DELETE FROM veiculo WHERE id_cliente = ? AND id_veiculo = ?";
+
+        if (idCliente <= 0 || idVeiculo <= 0) {
+            throw new IllegalArgumentException(
+                    "Cliente ou veículo inválido.");
+        }
+
+        String sql = """
+                UPDATE veiculo
+                SET ativo = FALSE,
+                    excluido_em = CURRENT_TIMESTAMP
+                WHERE id_cliente = ?
+                  AND id_veiculo = ?
+                  AND ativo = TRUE
+                """;
+
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
+
             statement.setInt(1, idCliente);
             statement.setInt(2, idVeiculo);
+
             return statement.executeUpdate() == 1;
         }
     }

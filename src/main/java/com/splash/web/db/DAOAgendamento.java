@@ -156,8 +156,22 @@ public class DAOAgendamento {
             throw new IllegalArgumentException("Selecione ao menos um serviço, sem repetições.");
         }
 
-        String verifyVehicle = "SELECT 1 FROM veiculo WHERE id_veiculo = ? AND id_cliente = ?";
-        String getPrice = "SELECT preco FROM servico WHERE id_servico = ?";
+        String verifyVehicle = """
+                SELECT 1
+                FROM veiculo v
+                JOIN cliente c
+                    ON c.id_cliente = v.id_cliente
+                WHERE v.id_veiculo = ?
+                  AND v.id_cliente = ?
+                  AND v.ativo = TRUE
+                  AND c.ativo = TRUE
+                """;
+        String getPrice = """
+                SELECT preco
+                FROM servico
+                WHERE id_servico = ?
+                  AND ativo = TRUE
+                """;
         String insertAppointment = "INSERT INTO agendamento (id_veiculo, data, horario) VALUES (?, ?, ?)";
         String insertService = "INSERT INTO agendamento_servico "
                 + "(id_agendamento, id_servico, valor_praticado) VALUES (?, ?, ?)";
@@ -172,7 +186,8 @@ public class DAOAgendamento {
                     statement.setInt(2, idCliente);
                     try (ResultSet result = statement.executeQuery()) {
                         if (!result.next()) {
-                            throw new IllegalArgumentException("O veículo selecionado não pertence à sua conta.");
+                            throw new IllegalArgumentException(
+                                    "Veículo não encontrado, inativo ou vinculado a um cliente inativo.");
                         }
                     }
                 }
@@ -184,7 +199,8 @@ public class DAOAgendamento {
                         statement.setInt(1, idServico);
                         try (ResultSet result = statement.executeQuery()) {
                             if (!result.next()) {
-                                throw new IllegalArgumentException("Um dos serviços selecionados não existe.");
+                                throw new IllegalArgumentException(
+                                        "Um dos serviços selecionados não existe ou está inativo.");
                             }
                             BigDecimal preco = result.getBigDecimal("preco");
                             selecionados.add(new ServicoView(idServico, null, null, preco));
@@ -277,6 +293,5 @@ public class DAOAgendamento {
     --------------------------------------*/
 
     // Nenhuma operação de remoção de agendamento ainda (cancelar só troca o status)
-
 
 }

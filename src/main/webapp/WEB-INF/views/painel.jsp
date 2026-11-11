@@ -64,8 +64,8 @@
 
       <a class="pcard" href="${pageContext.request.contextPath}/painel/carros">
         <svg class="pi" viewBox="0 0 24 24"><path d="M3 16v-3.5L5.5 7h9l4 4.5H21V16"/><circle cx="8" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
-        <b class="pt">Carros</b>
-        <span class="pc">Adicione e edite os carros de cada cliente.</span>
+        <b class="pt">Veículos</b>
+        <span class="pc">Adicione e edite os veículos de cada cliente.</span>
       </a>
 
       <a class="pcard" href="${pageContext.request.contextPath}/painel/agendamentos">

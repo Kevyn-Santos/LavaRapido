@@ -20,7 +20,12 @@ public class DAOServico {
     --------------------------------------*/
 
     public List<ServicoView> listar() throws SQLException {
-        String sql = "SELECT id_servico, nome, descricao, preco FROM servico ORDER BY id_servico";
+        String sql = """
+                SELECT id_servico, nome, descricao, preco
+                FROM servico
+                WHERE ativo = TRUE
+                ORDER BY id_servico
+                """;
         List<ServicoView> servicos = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
@@ -78,10 +83,25 @@ public class DAOServico {
     --------------------------------------*/
 
     public boolean remover(int idServico) throws SQLException {
-        String sql = "DELETE FROM servico WHERE id_servico = ?";
+
+        if (idServico <= 0) {
+            throw new IllegalArgumentException(
+                    "ID do serviço inválido.");
+        }
+
+        String sql = """
+                UPDATE servico
+                SET ativo = FALSE,
+                    excluido_em = CURRENT_TIMESTAMP
+                WHERE id_servico = ?
+                  AND ativo = TRUE
+                """;
+
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
+
             statement.setInt(1, idServico);
+
             return statement.executeUpdate() == 1;
         }
     }

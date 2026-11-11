@@ -24,6 +24,209 @@
           color: var(--ink);
           font-variation-settings: "wdth" 80;
         }
+
+        /* Organização da listagem de agendamentos */
+
+        #bookings-table-container .booking-item {
+          padding: 16px 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        #bookings-table-container .booking-item:last-child {
+          border-bottom: none;
+        }
+
+        #bookings-table-container .booking-main {
+          display: grid;
+          grid-template-columns:
+            minmax(180px, 1.6fr) minmax(145px, 1fr) minmax(115px, 0.8fr) minmax(100px, auto);
+          align-items: center;
+          gap: 16px;
+        }
+
+        #bookings-table-container .booking-main>div {
+          min-width: 0;
+        }
+
+        #bookings-table-container .booking-main .small {
+          display: block;
+          margin-bottom: 3px;
+        }
+
+        #bookings-table-container .booking-details {
+          position: relative;
+          min-width: 0;
+        }
+
+        #bookings-table-container .booking-details summary {
+          cursor: pointer;
+          font-weight: 700;
+          color: var(--primary);
+          white-space: nowrap;
+        }
+
+        #bookings-table-container .booking-details[open] {
+          grid-column: 1 / -1;
+        }
+
+        #bookings-table-container .booking-details[open] .booking-extra {
+          position: static;
+          width: 100%;
+          margin-top: 12px;
+          padding: 16px;
+          background: var(--paper);
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          box-shadow: none;
+        }
+
+        #booking-status-filter {
+          background: var(--card);
+          color: var(--ink);
+          border: 1px solid var(--line);
+          min-height: 44px;
+          padding: 10px 14px;
+          border-radius: 6px;
+        }
+
+        #booking-status-filter option {
+          background: #0B3050;
+          color: #FFFFFF;
+        }
+
+        @media (max-width: 860px) {
+          #bookings-table-container .booking-main {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        /* Popup de detalhes dos agendamentos */
+
+        dialog.booking-modal {
+          position: fixed;
+          inset: 0;
+          margin: auto;
+          width: min(560px, calc(100vw - 32px));
+          max-width: 560px;
+          max-height: 85vh;
+          padding: 28px;
+          overflow-y: auto;
+
+          background: #0B3050;
+          color: #FFFFFF;
+          border: 1px solid #365875;
+          border-radius: 16px;
+          box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+        }
+
+        dialog.booking-modal:not([open]) {
+          display: none;
+        }
+
+        dialog.booking-modal::backdrop {
+          background: rgba(0, 10, 20, 0.78);
+          backdrop-filter: blur(4px);
+        }
+
+        .booking-modal-header {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+          padding-bottom: 18px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid #365875;
+        }
+
+        .booking-modal-header h2 {
+          color: #FFFFFF;
+          font-size: 1.65rem;
+          line-height: 1.2;
+        }
+
+        .booking-modal .small {
+          display: block;
+          color: #9FC7E0;
+          font-size: 0.82rem;
+        }
+
+        .booking-modal-content {
+          display: grid;
+          gap: 22px;
+        }
+
+        .booking-modal-content>div {
+          min-width: 0;
+        }
+
+        .booking-modal-content strong {
+          display: block;
+          margin-top: 5px;
+          color: #FFFFFF;
+          font-size: 0.98rem;
+          overflow-wrap: anywhere;
+        }
+
+        .booking-modal-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 20px;
+        }
+
+        .booking-modal-total {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          background: #06263F;
+          padding: 16px;
+          border-radius: 10px;
+        }
+
+        .booking-modal-total strong {
+          font-size: 1.45rem;
+          margin: 0;
+        }
+
+        .booking-modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          margin-top: 24px;
+          padding-top: 18px;
+          border-top: 1px solid #365875;
+        }
+
+        .booking-modal .booking-close {
+          cursor: pointer;
+        }
+
+        .booking-modal-header .booking-close {
+          background: transparent;
+          border: none;
+          color: #FFFFFF;
+          font-size: 1.5rem;
+          padding: 0 6px;
+        }
+
+        .booking-modal-footer .booking-close {
+          background: #FF7A1A;
+          color: #06263F;
+          border: none;
+          border-radius: 8px;
+          padding: 10px 24px;
+          font-weight: 700;
+        }
+
+        @media (max-width: 480px) {
+          dialog.booking-modal {
+            padding: 20px;
+          }
+
+          .booking-modal-grid {
+            grid-template-columns: 1fr;
+          }
+        }
       </style>
     </head>
 
@@ -53,7 +256,7 @@
           <nav class="ptabs" aria-label="Áreas do painel">
             <a href="${pageContext.request.contextPath}/admin/inicio">Início</a>
             <a href="${pageContext.request.contextPath}/painel/clientes">Clientes</a>
-            <a href="${pageContext.request.contextPath}/painel/carros">Carros</a>
+            <a href="${pageContext.request.contextPath}/painel/carros">Veículos</a>
             <a href="${pageContext.request.contextPath}/painel/agendamentos" class="on"
               aria-current="page">Agendamentos</a>
             <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
@@ -72,10 +275,18 @@
               <button type="button" class="btn" id="btn-add-booking">Novo agendamento</button>
             </div>
 
-            <div class="search">
-              <input type="search" id="input-search" placeholder="Buscar por cliente, carro ou data...">
-            </div>
+            <div class="booking-filters" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+              <div class="search">
+                <input type="search" id="input-search" placeholder="Cliente, veículo, placa, data ou ID...">
+              </div>
 
+              <select id="booking-status-filter" aria-label="Filtrar por status">
+                <option value="">Todos os status</option>
+                <option value="AGENDADO">Agendados</option>
+                <option value="CONCLUIDO">Concluídos</option>
+                <option value="CANCELADO">Cancelados</option>
+              </select>
+            </div>
 
 
             <div id="bookings-table-container">
@@ -86,132 +297,160 @@
                 </c:when>
 
                 <c:otherwise>
-                  <div class="table-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Cliente</th>
-                          <th>Veículo</th>
-                          <th>Placa</th>
-                          <th>Data</th>
-                          <th>Horário</th>
-                          <th>Serviços</th>
-                          <th>Valor</th>
-                          <th>Status</th>
-                          <th>Pagamento</th>
-                        </tr>
-                      </thead>
+                  <div class="tbl">
 
-                      <tbody>
-                        <c:forEach var="agendamento" items="${agendamentos}">
-                          <tr>
-                            <td>
+                    <c:forEach var="agendamento" items="${agendamentos}">
+
+                      <div class="booking-item" data-status="${agendamento.status}"
+                        data-search="<c:out value='${agendamento.id} ${agendamento.cliente} ${agendamento.veiculo} ${agendamento.placa} ${agendamento.data} ${agendamento.servicos}' />">
+
+                        <div class="booking-main">
+                          <div>
+                            <strong>
+                              #
                               <c:out value="${agendamento.id}" />
-                            </td>
-                            <td>
+                              —
                               <c:out value="${agendamento.cliente}" />
-                            </td>
-                            <td>
+                            </strong>
+                            <p class="small">
                               <c:out value="${agendamento.veiculo}" />
-                            </td>
-                            <td>
-                              <c:out value="${agendamento.placa}" />
-                            </td>
-                            <td>
+                            </p>
+                          </div>
+
+                          <div>
+                            <span class="small">Data e horário</span>
+                            <p>
                               <c:out value="${agendamento.data}" />
-                            </td>
-                            <td>
                               <c:out value="${agendamento.horario}" />
-                            </td>
-                            <td>
-                              <c:out value="${agendamento.servicos}" />
-                            </td>
-                            <td>R$
-                              <c:out value="${agendamento.total}" />
-                            </td>
-                            <td>
-                              <c:out value="${agendamento.status}" />
-                            </td>
-                            <td>
-                              <c:out value="${agendamento.statusPagamento}" />
-                            </td>
-                          </tr>
-                        </c:forEach>
-                      </tbody>
-                    </table>
+                            </p>
+                          </div>
+
+                          <div>
+                            <span class="small">Status</span>
+                            <p>
+                              <strong>
+                                <c:out value="${agendamento.status}" />
+                              </strong>
+                            </p>
+                          </div>
+
+                          <button type="button" class="btn sm ghost booking-open"
+                            data-dialog-id="detalhes-${agendamento.id}">
+                            Ver detalhes
+                          </button>
+
+                        </div>
+
+                        <dialog id="detalhes-${agendamento.id}" class="booking-modal">
+
+                          <div class="booking-modal-header">
+                            <div>
+                              <h2>Agendamento #
+                                <c:out value="${agendamento.id}" />
+                              </h2>
+                              <p class="small">Detalhes do agendamento</p>
+                            </div>
+
+                            <button type="button" class="booking-close" aria-label="Fechar detalhes">✕</button>
+                          </div>
+
+                          <div class="booking-modal-content">
+
+                            <div>
+                              <span class="small">Cliente</span>
+                              <strong>
+                                <c:out value="${agendamento.cliente}" />
+                              </strong>
+                            </div>
+
+                            <div class="booking-modal-grid">
+
+                              <div>
+                                <span class="small">Veículo</span>
+                                <strong>
+                                  <c:out value="${agendamento.veiculo}" />
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span class="small">Placa</span>
+                                <strong>
+                                  <c:out value="${agendamento.placa}" />
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span class="small">Data</span>
+                                <strong>
+                                  <c:out value="${agendamento.data}" />
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span class="small">Horário</span>
+                                <strong>
+                                  <c:out value="${agendamento.horario}" />
+                                </strong>
+                              </div>
+
+                            </div>
+
+                            <div>
+                              <span class="small">Serviços contratados</span>
+                              <strong>
+                                <c:out value="${agendamento.servicos}" />
+                              </strong>
+                            </div>
+
+                            <div class="booking-modal-total">
+                              <span>Valor total</span>
+                              <strong>R$
+                                <c:out value="${agendamento.total}" />
+                              </strong>
+                            </div>
+
+                            <div class="booking-modal-grid">
+                              <div>
+                                <span class="small">Status do agendamento</span>
+                                <strong>
+                                  <c:out value="${agendamento.status}" />
+                                </strong>
+                              </div>
+
+                              <div>
+                                <span class="small">Situação do pagamento</span>
+                                <strong>
+                                  <c:out
+                                    value="${empty agendamento.statusPagamento ? 'Não informado' : agendamento.statusPagamento}" />
+                                </strong>
+                              </div>
+                            </div>
+
+                          </div>
+
+                          <div class="booking-modal-footer">
+                            <button type="button" class="btn ghost booking-close">
+                              Fechar
+                            </button>
+                          </div>
+
+                        </dialog>
+
+                      </div>
+
+                    </c:forEach>
                   </div>
+
+                  <p id="booking-empty-filter" class="small hide">
+                    Nenhum agendamento encontrado para esta pesquisa.
+                  </p>
                 </c:otherwise>
               </c:choose>
-
             </div>
-
-            <c:choose>
-              <c:when test="${empty agendamentos}">
-                <p class="small">Nenhum agendamento cadastrado.</p>
-              </c:when>
-
-              <c:otherwise>
-                <div class="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Cliente</th>
-                        <th>Veículo</th>
-                        <th>Placa</th>
-                        <th>Data</th>
-                        <th>Horário</th>
-                        <th>Serviços</th>
-                        <th>Valor</th>
-                        <th>Status</th>
-                        <th>Pagamento</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      <c:forEach var="agendamento" items="${agendamentos}">
-                        <tr>
-                          <td>
-                            <c:out value="${agendamento.id}" />
-                          </td>
-                          <td>
-                            <c:out value="${agendamento.cliente}" />
-                          </td>
-                          <td>
-                            <c:out value="${agendamento.veiculo}" />
-                          </td>
-                          <td>
-                            <c:out value="${agendamento.placa}" />
-                          </td>
-                          <td>
-                            <c:out value="${agendamento.data}" />
-                          </td>
-                          <td>
-                            <c:out value="${agendamento.horario}" />
-                          </td>
-                          <td>
-                            <c:out value="${agendamento.servicos}" />
-                          </td>
-                          <td>R$
-                            <c:out value="${agendamento.total}" />
-                          </td>
-                          <td>
-                            <c:out value="${agendamento.status}" />
-                          </td>
-                          <td>
-                            <c:out value="${agendamento.statusPagamento}" />
-                          </td>
-                        </tr>
-                      </c:forEach>
-                    </tbody>
-                  </table>
-                </div>
-              </c:otherwise>
-            </c:choose>
 
           </div>
         </div>
+
 
         <!-- 2. TELA DO FORMULÁRIO -->
         <div id="view-form" class="hide">
@@ -273,6 +512,71 @@
       </main>
 
       <script src="${pageContext.request.contextPath}/Assets/Js/painel.js"></script>
+
+      <script>
+        const buscaAgendamento = document.getElementById("input-search");
+        const filtroStatus = document.getElementById("booking-status-filter");
+
+        function filtrarAgendamentos() {
+          const busca = buscaAgendamento.value.trim().toLowerCase();
+          const status = filtroStatus.value;
+
+          let visiveis = 0;
+
+          document.querySelectorAll(".booking-item").forEach(item => {
+
+            const texto = (item.dataset.search || "").toLowerCase();
+
+            const correspondeBusca = texto.includes(busca);
+            const correspondeStatus =
+              !status || item.dataset.status === status;
+
+            const mostrar = correspondeBusca && correspondeStatus;
+
+            item.classList.toggle("hide", !mostrar);
+
+            if (mostrar) visiveis++;
+          });
+
+          const aviso = document.getElementById("booking-empty-filter");
+
+          if (aviso) {
+            aviso.classList.toggle("hide", visiveis > 0);
+          }
+        }
+
+        buscaAgendamento.addEventListener("input", filtrarAgendamentos);
+        filtroStatus.addEventListener("change", filtrarAgendamentos);
+      </script>
+
+      <script>
+        document.querySelectorAll(".booking-open").forEach(botao => {
+
+          botao.addEventListener("click", () => {
+
+            const idDialog = botao.dataset.dialogId;
+            const dialog = document.getElementById(idDialog);
+
+            if (dialog) {
+              dialog.showModal();
+            }
+          });
+        });
+
+        document.querySelectorAll(".booking-modal").forEach(dialog => {
+
+          dialog.querySelectorAll(".booking-close").forEach(botao => {
+            botao.addEventListener("click", () => dialog.close());
+          });
+
+          dialog.addEventListener("click", evento => {
+            if (evento.target === dialog) {
+              dialog.close();
+            }
+          });
+        });
+      </script>
+
     </body>
 
     </html>

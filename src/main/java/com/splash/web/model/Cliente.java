@@ -86,6 +86,18 @@ public class Cliente extends Pessoa {
         return veiculo;
     }
 
+    public Veiculo carregarVeiculo(int idVeiculo, String placa,
+            String marca, String modelo, String cor) {
+
+        Veiculo veiculo = Veiculo.carregar(
+                this, placa, marca, modelo, cor);
+
+        veiculo.setId(idVeiculo);
+        veiculos.add(veiculo);
+
+        return veiculo;
+    }
+
     public boolean possuiVeiculoComPlaca(String placa) {
         String normalizada = Validacao.placa(placa);
         return veiculos.stream().anyMatch(v -> v.getPlaca().equals(normalizada));

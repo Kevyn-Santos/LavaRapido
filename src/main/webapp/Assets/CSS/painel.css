@@ -3,7 +3,9 @@
 /* ==========================================================================
    1. RESET E VARIÁVEIS DE TEMA
    ========================================================================== */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -21,7 +23,7 @@
   --card: #FFFFFF;
   --ink: #06263F;
   --muted: #3E5B70;
-  --line: rgba(6,38,63,.18);
+  --line: rgba(6, 38, 63, .18);
   --primary: #0E6BAA;
   --on-primary: #FFFFFF;
   --ok: #1E7A4F;
@@ -35,7 +37,7 @@
     --card: #0B3050;
     --ink: #EDF3F4;
     --muted: #9FBACB;
-    --line: rgba(237,243,244,.22);
+    --line: rgba(237, 243, 244, .22);
     --primary: #8FC9E8;
     --on-primary: #06263F;
     --ok: #7FD6A4;
@@ -48,7 +50,7 @@
   --card: #0B3050;
   --ink: #EDF3F4;
   --muted: #9FBACB;
-  --line: rgba(237,243,244,.22);
+  --line: rgba(237, 243, 244, .22);
   --primary: #8FC9E8;
   --on-primary: #06263F;
   --ok: #7FD6A4;
@@ -68,20 +70,58 @@ body {
   min-height: 100vh;
 }
 
-a { color: inherit; text-decoration: none; }
-button, input, select { font: inherit; color: inherit; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
-.q { font-family: "Instrument Serif", Georgia, serif; font-style: italic; font-weight: 400; }
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
-.small { font-size: .9rem; color: var(--muted); }
-.hide { display: none !important; }
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+.q {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.small {
+  font-size: .9rem;
+  color: var(--muted);
+}
+
+.hide {
+  display: none !important;
+}
 
 /* ==========================================================================
    2. MARCA E CABEÇALHO (HEADER)
    ========================================================================== */
-.wm { font-weight: 800; line-height: .9; letter-spacing: -.03em; white-space: nowrap; }
-.wm .f { font-variation-settings: "wdth" 75; letter-spacing: -.05em; }
-.wm .s { font-variation-settings: "wdth" 100; letter-spacing: .015em; }
+.wm {
+  font-weight: 800;
+  line-height: .9;
+  letter-spacing: -.03em;
+  white-space: nowrap;
+}
+
+.wm .f {
+  font-variation-settings: "wdth" 75;
+  letter-spacing: -.05em;
+}
+
+.wm .s {
+  font-variation-settings: "wdth" 100;
+  letter-spacing: .015em;
+}
 
 .top {
   position: sticky;
@@ -101,8 +141,21 @@ button, input, select { font: inherit; color: inherit; }
   min-height: 64px;
 }
 
-.top .lock { font-size: 1.25rem; font-weight: 800; display: inline-flex; align-items: center; gap: .32em; }
-.top .logo-img { display: block; width: 140px; max-width: 42vw; height: auto; object-fit: contain; }
+.top .lock {
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: .32em;
+}
+
+.top .logo-img {
+  display: block;
+  width: 140px;
+  max-width: 42vw;
+  height: auto;
+  object-fit: contain;
+}
 
 body.panel-page .top.panel-page-header {
   position: fixed;
@@ -272,20 +325,50 @@ body.panel-home .btn-light:hover {
     font-size: clamp(1.35rem, 6vw, 1.8rem);
   }
 
-  body.panel-home .dashboard-welcome-top { gap: 10px; }
+  body.panel-home .dashboard-welcome-top {
+    gap: 10px;
+  }
 }
 
 /* ==========================================================================
    3. ESTRUTURA DO PAINEL E NAVEGAÇÃO DE SEPARADORES
    ========================================================================== */
-.page { padding: 32px var(--pad) 72px; min-height: 100vh; }
+.page {
+  padding: 32px var(--pad) 72px;
+  min-height: 100vh;
+}
 
-.who { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-.who h1 { font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1; }
+.who {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
 
-.role { display: inline-block; font-weight: 700; font-size: .85rem; padding: 5px 14px; border-radius: 4px 12px 4px 4px; }
-.role.admin { background: var(--ink); color: var(--paper); }
-.role.atendente { background: #8FC9E8; color: #06263F; }
+.who h1 {
+  font-size: clamp(2rem, 4.4vw, 3.2rem);
+  line-height: 1;
+}
+
+.role {
+  display: inline-block;
+  font-weight: 700;
+  font-size: .85rem;
+  padding: 5px 14px;
+  border-radius: 4px 12px 4px 4px;
+}
+
+.role.admin {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.role.atendente {
+  background: #8FC9E8;
+  color: #06263F;
+}
 
 .ptabs {
   display: flex;
@@ -296,17 +379,51 @@ body.panel-home .btn-light:hover {
   border-bottom: 1px solid var(--line);
   scrollbar-width: none;
 }
-.ptabs::-webkit-scrollbar { display: none; }
-.ptabs a { white-space: nowrap; padding: 8px 16px; border-radius: 999px; text-decoration: none; font-weight: 600; border: 1.5px solid var(--line); }
-.ptabs a.on { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
 
-.phead { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-.phead h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.ptabs::-webkit-scrollbar {
+  display: none;
+}
+
+.ptabs a {
+  white-space: nowrap;
+  padding: 8px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 600;
+  border: 1.5px solid var(--line);
+}
+
+.ptabs a.on {
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: var(--primary);
+}
+
+.phead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.phead h2 {
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
 
 /* ==========================================================================
    4. CARTÕES DE MÓDULOS (INÍCIO DO PAINEL)
    ========================================================================== */
-.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.pgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
 .pcard {
   position: relative;
   display: grid;
@@ -320,11 +437,44 @@ body.panel-home .btn-light:hover {
   min-height: 180px;
   transition: transform .2s, border-color .2s;
 }
-.pcard:hover { transform: translateY(-3px); border-color: var(--primary); }
-.pcard .pi { width: 28px; height: 28px; fill: none; stroke: var(--primary); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 10px; }
-.pcard .pt { font-size: 1.25rem; font-weight: 800; }
-.pcard .pc { color: var(--muted); font-size: .9rem; margin-top: 4px; line-height: 1.4; }
-.pdot { position: absolute; right: 18px; top: 18px; width: 10px; height: 10px; border-radius: 50%; background: var(--lamp); }
+
+.pcard:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary);
+}
+
+.pcard .pi {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-bottom: 10px;
+}
+
+.pcard .pt {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.pcard .pc {
+  color: var(--muted);
+  font-size: .9rem;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.pdot {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--lamp);
+}
 
 /* ==========================================================================
    5. TABELAS, CAMPOS E PESQUISA
@@ -341,17 +491,68 @@ body.panel-home .btn-light:hover {
   margin-bottom: 14px;
 }
 
-.tbl { background: var(--card); border: 1px solid var(--line); border-radius: 4px 28px 4px 4px; padding: 6px 20px; }
-.trow { display: grid; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
-.trow:last-child { border-bottom: 0; }
-.thead { font-size: .8rem; font-weight: 700; color: var(--muted); padding: 12px 0 8px; }
+.tbl {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px 28px 4px 4px;
+  padding: 6px 20px;
+}
 
-.crow { grid-template-columns: 1.6fr 1fr 1.6fr auto; }
+.trow {
+  display: grid;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.trow:last-child {
+  border-bottom: 0;
+}
+
+.thead {
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 12px 0 8px;
+}
+
+.crow {
+  grid-template-columns: 1.8fr 1fr 1fr auto;
+}
+
+/* Colunas da listagem de veículos */
+#cars-table-container .carrow {
+  display: grid;
+  grid-template-columns:
+    minmax(130px, 1fr) minmax(130px, 1.2fr) minmax(100px, 0.9fr) minmax(90px, 0.8fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 860px) {
+  #cars-table-container .carrow {
+    grid-template-columns: 1fr;
+  }
+}
 
 @media(max-width: 860px) {
-  .thead { display: none; }
-  .trow { grid-template-columns: 1fr !important; gap: 6px; }
-  .trow > div[data-l]::before { content: attr(data-l); display: block; font-size: .74rem; color: var(--muted); font-weight: 600; }
+  .thead {
+    display: none;
+  }
+
+  .trow {
+    grid-template-columns: 1fr !important;
+    gap: 6px;
+  }
+
+  .trow>div[data-l]::before {
+    content: attr(data-l);
+    display: block;
+    font-size: .74rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
 }
 
 /* ==========================================================================
@@ -372,31 +573,119 @@ body.panel-home .btn-light:hover {
   cursor: pointer;
   min-height: 44px;
 }
-.btn:hover { filter: brightness(1.07); }
-.btn.sm { padding: 6px 14px; min-height: 36px; font-size: .88rem; border-radius: 4px 12px 4px 4px; }
-.btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-.btn.danger { background: transparent; border-color: var(--line); color: var(--muted); }
-.btn.danger:hover { border-color: #B3261E; color: #FFB4A8; }
 
-.seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 4px 14px 4px 4px; overflow: hidden; margin: 0 14px 14px 0; }
-.seg button { border: 0; background: transparent; padding: 9px 16px; font-weight: 700; cursor: pointer; }
-.seg button[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); }
+.btn:hover {
+  filter: brightness(1.07);
+}
 
-.badge { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; border: 1.5px solid var(--line); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
-.badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--tide); }
-.badge.andamento::before { background: var(--primary); }
-.badge.concluido::before, .badge.pago::before { background: var(--ok); }
-.badge.agendado::before { background: #8FC9E8; }
-.badge.cancelado { opacity: .6; text-decoration: line-through; }
+.btn.sm {
+  padding: 6px 14px;
+  min-height: 36px;
+  font-size: .88rem;
+  border-radius: 4px 12px 4px 4px;
+}
 
-.acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.acts select { background: var(--card); border: 1.5px solid var(--line); border-radius: 4px; padding: 6px 8px; min-height: 36px; }
+.btn.ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.btn.danger {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+.btn.danger:hover {
+  border-color: #B3261E;
+  color: #FFB4A8;
+}
+
+.seg {
+  display: inline-flex;
+  border: 1.5px solid var(--line);
+  border-radius: 4px 14px 4px 4px;
+  overflow: hidden;
+  margin: 0 14px 14px 0;
+}
+
+.seg button {
+  border: 0;
+  background: transparent;
+  padding: 9px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.seg button[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .82rem;
+  font-weight: 600;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+
+.badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--tide);
+}
+
+.badge.andamento::before {
+  background: var(--primary);
+}
+
+.badge.concluido::before,
+.badge.pago::before {
+  background: var(--ok);
+}
+
+.badge.agendado::before {
+  background: #8FC9E8;
+}
+
+.badge.cancelado {
+  opacity: .6;
+  text-decoration: line-through;
+}
+
+.acts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.acts select {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  min-height: 36px;
+}
 
 /* ==========================================================================
    7. ATENDIMENTOS E RESUMO FINANCEIRO
    ========================================================================== */
-.grp { margin-bottom: 28px; }
-.grp h3 { margin-bottom: 12px; }
+.grp {
+  margin-bottom: 28px;
+}
+
+.grp h3 {
+  margin-bottom: 12px;
+}
 
 .atc {
   display: grid;
@@ -409,17 +698,51 @@ body.panel-home .btn-light:hover {
   padding: 18px 22px;
   margin-bottom: 12px;
 }
-.atc.run { border-left: 6px solid var(--lamp); }
-.at-t { display: grid; gap: 2px; font-size: .88rem; color: var(--muted); }
-.at-t b { color: var(--ink); font-size: 1.25rem; }
 
-@media(max-width: 860px) { .atc { grid-template-columns: 1fr; } }
+.atc.run {
+  border-left: 6px solid var(--lamp);
+}
 
-.sums { display: flex; gap: clamp(18px, 4vw, 48px); margin-bottom: 16px; flex-wrap: wrap; }
-.sums div { display: grid; }
-.sums b { font-size: 1.8rem; }
+.at-t {
+  display: grid;
+  gap: 2px;
+  font-size: .88rem;
+  color: var(--muted);
+}
 
-.payment-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.at-t b {
+  color: var(--ink);
+  font-size: 1.25rem;
+}
+
+@media(max-width: 860px) {
+  .atc {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sums {
+  display: flex;
+  gap: clamp(18px, 4vw, 48px);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.sums div {
+  display: grid;
+}
+
+.sums b {
+  font-size: 1.8rem;
+}
+
+.payment-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .payment-form select {
   min-height: 36px;
   max-width: 180px;
@@ -430,9 +753,22 @@ body.panel-home .btn-light:hover {
   border-radius: 4px;
 }
 
-.empty { padding: 28px; border: 1.5px dashed var(--line); border-radius: 6px; text-align: center; }
-.empty .q { font-size: 1.7rem; line-height: 1.1; margin-bottom: 8px; }
-.empty p { margin-bottom: 12px; }
+.empty {
+  padding: 28px;
+  border: 1.5px dashed var(--line);
+  border-radius: 6px;
+  text-align: center;
+}
+
+.empty .q {
+  font-size: 1.7rem;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.empty p {
+  margin-bottom: 12px;
+}
 
 /* ==========================================================================
    FORMULÁRIOS DE ADIÇÃO E EDIÇÃO DO PAINEL
@@ -464,7 +800,8 @@ body.panel-home .btn-light:hover {
   font-size: .92rem;
 }
 
-.field input, .field select {
+.field input,
+.field select {
   background: var(--paper);
   color: var(--ink);
   border: 1.5px solid var(--line);
@@ -474,7 +811,8 @@ body.panel-home .btn-light:hover {
   width: 100%;
 }
 
-.field input:focus, .field select:focus {
+.field input:focus,
+.field select:focus {
   border-color: var(--primary);
   outline: none;
 }
@@ -486,7 +824,9 @@ body.panel-home .btn-light:hover {
 }
 
 @media(max-width: 560px) {
-  .fgrid { grid-template-columns: 1fr; }
+  .fgrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .facts {
@@ -503,7 +843,13 @@ body.panel-home .btn-light:hover {
   margin: 4px 0 10px;
 }
 
-.booking-client-search { position: relative; display: grid; gap: 6px; margin-bottom: 8px; }
+.booking-client-search {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
 .booking-client-search input {
   width: 100%;
   min-height: 44px;
@@ -513,6 +859,7 @@ body.panel-home .btn-light:hover {
   border: 1.5px solid var(--line);
   border-radius: 4px;
 }
+
 .booking-client-results {
   position: absolute;
   z-index: 50;
@@ -524,9 +871,13 @@ body.panel-home .btn-light:hover {
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 4px;
-  box-shadow: 0 8px 20px rgba(6,38,63,.2);
+  box-shadow: 0 8px 20px rgba(6, 38, 63, .2);
 }
-.booking-client-results[hidden] { display: none !important; }
+
+.booking-client-results[hidden] {
+  display: none !important;
+}
+
 .booking-client-option {
   display: block;
   width: 100%;
@@ -537,10 +888,25 @@ body.panel-home .btn-light:hover {
   text-align: left;
   cursor: pointer;
 }
-.booking-client-option:hover, .booking-client-option:focus { background: var(--paper-2); outline: none; }
-.booking-client-empty { padding: 10px 12px; color: var(--muted); font-size: .9rem; }
 
-#services-checkboxes { display: grid; gap: 8px; margin: 12px 0 18px; }
+.booking-client-option:hover,
+.booking-client-option:focus {
+  background: var(--paper-2);
+  outline: none;
+}
+
+.booking-client-empty {
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+#services-checkboxes {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 18px;
+}
+
 #services-checkboxes .service-option {
   display: flex !important;
   flex-direction: row !important;
@@ -554,7 +920,14 @@ body.panel-home .btn-light:hover {
   border-radius: 4px 12px 4px 4px;
   cursor: pointer;
 }
-#services-checkboxes .service-option-main { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+#services-checkboxes .service-option-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 #services-checkboxes .service-option input[type="checkbox"] {
   appearance: auto;
   width: 18px !important;
@@ -566,4 +939,218 @@ body.panel-home .btn-light:hover {
   flex: 0 0 18px;
   accent-color: var(--blue);
 }
-#services-checkboxes .service-option-price { white-space: nowrap; color: var(--muted); font-size: .9rem; font-weight: 700; }
+
+#services-checkboxes .service-option-price {
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+/* Painel Carros — alinhamento das cinco colunas */
+#cars-table-container .trow.carrow {
+  display: grid;
+  grid-template-columns:
+    minmax(110px, 1fr) minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(80px, 0.8fr) max-content;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Botões no lado direito */
+#cars-table-container .carrow .acts {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+/* Layout para celulares */
+@media (max-width: 860px) {
+  #cars-table-container .trow.carrow {
+    grid-template-columns: 1fr;
+  }
+
+  #cars-table-container .carrow .acts {
+    justify-content: flex-start;
+  }
+}
+
+/* Painel Agendamentos */
+
+.booking-filters {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.booking-filters .search {
+  flex: 1;
+  min-width: 220px;
+}
+
+.booking-filters .search input {
+  max-width: none;
+  margin-bottom: 0;
+}
+
+#booking-status-filter {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  background: var(--card);
+}
+
+.booking-item {
+  border-bottom: 1px solid var(--line);
+  padding: 16px 0;
+}
+
+.booking-item:last-child {
+  border-bottom: none;
+}
+
+.booking-main {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 0.9fr 110px;
+  gap: 16px;
+  align-items: center;
+}
+
+.booking-details {
+  position: relative;
+}
+
+.booking-details summary {
+  cursor: pointer;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.booking-extra {
+  margin-top: 12px;
+  padding: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: grid;
+  gap: 8px;
+}
+
+.booking-details[open] .booking-extra {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  width: min(320px, 80vw);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .18);
+}
+
+@media (max-width: 860px) {
+  .booking-main {
+    grid-template-columns: 1fr;
+  }
+
+  .booking-details[open] .booking-extra {
+    position: static;
+    width: 100%;
+  }
+}
+
+/* Popup dos detalhes do agendamento */
+
+.booking-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(540px, calc(100% - 32px));
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .35);
+}
+
+.booking-modal::backdrop {
+  background: rgba(0, 0, 0, .65);
+}
+
+.booking-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.booking-modal-header h2 {
+  font-size: 1.6rem;
+}
+
+.booking-close {
+  cursor: pointer;
+}
+
+.booking-modal-header .booking-close {
+  background: transparent;
+  border: 0;
+  color: var(--ink);
+  font-size: 1.4rem;
+}
+
+.booking-modal-content {
+  display: grid;
+  gap: 20px;
+}
+
+.booking-modal-content>div:not(.booking-modal-grid) {
+  display: grid;
+  gap: 4px;
+}
+
+.booking-modal-content strong {
+  overflow-wrap: anywhere;
+}
+
+.booking-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.booking-modal-grid>div {
+  display: grid;
+  gap: 4px;
+}
+
+.booking-modal-total {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.booking-modal-total strong {
+  font-size: 1.4rem;
+}
+
+.booking-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+@media (max-width: 480px) {
+  .booking-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}

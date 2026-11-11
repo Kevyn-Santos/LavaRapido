@@ -148,11 +148,15 @@ public class DAOCliente {
     public List<Cliente> getUsuariosComVeiculos() throws SQLException {
         String sql = """
                 SELECT
-                c.id_cliente, c.nome, c.cpf, c.telefone, c.email, v.marca, v.modelo, v.cor, v.placa
+                    c.id_cliente, c.nome, c.cpf, c.telefone, c.email,
+                    v.id_veiculo, v.marca, v.modelo, v.cor, v.placa
                 FROM cliente c
                 LEFT JOIN veiculo v
-                ON c.id_cliente = v.id_cliente
-                ORDER BY c.nome;""";
+                    ON c.id_cliente = v.id_cliente
+                    AND v.ativo = TRUE
+                WHERE c.ativo = TRUE
+                ORDER BY c.nome;
+                """;
         Map<Integer, Cliente> clientes = new LinkedHashMap<>();
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -167,6 +171,7 @@ public class DAOCliente {
                 }
                 if (rs.getString("placa") != null) {
                     cliente.carregarVeiculo(
+                            rs.getInt("id_veiculo"),
                             rs.getString("placa"),
                             rs.getString("marca"),
                             rs.getString("modelo"),
@@ -210,7 +215,12 @@ public class DAOCliente {
     // Devolve a DTO ClienteView (id, nome, email), usada no login. Substitui
     // ClienteRepository.autenticar
     public ClienteView autenticar(String email, String senha) throws SQLException {
-        String sql = "SELECT id_cliente, nome, email, senha_hash FROM cliente WHERE email = ?";
+        String sql = """
+                SELECT id_cliente, nome, email, senha_hash
+                FROM cliente
+                WHERE email = ?
+                  AND ativo = TRUE
+                """;
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, email.trim().toLowerCase());
@@ -381,14 +391,34 @@ public class DAOCliente {
     --------------------------------------*/
 
     public boolean remover(int id) throws SQLException {
-        String sql = "DELETE FROM cliente WHERE id_cliente=?";
+
+        if (id <= 0) {
+            throw new IllegalArgumentException(
+                    "ID do cliente inválido.");
+        }
+
+        String sql = """
+                UPDATE cliente
+                SET ativo = FALSE,
+                    excluido_em = CURRENT_TIMESTAMP
+                WHERE id_cliente = ?
+                  AND ativo = TRUE
+                """;
+
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, id);
+
             return stmt.executeUpdate() == 1;
         }
     }
 
-   
-    
+    /**
+     * Mantém compatibilidade com os testes e chamadas antigas.
+     */
+    public void deleteusuario(int id) throws SQLException {
+        remover(id);
+    }
+
 }
