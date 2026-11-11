@@ -389,17 +389,6 @@ public class DAOCliente {
         }
     }
 
-    public void deleteusuario(int id) throws SQLException {
-        remover(id);
-    }
-
-    // public void deleteusuariosTotal(int Id) throws SQLException {
-    // String sqlCliente = "DELETE FROM cliente WHERE id_cliente=?";
-    // try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement
-    // stmt = conn.prepareStatement(sqlCliente)) {
-    // stmt.setInt(1, Id);
-    // stmt.executeUpdate();
-    // }
-    // }
-
+   
+    
 }

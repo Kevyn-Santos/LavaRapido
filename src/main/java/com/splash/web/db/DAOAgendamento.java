@@ -277,4 +277,6 @@ public class DAOAgendamento {
     --------------------------------------*/
 
     // Nenhuma operação de remoção de agendamento ainda (cancelar só troca o status)
+
+
 }

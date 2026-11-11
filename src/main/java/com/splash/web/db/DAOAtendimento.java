@@ -132,6 +132,14 @@ public class DAOAtendimento {
     /*--------------------------------------
     Remoção de atendimentos
     --------------------------------------*/
-
-    // Nenhuma operação de remoção de atendimento ainda
+    Public Void remover(int idAtendimento) throws SQLException {
+        String sql = "DELETE FROM atendimento WHERE id_atendimento = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, idAtendimento);
+            if (statement.executeUpdate() != 1) {
+                throw new IllegalArgumentException("Atendimento não encontrado.");
+            }
+        }
+    }
 }

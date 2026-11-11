@@ -150,11 +150,77 @@ public class DAOColaborador {
     Update de colaboradores
     --------------------------------------*/
 
+    public void atualizar(int idColaborador, String nome, String cargo, String nivelAcesso, String email, String senha) throws SQLException {
+        
+        if(idColaborador <= 0) {
+            throw new IllegalArgumentException("ID do colaborador inválido.");
+        }
+        
+        ArrayList<String> colunas = new ArrayList<>();
+        ArrayList<String> valores = new ArrayList<>();
+
+if (nome != null && !nome.isBlank()) {
+                    colunas.add("nome = ?");
+                    valores.add(nome.trim());
+                }
+
+                if (cargo != null && !cargo.isBlank()) {
+                    colunas.add("cargo = ?");
+                    valores.add(cargo.trim());
+                }
+            if (nivelAcesso != null && !nivelAcesso.isBlank()) {
+                colunas.add("nivel_acesso = ?");
+                valores.add(nivelAcesso);
+            }
+            
+           if (email != null && !email.isBlank()) {
+                colunas.add("email = ?");
+                valores.add(email.trim().toLowerCase());
+            }
+           if (senha != null && !senha.isBlank()) {
+                colunas.add("senha_hash = ?");
+                valores.add(Passwords.hash(senha)); 
+            }
+            else {
+                colunas.add("senha_hash = CASE WHEN ? THEN ? ELSE senha_hash END");
+                valores.add(null);
+                valores.add(null);
+            }
+
+            if (colunas.isEmpty()) {
+            throw new IllegalArgumentException("Ao menos um valor precisa ser preenchido para edição no Banco");
+        }
+        String sql = "UPDATE colaborador SET " + String.join(", ", colunas) + " WHERE id_colaborador = ?";
+        valores.add((String.valueOf(idColaborador)));
+        
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            
+                    for (int i = 0; i < valores.size(); i++) {
+                statement.setObject(i + 1, valores.get(i));}
+                
+        if (statement.executeUpdate() != 1) {
+            throw new IllegalArgumentException("Colaborador não encontrado.");
+        } 
+        }
+    }
+    
+    
     // Nenhuma operação de update de colaborador ainda
 
     /*--------------------------------------
     Remoção de colaboradores
     --------------------------------------*/
+    public boolean remover(int idColaborador) throws SQLException {
+        String sql = "DELETE FROM colaborador WHERE id_colaborador = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, idColaborador);
+            return statement.executeUpdate() == 1;
+        }
+    }
 
     // Nenhuma operação de remoção de colaborador ainda
+
+
 }
