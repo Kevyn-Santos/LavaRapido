@@ -24,7 +24,7 @@ public class DAOColaborador {
                 SELECT id_colaborador, nome, cargo, nivel_acesso, email
                 FROM colaborador
                 WHERE ativo = TRUE
-                ORDER BY nome
+                ORDER BY id_colaborador DESC
                 """;
         List<ColaboradorView> colaboradores = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();

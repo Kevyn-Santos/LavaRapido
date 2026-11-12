@@ -24,8 +24,7 @@ public class DAOServico {
                 SELECT id_servico, nome, descricao, preco
                 FROM servico
                 WHERE ativo = TRUE
-                ORDER BY id_servico
-                """;
+                ORDER BY id_servico DESC                """;
         List<ServicoView> servicos = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);

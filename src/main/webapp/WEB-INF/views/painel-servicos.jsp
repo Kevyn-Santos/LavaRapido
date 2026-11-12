@@ -64,21 +64,19 @@
                         border-bottom: 0;
                     }
 
+
                     .servicos-tabela th:nth-child(1) {
-                        width: 9%;
+                        width: 55%;
                     }
 
                     .servicos-tabela th:nth-child(2) {
-                        width: 46%;
-                    }
-
-                    .servicos-tabela th:nth-child(3) {
                         width: 20%;
                     }
 
-                    .servicos-tabela th:nth-child(4) {
+                    .servicos-tabela th:nth-child(3) {
                         width: 25%;
                     }
+
 
                     .servico-nome {
                         display: block;
@@ -280,7 +278,6 @@
                                     <table class="servicos-tabela">
                                         <thead>
                                             <tr>
-                                                <th>ID</th>
                                                 <th>Serviço</th>
                                                 <th>Preço</th>
                                                 <th>Ações</th>
@@ -290,12 +287,14 @@
                                             <c:forEach var="servico" items="${servicos}">
                                                 <tr class="linha-servico"
                                                     data-busca="<c:out value='${servico.id} ${servico.nome} ${servico.descricao}' />">
+
                                                     <td>
-                                                        <c:out value="${servico.id}" />
-                                                    </td>
-                                                    <td><span class="servico-nome">
+                                                        <span class="servico-nome">
+                                                            #
+                                                            <c:out value="${servico.id}" /> —
                                                             <c:out value="${servico.nome}" />
                                                         </span>
+
                                                         <span class="servico-descricao">
                                                             <c:out value="${servico.descricao}" />
                                                         </span>

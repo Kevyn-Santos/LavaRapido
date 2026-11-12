@@ -42,24 +42,29 @@
           vertical-align: middle;
         }
 
-        .tabela-colaboradores th:nth-child(1) {
-          width: 7%;
+        /* Quatro colunas: ID junto do nome, cargo, nível e ações. */
+        .tabela-colaboradores th:nth-child(1),
+        .tabela-colaboradores td:nth-child(1) {
+          width: 43%;
         }
 
-        .tabela-colaboradores th:nth-child(2) {
-          width: 31%;
+        .tabela-colaboradores th:nth-child(2),
+        .tabela-colaboradores td:nth-child(2) {
+          width: 17%;
         }
 
-        .tabela-colaboradores th:nth-child(3) {
-          width: 22%;
+        .tabela-colaboradores th:nth-child(3),
+        .tabela-colaboradores td:nth-child(3) {
+          width: 20%;
         }
 
-        .tabela-colaboradores th:nth-child(4) {
-          width: 25%;
+        .tabela-colaboradores th:nth-child(4),
+        .tabela-colaboradores td:nth-child(4) {
+          width: 20%;
         }
 
-        .tabela-colaboradores th:nth-child(5) {
-          width: 15%;
+        .tabela-colaboradores td:nth-child(4) {
+          white-space: nowrap;
         }
 
         .colaborador-info {
@@ -163,14 +168,6 @@
           border-bottom: none;
         }
 
-        #collab-table-container td:nth-child(1) {
-          width: 65px;
-        }
-
-        #collab-table-container td:nth-child(4) {
-          overflow-wrap: anywhere;
-        }
-
         #collab-table-container tr.hide {
           display: none !important;
         }
@@ -265,7 +262,6 @@
                     <table class="tabela-colaboradores">
                       <thead>
                         <tr>
-                          <th>ID</th>
                           <th>Colaborador</th>
                           <th>Cargo</th>
                           <th>Nível de acesso</th>
@@ -280,14 +276,10 @@
                             data-nivel="${colaborador.nivelAcesso}">
 
                             <td>
-                              <c:out value="${colaborador.id}" />
-                            </td>
-
-                            <td>
                               <div class="colaborador-info">
-                                <strong>
-                                  <c:out value="${colaborador.nome}" />
-                                </strong>
+
+                                <strong>#<c:out value="${colaborador.id}" /> — <c:out value="${colaborador.nome}" /></strong>
+
 
                                 <span class="colaborador-email">
                                   <c:out value="${colaborador.email}" />
@@ -310,7 +302,8 @@
                                 data-email="<c:out value='${colaborador.email}' />"
                                 data-nivel="${colaborador.nivelAcesso}">
                                 Editar
-                                <form method="post" action="${pageContext.request.contextPath}/admin/colaboradores"
+                              </button>
+                              <form method="post" action="${pageContext.request.contextPath}/admin/colaboradores"
                                   class="form-remover-colaborador">
 
                                   <input type="hidden" name="acao" value="remover">
@@ -321,8 +314,7 @@
                                     Remover
                                   </button>
 
-                                </form>
-                              </button>
+                              </form>
                             </td>
 
                           </tr>

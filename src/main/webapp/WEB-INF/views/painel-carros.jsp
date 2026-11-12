@@ -17,45 +17,127 @@
           align-items: end;
           margin: 16px 0 20px;
         }
-        .car-client-select, .car-client-search-action { min-width: 0; }
-        .car-client-select label, .car-client-search-action label { display: block; margin-bottom: 8px; }
-        #lista-clientes, #abrir-pesquisa-cliente {
-          width: 100%; min-height: 44px; box-sizing: border-box; margin: 0;
+
+        .car-client-select,
+        .car-client-search-action {
+          min-width: 0;
         }
+
+        .car-client-select label,
+        .car-client-search-action label {
+          display: block;
+          margin-bottom: 8px;
+        }
+
+        #lista-clientes,
+        #abrir-pesquisa-cliente {
+          width: 100%;
+          min-height: 44px;
+          box-sizing: border-box;
+          margin: 0;
+        }
+
         #lista-clientes {
-          padding: 10px 12px; background: #0B3050; color: white;
-          border: 1px solid #365875; border-radius: 6px;
+          padding: 10px 12px;
+          background: #0B3050;
+          color: white;
+          border: 1px solid #365875;
+          border-radius: 6px;
         }
-        #lista-clientes option { background: #0B3050; color: white; }
+
+        #lista-clientes option {
+          background: #0B3050;
+          color: white;
+        }
+
         .popup-pesquisa-cliente {
-          position: fixed; inset: 0; margin: auto;
-          width: min(560px, calc(100vw - 32px)); max-height: 82vh;
-          overflow-y: auto; box-sizing: border-box; padding: 24px;
-          border: 1px solid #365875; border-radius: 14px;
-          background: #0B3050; color: white;
+          position: fixed;
+          inset: 0;
+          margin: auto;
+          width: min(560px, calc(100vw - 32px));
+          max-height: 82vh;
+          overflow-y: auto;
+          box-sizing: border-box;
+          padding: 24px;
+          border: 1px solid #365875;
+          border-radius: 14px;
+          background: #0B3050;
+          color: white;
           box-shadow: 0 24px 70px rgba(0, 0, 0, .5);
         }
-        .popup-pesquisa-cliente:not([open]) { display: none; }
-        .popup-pesquisa-cliente::backdrop { background: rgba(0, 10, 20, .75); }
-        .popup-pesquisa-topo { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
-        .popup-pesquisa-topo h2 { margin: 0; }
-        .popup-pesquisa-cliente .booking-client-search { position: static; }
-        #filtro-cliente { width: 100%; box-sizing: border-box; min-height: 44px; }
+
+        .popup-pesquisa-cliente:not([open]) {
+          display: none;
+        }
+
+        .popup-pesquisa-cliente::backdrop {
+          background: rgba(0, 10, 20, .75);
+        }
+
+        .popup-pesquisa-topo {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 20px;
+        }
+
+        .popup-pesquisa-topo h2 {
+          margin: 0;
+        }
+
+        .popup-pesquisa-cliente .booking-client-search {
+          position: static;
+        }
+
+        #filtro-cliente {
+          width: 100%;
+          box-sizing: border-box;
+          min-height: 44px;
+        }
+
         .popup-pesquisa-cliente .booking-client-results {
-          position: static; display: block; width: 100%; max-height: 320px;
-          overflow-y: auto; box-sizing: border-box; margin-top: 12px;
-          background: #082741; border: 1px solid #365875; border-radius: 8px;
+          position: static;
+          display: block;
+          width: 100%;
+          max-height: 320px;
+          overflow-y: auto;
+          box-sizing: border-box;
+          margin-top: 12px;
+          background: #082741;
+          border: 1px solid #365875;
+          border-radius: 8px;
         }
-        .popup-pesquisa-cliente .booking-client-results[hidden] { display: none !important; }
+
+        .popup-pesquisa-cliente .booking-client-results[hidden] {
+          display: none !important;
+        }
+
         .popup-pesquisa-cliente .booking-client-option {
-          display: block; width: 100%; text-align: left; padding: 12px;
-          color: white; background: transparent; border: 0; cursor: pointer;
+          display: block;
+          width: 100%;
+          text-align: left;
+          padding: 12px;
+          color: white;
+          background: transparent;
+          border: 0;
+          cursor: pointer;
         }
-        .popup-pesquisa-cliente .booking-client-option:hover, .popup-pesquisa-cliente .booking-client-option:focus-visible {
+
+        .popup-pesquisa-cliente .booking-client-option:hover,
+        .popup-pesquisa-cliente .booking-client-option:focus-visible {
           background: #184d73;
         }
-        .popup-pesquisa-cliente .booking-client-option.hide { display: none !important; }
-        @media (max-width: 700px) { .car-client-chooser { grid-template-columns: 1fr; } }
+
+        .popup-pesquisa-cliente .booking-client-option.hide {
+          display: none !important;
+        }
+
+        @media (max-width: 700px) {
+          .car-client-chooser {
+            grid-template-columns: 1fr;
+          }
+        }
       </style>
 
     </head>
@@ -111,7 +193,9 @@
                   <option value="">Selecione um cliente</option>
                   <c:forEach var="cliente" items="${clientes}">
                     <option value="${cliente.id_cliente}">
-                      #<c:out value="${cliente.id_cliente}" /> — <c:out value="${cliente.nome}" />
+                      #
+                      <c:out value="${cliente.id_cliente}" /> —
+                      <c:out value="${cliente.nome}" />
                     </option>
                   </c:forEach>
                 </select>
@@ -124,7 +208,8 @@
               </div>
             </div>
 
-            <dialog id="popup-pesquisa-cliente" class="popup-pesquisa-cliente" aria-labelledby="titulo-pesquisa-cliente">
+            <dialog id="popup-pesquisa-cliente" class="popup-pesquisa-cliente"
+              aria-labelledby="titulo-pesquisa-cliente">
               <div class="popup-pesquisa-topo">
                 <h2 id="titulo-pesquisa-cliente">Pesquisar cliente</h2>
                 <button type="button" id="fechar-pesquisa-cliente" class="btn sm ghost">Fechar</button>
@@ -134,10 +219,11 @@
                 <input type="search" id="filtro-cliente" placeholder="Digite o nome ou ID..." autocomplete="off">
                 <div id="sugestoes-clientes" class="booking-client-results" hidden>
                   <c:forEach var="cliente" items="${clientes}">
-                    <button type="button" class="booking-client-option"
-                            data-id="${cliente.id_cliente}"
-                            data-nome="<c:out value='${cliente.nome}' />">
-                      #<c:out value="${cliente.id_cliente}" /> — <c:out value="${cliente.nome}" />
+                    <button type="button" class="booking-client-option" data-id="${cliente.id_cliente}"
+                      data-nome="<c:out value='${cliente.nome}' />">
+                      #
+                      <c:out value="${cliente.id_cliente}" /> —
+                      <c:out value="${cliente.nome}" />
                     </button>
                   </c:forEach>
                 </div>
@@ -155,20 +241,28 @@
                 </div>
                 <c:forEach var="cliente" items="${clientes}">
                   <c:forEach var="veiculo" items="${cliente.veiculos}">
-                    <div class="trow carrow hide"
-                         data-cliente-id="${cliente.id_cliente}"
-                         data-veiculo-id="${veiculo.id}"
-                         data-marca="<c:out value='${veiculo.marca}' />"
-                         data-modelo="<c:out value='${veiculo.modelo}' />"
-                         data-placa="<c:out value='${veiculo.placa}' />"
-                         data-cor="<c:out value='${veiculo.cor}' />">
-                      <div data-l="Veículo"><strong>#<c:out value="${veiculo.id}" /> — <c:out value="${veiculo.marca}" /></strong></div>
-                      <div data-l="Modelo"><c:out value="${veiculo.modelo}" /></div>
-                      <div data-l="Placa"><c:out value="${veiculo.placa}" /></div>
-                      <div data-l="Cor"><c:out value="${veiculo.cor}" /></div>
+                    <div class="trow carrow hide" data-cliente-id="${cliente.id_cliente}"
+                      data-veiculo-id="${veiculo.id}" data-marca="<c:out value='${veiculo.marca}' />"
+                      data-modelo="<c:out value='${veiculo.modelo}' />" data-placa="<c:out value='${veiculo.placa}' />"
+                      data-cor="<c:out value='${veiculo.cor}' />">
+                      <div data-l="Veículo"><strong>#
+                          <c:out value="${veiculo.id}" /> —
+                          <c:out value="${veiculo.marca}" />
+                        </strong></div>
+                      <div data-l="Modelo">
+                        <c:out value="${veiculo.modelo}" />
+                      </div>
+                      <div data-l="Placa">
+                        <c:out value="${veiculo.placa}" />
+                      </div>
+                      <div data-l="Cor">
+                        <c:out value="${veiculo.cor}" />
+                      </div>
                       <div class="acts" data-l="Ações">
-                        <button type="button" class="btn sm ghost btn-edit-car" data-veiculo-id="${veiculo.id}">Editar</button>
-                        <button type="button" class="btn sm danger btn-remove-car" data-veiculo-id="${veiculo.id}">Remover</button>
+                        <button type="button" class="btn sm ghost btn-edit-car"
+                          data-veiculo-id="${veiculo.id}">Editar</button>
+                        <button type="button" class="btn sm danger btn-remove-car"
+                          data-veiculo-id="${veiculo.id}">Remover</button>
                       </div>
                     </div>
                   </c:forEach>
@@ -177,63 +271,63 @@
             </div>
           </div>
 
-        <!-- 2. TELA DO FORMULÁRIO -->
-        <div id="view-form" class="hide">
-          <div class="fcard">
-            <h2 id="form-title">Manter</h2>
-            <form id="form-car" action="${pageContext.request.contextPath}/admin/veiculos" method="post"> <input
-                type="hidden" name="acao" value="salvar">
-              <input type="hidden" id="car-id" name="idVeiculo">
-              <input type="hidden" id="car-client-id" name="idCliente">
-              <div class="field">
-                <label for="car-client">Cliente proprietário</label>
-
-                <select id="car-client" required>
-                  <option value="">Selecione um cliente</option>
-
-                  <c:forEach var="cliente" items="${clientes}">
-                    <option value="${cliente.id_cliente}">
-                      #
-                      <c:out value="${cliente.id_cliente}" />
-                      —
-                      <c:out value="${cliente.nome}" />
-                    </option>
-                  </c:forEach>
-                </select>
-              </div>
-
-              <div class="fgrid">
+          <!-- 2. TELA DO FORMULÁRIO -->
+          <div id="view-form" class="hide">
+            <div class="fcard">
+              <h2 id="form-title">Manter</h2>
+              <form id="form-car" action="${pageContext.request.contextPath}/admin/veiculos" method="post"> <input
+                  type="hidden" name="acao" value="salvar">
+                <input type="hidden" id="car-id" name="idVeiculo">
+                <input type="hidden" id="car-client-id" name="idCliente">
                 <div class="field">
-                  <label for="car-brand">Marca</label>
-                  <input type="text" id="car-brand" name="marca" required maxlength="60" placeholder="Ex: Chevrolet">
+                  <label for="car-client">Cliente proprietário</label>
+
+                  <select id="car-client" required>
+                    <option value="">Selecione um cliente</option>
+
+                    <c:forEach var="cliente" items="${clientes}">
+                      <option value="${cliente.id_cliente}">
+                        #
+                        <c:out value="${cliente.id_cliente}" />
+                        —
+                        <c:out value="${cliente.nome}" />
+                      </option>
+                    </c:forEach>
+                  </select>
+                </div>
+
+                <div class="fgrid">
+                  <div class="field">
+                    <label for="car-brand">Marca</label>
+                    <input type="text" id="car-brand" name="marca" required maxlength="60" placeholder="Ex: Chevrolet">
+                  </div>
+
+                  <div class="field">
+                    <label for="car-model">Modelo</label>
+                    <input type="text" id="car-model" name="modelo" required maxlength="60" placeholder="Ex: Onix">
+                  </div>
+                  <div class="field">
+                    <label for="car-color">Cor</label>
+                    <input type="text" id="car-color" name="cor" placeholder="Ex: Prata" maxlength="30">
+                  </div>
                 </div>
 
                 <div class="field">
-                  <label for="car-model">Modelo</label>
-                  <input type="text" id="car-model" name="modelo" required maxlength="60" placeholder="Ex: Onix">
+                  <label for="car-plate">Placa</label>
+                  <input type="text" id="car-plate" name="placa" required placeholder="ABC1D23" maxlength="7"
+                    style="text-transform:uppercase">
                 </div>
-                <div class="field">
-                  <label for="car-color">Cor</label>
-                  <input type="text" id="car-color" name="cor" placeholder="Ex: Prata" maxlength="30">
+
+                <p class="err" id="form-error" role="alert" style="color: #B3261E; font-size: 0.9rem; margin-top: 8px;">
+                </p>
+
+                <div class="facts">
+                  <button class="btn" type="submit">Salvar veículo</button>
+                  <button class="btn ghost" type="button" id="btn-cancel-car">Cancelar</button>
                 </div>
-              </div>
-
-              <div class="field">
-                <label for="car-plate">Placa</label>
-                <input type="text" id="car-plate" name="placa" required placeholder="ABC1D23" maxlength="7"
-                  style="text-transform:uppercase">
-              </div>
-
-              <p class="err" id="form-error" role="alert" style="color: #B3261E; font-size: 0.9rem; margin-top: 8px;">
-              </p>
-
-              <div class="facts">
-                <button class="btn" type="submit">Salvar veículo</button>
-                <button class="btn ghost" type="button" id="btn-cancel-car">Cancelar</button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
         </div>
       </main>
 
@@ -368,6 +462,57 @@
             alert("Selecione o cliente proprietário.");
           }
         });
+
+
+        document.querySelectorAll(".btn-remove-car").forEach(botao => {
+          botao.addEventListener("click", () => {
+            const linha = botao.closest(".trow.carrow");
+            const idCliente = linha.dataset.clienteId;
+            const idVeiculo = linha.dataset.veiculoId;
+
+            if (!confirm("Deseja realmente remover este veículo?")) {
+              return;
+            }
+
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "${pageContext.request.contextPath}/admin/veiculos";
+
+            for (const [nome, valor] of Object.entries({
+              acao: "remover",
+              idCliente: idCliente,
+              idVeiculo: idVeiculo
+            })) {
+              const input = document.createElement("input");
+              input.type = "hidden";
+              input.name = nome;
+              input.value = valor;
+              form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+          });
+        });
+
+
+        const tabelaVeiculos = document.querySelector(
+          "#cars-table-container .tbl"
+        );
+
+        if (tabelaVeiculos) {
+          const linhasVeiculos = Array.from(
+            tabelaVeiculos.querySelectorAll(".trow.carrow[data-veiculo-id]")
+          );
+
+          linhasVeiculos.sort((a, b) => {
+            return Number(b.dataset.veiculoId) - Number(a.dataset.veiculoId);
+          });
+
+          linhasVeiculos.forEach(linha => {
+            tabelaVeiculos.appendChild(linha);
+          });
+        }
       </script>
 
     </body>

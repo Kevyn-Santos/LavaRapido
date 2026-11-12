@@ -227,188 +227,197 @@
 
                       <tbody>
                         <c:forEach var="atendimento" items="${atendimentos}">
+                          <c:if test="${atendimento.statusAgendamento != 'CANCELADO'}">
 
-                          <tr class="linha-atendimento" data-cliente="<c:out value='${atendimento.cliente}' />"
-                            data-placa="<c:out value='${atendimento.placa}' />" data-status="${atendimento.status}">
-                            <td>
-                              <c:out value="${atendimento.cliente}" />
-                            </td>
+                            <tr class="linha-atendimento" data-cliente="<c:out value='${atendimento.cliente}' />"
+                              data-placa="<c:out value='${atendimento.placa}' />" data-status="${atendimento.status}">
 
-                            <td>
-                              <c:out value="${atendimento.data}" />
-                            </td>
+                              <td>
+                                <strong>
+                                  #
+                                  <c:out value="${atendimento.id}" /> —
+                                  <c:out value="${atendimento.cliente}" />
+                                </strong>
+                              </td>
 
-                            <td>
-                              <c:out value="${atendimento.placa}" />
-                            </td>
+                              <td>
+                                <c:out value="${atendimento.data}" />
+                              </td>
 
-                            <td>
-                              <c:out value="${atendimento.horario}" />
-                            </td>
+                              <td>
+                                <c:out value="${atendimento.placa}" />
+                              </td>
 
-                            <td>
-                              <c:out value="${atendimento.status}" />
-                            </td>
+                              <td>
+                                <c:out value="${atendimento.horario}" />
+                              </td>
 
-                            <td>
-                              <c:out value="${atendimento.colaboradores}" />
-                            </td>
+                              <td>
+                                <c:out value="${atendimento.status}" />
+                              </td>
 
-                            <td>
-                              <c:choose>
+                              <td>
+                                <c:out value="${atendimento.colaboradores}" />
+                              </td>
 
-                                <c:when test="${atendimento.statusAgendamento == 'CANCELADO'}">
-                                  Agendamento cancelado
-                                </c:when>
+                              <td>
+                                <c:choose>
 
-                                <c:when test="${atendimento.status == 'ENTREGUE'}">
-                                  Atendimento encerrado (histórico)
-                                </c:when>
+                                  <c:when test="${atendimento.statusAgendamento == 'CANCELADO'}">
+                                    Agendamento cancelado
+                                  </c:when>
 
-                                <c:otherwise>
+                                  <c:when test="${atendimento.status == 'ENTREGUE'}">
+                                    Atendimento encerrado (histórico)
+                                  </c:when>
 
-                                  <button type="button" class="btn sm ghost abrir-atendimento"
-                                    data-dialog="atendimento-${atendimento.id}">
-                                    Gerenciar
-                                  </button>
+                                  <c:otherwise>
 
-                                  <dialog id="atendimento-${atendimento.id}" class="atendimento-modal">
-
-                                    <div class="atendimento-modal-topo">
-                                      <div>
-                                        <h2>Atendimento #
-                                          <c:out value="${atendimento.id}" />
-                                        </h2>
-                                        <p class="small">Gerenciar atendimento</p>
-                                      </div>
-
-                                      <button type="button" class="fechar-atendimento" aria-label="Fechar">✕</button>
-                                    </div>
-
-                                    <div class="atendimento-resumo">
-                                      <p><strong>Cliente:</strong>
-                                        <c:out value="${atendimento.cliente}" />
-                                      </p>
-
-                                      <p><strong>Placa:</strong>
-                                        <c:out value="${atendimento.placa}" />
-                                      </p>
-
-                                      <p><strong>Data:</strong>
-                                        <c:out value="${atendimento.data}" />
-                                      </p>
-
-                                      <p><strong>Horário:</strong>
-                                        <c:out value="${atendimento.horario}" />
-                                      </p>
-
-                                      <p><strong>Status atual:</strong>
-                                        <c:out value="${atendimento.status}" />
-                                      </p>
-
-                                      <p><strong>Colaboradores vinculados:</strong>
-                                        <c:out
-                                          value="${empty atendimento.colaboradores ? 'Nenhum' : atendimento.colaboradores}" />
-                                      </p>
-                                    </div>
-                                    <form method="post" action="${pageContext.request.contextPath}/admin/atendimentos">
-
-                                      <input type="hidden" name="idAtendimento" value="${atendimento.id}" />
-
-                                      <div class="field">
-                                        <label>Proximo status</label>
-
-                                        <select name="status" required>
-
-                                          <c:choose>
-                                            <c:when test="${atendimento.status == 'AGUARDANDO'}">
-                                              <option value="EM_LAVAGEM">
-                                                Iniciar lavagem
-                                              </option>
-                                            </c:when>
-
-                                            <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
-                                              <option value="FINALIZADO">
-                                                Finalizar
-                                              </option>
-                                            </c:when>
-
-                                            <c:when test="${atendimento.status == 'FINALIZADO'}">
-                                              <option value="FINALIZADO">
-                                                Finalizado
-                                              </option>
-                                            </c:when>
-
-                                            <c:otherwise>
-                                              <option value="ENTREGUE">
-                                                Entregue
-                                              </option>
-                                            </c:otherwise>
-                                          </c:choose>
-
-                                        </select>
-                                      </div>
-
-
-                                      <div class="field">
-                                        <label>Colaboradores</label>
-
-                                        <c:forEach var="colaborador" items="${colaboradores}">
-
-                                          <c:if test="${colaborador.nivelAcesso == 'OPERACIONAL'}">
-
-                                            <c:set var="colaboradorSelecionado" value="false" />
-
-                                            <c:forTokens items="${atendimento.idsColaboradores}" delims=","
-                                              var="idSelecionado">
-
-                                              <c:if test="${idSelecionado == colaborador.id}">
-                                                <c:set var="colaboradorSelecionado" value="true" />
-                                              </c:if>
-
-                                            </c:forTokens>
-
-                                            <label style="display:block;">
-
-                                              <input type="checkbox" name="idColaboradores" value="${colaborador.id}"
-                                                ${colaboradorSelecionado ? 'checked' : '' } />
-
-                                              <c:out value="${colaborador.nome}" />
-
-                                            </label>
-
-                                          </c:if>
-
-                                        </c:forEach>
-                                      </div>
-
-
-                                      <c:choose>
-                                        <c:when test="${atendimento.status == 'FINALIZADO'}"> <button class="btn sm"
-                                            type="submit">
-                                            Salvar colaboradores
-                                          </button>
-                                        </c:when>
-
-                                        <c:otherwise>
-                                          <button class="btn sm" type="submit">
-                                            Atualizar
-                                          </button>
-                                        </c:otherwise>
-                                      </c:choose>
-
-                                    </form>
-
-                                    <button type="button" class="btn ghost fechar-atendimento">
-                                      Fechar
+                                    <button type="button" class="btn sm ghost abrir-atendimento"
+                                      data-dialog="atendimento-${atendimento.id}">
+                                      Gerenciar
                                     </button>
-                                  </dialog>
 
-                                </c:otherwise>
-                              </c:choose>
-                            </td>
+                                    <dialog id="atendimento-${atendimento.id}" class="atendimento-modal">
 
-                          </tr>
+                                      <div class="atendimento-modal-topo">
+                                        <div>
+                                          <h2>Atendimento #
+                                            <c:out value="${atendimento.id}" />
+                                          </h2>
+                                          <p class="small">Gerenciar atendimento</p>
+                                        </div>
+
+                                        <button type="button" class="fechar-atendimento" aria-label="Fechar">✕</button>
+                                      </div>
+
+                                      <div class="atendimento-resumo">
+                                        <p><strong>Cliente:</strong>
+                                          <c:out value="${atendimento.cliente}" />
+                                        </p>
+
+                                        <p><strong>Placa:</strong>
+                                          <c:out value="${atendimento.placa}" />
+                                        </p>
+
+                                        <p><strong>Data:</strong>
+                                          <c:out value="${atendimento.data}" />
+                                        </p>
+
+                                        <p><strong>Horário:</strong>
+                                          <c:out value="${atendimento.horario}" />
+                                        </p>
+
+                                        <p><strong>Status atual:</strong>
+                                          <c:out value="${atendimento.status}" />
+                                        </p>
+
+                                        <p><strong>Colaboradores vinculados:</strong>
+                                          <c:out
+                                            value="${empty atendimento.colaboradores ? 'Nenhum' : atendimento.colaboradores}" />
+                                        </p>
+                                      </div>
+                                      <form method="post"
+                                        action="${pageContext.request.contextPath}/admin/atendimentos">
+
+                                        <input type="hidden" name="idAtendimento" value="${atendimento.id}" />
+
+                                        <div class="field">
+                                          <label>Proximo status</label>
+
+                                          <select name="status" required>
+
+                                            <c:choose>
+                                              <c:when test="${atendimento.status == 'AGUARDANDO'}">
+                                                <option value="EM_LAVAGEM">
+                                                  Iniciar lavagem
+                                                </option>
+                                              </c:when>
+
+                                              <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
+                                                <option value="FINALIZADO">
+                                                  Finalizar
+                                                </option>
+                                              </c:when>
+
+                                              <c:when test="${atendimento.status == 'FINALIZADO'}">
+                                                <option value="FINALIZADO">
+                                                  Finalizado
+                                                </option>
+                                              </c:when>
+
+                                              <c:otherwise>
+                                                <option value="ENTREGUE">
+                                                  Entregue
+                                                </option>
+                                              </c:otherwise>
+                                            </c:choose>
+
+                                          </select>
+                                        </div>
+
+
+                                        <div class="field">
+                                          <label>Colaboradores</label>
+
+                                          <c:forEach var="colaborador" items="${colaboradores}">
+
+                                            <c:if test="${colaborador.nivelAcesso == 'OPERACIONAL'}">
+
+                                              <c:set var="colaboradorSelecionado" value="false" />
+
+                                              <c:forTokens items="${atendimento.idsColaboradores}" delims=","
+                                                var="idSelecionado">
+
+                                                <c:if test="${idSelecionado == colaborador.id}">
+                                                  <c:set var="colaboradorSelecionado" value="true" />
+                                                </c:if>
+
+                                              </c:forTokens>
+
+                                              <label style="display:block;">
+
+                                                <input type="checkbox" name="idColaboradores" value="${colaborador.id}"
+                                                  ${colaboradorSelecionado ? 'checked' : '' } />
+
+                                                <c:out value="${colaborador.nome}" />
+
+                                              </label>
+
+                                            </c:if>
+
+                                          </c:forEach>
+                                        </div>
+
+
+                                        <c:choose>
+                                          <c:when test="${atendimento.status == 'FINALIZADO'}"> <button class="btn sm"
+                                              type="submit">
+                                              Salvar colaboradores
+                                            </button>
+                                          </c:when>
+
+                                          <c:otherwise>
+                                            <button class="btn sm" type="submit">
+                                              Atualizar
+                                            </button>
+                                          </c:otherwise>
+                                        </c:choose>
+
+                                      </form>
+
+                                      <button type="button" class="btn ghost fechar-atendimento">
+                                        Fechar
+                                      </button>
+                                    </dialog>
+
+                                  </c:otherwise>
+                                </c:choose>
+                              </td>
+
+                            </tr>
+
+                          </c:if>
 
                         </c:forEach>
                       </tbody>

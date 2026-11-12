@@ -25,7 +25,7 @@ public class DAOPagamento {
                 + "FROM pagamento p JOIN agendamento a ON a.id_agendamento = p.id_agendamento "
                 + "JOIN veiculo v ON v.id_veiculo = a.id_veiculo "
                 + "JOIN cliente c ON c.id_cliente = v.id_cliente "
-                + "ORDER BY a.data DESC, a.horario DESC";
+                + "ORDER BY p.id_pagamento DESC";
         List<PagamentoView> pagamentos = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);

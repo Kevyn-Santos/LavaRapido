@@ -30,7 +30,7 @@ public class DAOAtendimento {
                 + "JOIN cliente c ON c.id_cliente = v.id_cliente "
                 + "LEFT JOIN colaborador_atendimento ca ON ca.id_atendimento = at.id_atendimento "
                 + "LEFT JOIN colaborador col ON col.id_colaborador = ca.id_colaborador "
-                + "GROUP BY at.id_atendimento ORDER BY a.data, a.horario";
+                + "GROUP BY at.id_atendimento ORDER BY at.id_atendimento DESC";
         List<AtendimentoView> atendimentos = new ArrayList<>();
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql);
@@ -45,6 +45,111 @@ public class DAOAtendimento {
             }
         }
         return atendimentos;
+    }
+
+    public boolean iniciarAtendimento(
+            int idAtendimento,
+            List<Integer> idsColaboradores) throws SQLException {
+
+        if (idAtendimento <= 0
+                || idsColaboradores == null
+                || idsColaboradores.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Selecione pelo menos um lavador.");
+        }
+
+        LinkedHashSet<Integer> idsUnicos = new LinkedHashSet<>(idsColaboradores);
+
+        if (idsUnicos.size() != idsColaboradores.size()
+                || idsUnicos.stream().anyMatch(
+                        id -> id == null || id <= 0)) {
+            throw new IllegalArgumentException(
+                    "Lista de lavadores inválida.");
+        }
+
+        String sqlIniciar = """
+                UPDATE atendimento at
+                JOIN agendamento a
+                    ON a.id_agendamento = at.id_agendamento
+                SET
+                    at.status = 'EM_LAVAGEM',
+                    at.data_inicio = CURRENT_TIMESTAMP
+                WHERE at.id_atendimento = ?
+                  AND at.status = 'AGUARDANDO'
+                  AND a.status = 'AGENDADO'
+                  AND a.data = CURRENT_DATE()
+                """;
+
+        String sqlValidar = """
+                SELECT 1
+                FROM colaborador
+                WHERE id_colaborador = ?
+                  AND ativo = TRUE
+                  AND nivel_acesso = 'OPERACIONAL'
+                """;
+
+        String sqlVincular = """
+                INSERT INTO colaborador_atendimento
+                    (id_colaborador, id_atendimento)
+                SELECT ?, ?
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM colaborador_atendimento
+                    WHERE id_colaborador = ?
+                      AND id_atendimento = ?
+                )
+                """;
+
+        try (Connection connection = DatabaseConnection.getConnection()) {
+
+            connection.setAutoCommit(false);
+
+            try {
+                try (PreparedStatement statement = connection.prepareStatement(sqlIniciar)) {
+
+                    statement.setInt(1, idAtendimento);
+
+                    if (statement.executeUpdate() != 1) {
+                        connection.rollback();
+                        return false;
+                    }
+                }
+
+                try (PreparedStatement validar = connection.prepareStatement(sqlValidar);
+                        PreparedStatement vincular = connection.prepareStatement(sqlVincular)) {
+
+                    for (Integer idColaborador : idsUnicos) {
+
+                        validar.setInt(1, idColaborador);
+
+                        try (ResultSet resultado = validar.executeQuery()) {
+
+                            if (!resultado.next()) {
+                                throw new IllegalArgumentException(
+                                        "Lavador inválido ou inativo.");
+                            }
+                        }
+
+                        vincular.setInt(1, idColaborador);
+                        vincular.setInt(2, idAtendimento);
+                        vincular.setInt(3, idColaborador);
+                        vincular.setInt(4, idAtendimento);
+
+                        vincular.executeUpdate();
+                    }
+                }
+
+                connection.commit();
+                return true;
+
+            } catch (SQLException | RuntimeException exception) {
+                connection.rollback();
+                throw exception;
+
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        }
     }
 
     /*--------------------------------------

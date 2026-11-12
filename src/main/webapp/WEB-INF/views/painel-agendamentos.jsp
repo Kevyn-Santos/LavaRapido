@@ -428,11 +428,28 @@
 
                           </div>
 
+
                           <div class="booking-modal-footer">
+
+                            <c:if test="${agendamento.status eq 'AGENDADO'}">
+                              <form method="post" action="${pageContext.request.contextPath}/admin/agendamentos"
+                                onsubmit="return confirm('Deseja realmente cancelar este agendamento?');">
+
+                                <input type="hidden" name="acao" value="cancelar">
+                                <input type="hidden" name="idAgendamento" value="${agendamento.id}">
+
+                                <button type="submit" class="btn danger">
+                                  Cancelar agendamento
+                                </button>
+                              </form>
+                            </c:if>
+
                             <button type="button" class="btn ghost booking-close">
                               Fechar
                             </button>
+
                           </div>
+
 
                         </dialog>
 

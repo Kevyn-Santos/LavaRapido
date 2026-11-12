@@ -122,7 +122,7 @@
           #payments-container tr.hide {
             display: none !important;
           }
-        
+
 
           /* Etapa 32.7: listagem compacta e janela de detalhes */
           #payments-container .payment-list {
@@ -132,7 +132,12 @@
             padding: 12px 18px;
             overflow-x: auto;
           }
-          #payments-container .payment-list table { width: 100%; border-collapse: collapse; }
+
+          #payments-container .payment-list table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+
           #payments-container .payment-list th,
           #payments-container .payment-list td {
             padding: 15px 12px;
@@ -140,10 +145,27 @@
             vertical-align: middle;
             border-bottom: 1px solid #365875;
           }
-          #payments-container .payment-list th { color: #9FC7E0; }
-          #payments-container .payment-list tr:last-child td { border-bottom: 0; }
-          .payment-sub { display: block; margin-top: 5px; color: #9FC7E0; font-size: .78rem; }
-          .payment-value { font-weight: 700; white-space: nowrap; }
+
+          #payments-container .payment-list th {
+            color: #9FC7E0;
+          }
+
+          #payments-container .payment-list tr:last-child td {
+            border-bottom: 0;
+          }
+
+          .payment-sub {
+            display: block;
+            margin-top: 5px;
+            color: #9FC7E0;
+            font-size: .78rem;
+          }
+
+          .payment-value {
+            font-weight: 700;
+            white-space: nowrap;
+          }
+
           dialog.payment-modal {
             position: fixed;
             inset: 0;
@@ -157,28 +179,112 @@
             border-radius: 16px;
             background: #0B3050;
             color: white;
-            box-shadow: 0 24px 70px rgba(0,0,0,.5);
-          }
-          dialog.payment-modal:not([open]) { display: none; }
-          dialog.payment-modal::backdrop { background: rgba(0,10,20,.76); }
-          .payment-modal-header { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid #365875; padding-bottom: 16px; margin-bottom: 20px; }
-          .payment-modal-header h2 { color: #fff; }
-          .payment-modal .small { color: #9FC7E0; display: block; }
-          .payment-modal-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
-          .payment-modal-grid strong { display: block; margin-top: 5px; overflow-wrap: anywhere; color: #fff; }
-          .payment-modal-total { background: #06263F; border-radius: 10px; padding: 16px; margin: 22px 0; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
-          .payment-modal-total strong { font-size: 1.3rem; }
-          .payment-icon-close { border: 0; background: transparent; color: white; font-size: 1.4rem; cursor: pointer; }
-          .payment-confirm-form { display: grid; gap: 12px; padding-bottom: 18px; }
-          .payment-confirm-form select { min-height: 44px; padding: 10px; background: #06263F; border: 1px solid #365875; border-radius: 6px; color: white; }
-          .payment-confirm-form select option { background: #06263F; color: white; }
-          .payment-confirm-form .btn { justify-self: start; }
-          .payment-modal-footer { display: flex; justify-content: flex-end; border-top: 1px solid #365875; padding-top: 16px; }
-          @media (max-width: 540px) {
-            .payment-modal-grid { grid-template-columns: 1fr; }
-            #payments-container .payment-list th, #payments-container .payment-list td { padding: 10px 6px; }
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .5);
           }
 
+          dialog.payment-modal:not([open]) {
+            display: none;
+          }
+
+          dialog.payment-modal::backdrop {
+            background: rgba(0, 10, 20, .76);
+          }
+
+          .payment-modal-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 1px solid #365875;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+          }
+
+          .payment-modal-header h2 {
+            color: #fff;
+          }
+
+          .payment-modal .small {
+            color: #9FC7E0;
+            display: block;
+          }
+
+          .payment-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+          }
+
+          .payment-modal-grid strong {
+            display: block;
+            margin-top: 5px;
+            overflow-wrap: anywhere;
+            color: #fff;
+          }
+
+          .payment-modal-total {
+            background: #06263F;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 22px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+          }
+
+          .payment-modal-total strong {
+            font-size: 1.3rem;
+          }
+
+          .payment-icon-close {
+            border: 0;
+            background: transparent;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+          }
+
+          .payment-confirm-form {
+            display: grid;
+            gap: 12px;
+            padding-bottom: 18px;
+          }
+
+          .payment-confirm-form select {
+            min-height: 44px;
+            padding: 10px;
+            background: #06263F;
+            border: 1px solid #365875;
+            border-radius: 6px;
+            color: white;
+          }
+
+          .payment-confirm-form select option {
+            background: #06263F;
+            color: white;
+          }
+
+          .payment-confirm-form .btn {
+            justify-self: start;
+          }
+
+          .payment-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            border-top: 1px solid #365875;
+            padding-top: 16px;
+          }
+
+          @media (max-width: 540px) {
+            .payment-modal-grid {
+              grid-template-columns: 1fr;
+            }
+
+            #payments-container .payment-list th,
+            #payments-container .payment-list td {
+              padding: 10px 6px;
+            }
+          }
         </style>
       </head>
 
@@ -308,22 +414,32 @@
                       </thead>
                       <tbody>
                         <c:forEach var="pagamento" items="${pagamentos}">
-                          <tr class="linha-pagamento"
-                              data-cliente="<c:out value='${pagamento.cliente}' />"
-                              data-placa="<c:out value='${pagamento.placa}' />"
-                              data-status="${pagamento.status}">
+                          <tr class="linha-pagamento" data-cliente="<c:out value='${pagamento.cliente}' />"
+                            data-placa="<c:out value='${pagamento.placa}' />" data-status="${pagamento.status}">
+
                             <td>
-                              <strong><c:out value="${pagamento.cliente}" /></strong>
-                              <span class="payment-sub">Agendamento #<c:out value="${pagamento.idAgendamento}" /></span>
+                              <strong>
+                                #
+                                <c:out value="${pagamento.id}" /> —
+                                <c:out value="${pagamento.cliente}" />
+                              </strong>
+
+                              <span class="payment-sub">
+                                Agendamento #
+                                <c:out value="${pagamento.idAgendamento}" />
+                              </span>
                             </td>
+
                             <td class="payment-value">
-                              <fmt:formatNumber value="${pagamento.valor}" type="currency"
-                                currencySymbol="R$ " minFractionDigits="2" maxFractionDigits="2" />
+                              <fmt:formatNumber value="${pagamento.valor}" type="currency" currencySymbol="R$ "
+                                minFractionDigits="2" maxFractionDigits="2" />
                             </td>
-                            <td><c:out value="${pagamento.status}" /></td>
+                            <td>
+                              <c:out value="${pagamento.status}" />
+                            </td>
                             <td>
                               <button class="btn sm ghost payment-open" type="button"
-                                      data-modal="pagamento-${pagamento.id}">
+                                data-modal="pagamento-${pagamento.id}">
                                 Gerenciar
                               </button>
                             </td>
@@ -334,61 +450,84 @@
                   </div>
 
                   <%-- Popups fora da tabela, para manter o HTML válido e a listagem compacta --%>
-                  <c:forEach var="pagamento" items="${pagamentos}">
-                    <dialog id="pagamento-${pagamento.id}" class="payment-modal">
-                      <div class="payment-modal-header">
-                        <div>
-                          <h2>Pagamento #<c:out value="${pagamento.id}" /></h2>
-                          <p class="small">Agendamento #<c:out value="${pagamento.idAgendamento}" /></p>
+                    <c:forEach var="pagamento" items="${pagamentos}">
+                      <dialog id="pagamento-${pagamento.id}" class="payment-modal">
+                        <div class="payment-modal-header">
+                          <div>
+                            <h2>Pagamento #
+                              <c:out value="${pagamento.id}" />
+                            </h2>
+                            <p class="small">Agendamento #
+                              <c:out value="${pagamento.idAgendamento}" />
+                            </p>
+                          </div>
+                          <button type="button" class="payment-close payment-icon-close" aria-label="Fechar">✕</button>
                         </div>
-                        <button type="button" class="payment-close payment-icon-close"
-                                aria-label="Fechar">✕</button>
-                      </div>
 
-                      <div class="payment-modal-grid">
-                        <div><span class="small">Cliente</span>
-                          <strong><c:out value="${pagamento.cliente}" /></strong></div>
-                        <div><span class="small">Placa</span>
-                          <strong><c:out value="${pagamento.placa}" /></strong></div>
-                        <div><span class="small">Data</span>
-                          <strong><c:out value="${pagamento.data}" /></strong></div>
-                        <div><span class="small">Horário</span>
-                          <strong><c:out value="${pagamento.horario}" /></strong></div>
-                        <div><span class="small">Situação</span>
-                          <strong><c:out value="${pagamento.status}" /></strong></div>
-                        <div><span class="small">Forma de pagamento</span>
-                          <strong><c:out value="${empty pagamento.forma ? 'Não informada' : pagamento.forma}" /></strong></div>
-                      </div>
+                        <div class="payment-modal-grid">
+                          <div><span class="small">Cliente</span>
+                            <strong>
+                              <c:out value="${pagamento.cliente}" />
+                            </strong>
+                          </div>
+                          <div><span class="small">Placa</span>
+                            <strong>
+                              <c:out value="${pagamento.placa}" />
+                            </strong>
+                          </div>
+                          <div><span class="small">Data</span>
+                            <strong>
+                              <c:out value="${pagamento.data}" />
+                            </strong>
+                          </div>
+                          <div><span class="small">Horário</span>
+                            <strong>
+                              <c:out value="${pagamento.horario}" />
+                            </strong>
+                          </div>
+                          <div><span class="small">Situação</span>
+                            <strong>
+                              <c:out value="${pagamento.status}" />
+                            </strong>
+                          </div>
+                          <div><span class="small">Forma de pagamento</span>
+                            <strong>
+                              <c:out value="${empty pagamento.forma ? 'Não informada' : pagamento.forma}" />
+                            </strong>
+                          </div>
+                        </div>
 
-                      <div class="payment-modal-total">
-                        <span>Valor total</span>
-                        <strong><fmt:formatNumber value="${pagamento.valor}" type="currency"
-                          currencySymbol="R$ " minFractionDigits="2" maxFractionDigits="2" /></strong>
-                      </div>
+                        <div class="payment-modal-total">
+                          <span>Valor total</span>
+                          <strong>
+                            <fmt:formatNumber value="${pagamento.valor}" type="currency" currencySymbol="R$ "
+                              minFractionDigits="2" maxFractionDigits="2" />
+                          </strong>
+                        </div>
 
-                      <c:if test="${pagamento.status == 'PENDENTE'}">
-                        <form class="payment-confirm-form" method="post"
-                              action="${pageContext.request.contextPath}/admin/pagamentos"
-                              onsubmit="return confirm('Confirmar o recebimento deste pagamento?');">
-                          <input type="hidden" name="idPagamento" value="${pagamento.id}" />
-                          <input type="hidden" name="status" value="PAGO" />
-                          <label for="forma-pagamento-${pagamento.id}">Forma de pagamento</label>
-                          <select id="forma-pagamento-${pagamento.id}" name="formaPagamento" required>
-                            <option value="">Selecione uma forma</option>
-                            <option value="PIX">PIX</option>
-                            <option value="DINHEIRO">Dinheiro</option>
-                            <option value="CREDITO">Crédito</option>
-                            <option value="DEBITO">Débito</option>
-                          </select>
-                          <button class="btn" type="submit">Confirmar pagamento</button>
-                        </form>
-                      </c:if>
+                        <c:if test="${pagamento.status == 'PENDENTE'}">
+                          <form class="payment-confirm-form" method="post"
+                            action="${pageContext.request.contextPath}/admin/pagamentos"
+                            onsubmit="return confirm('Confirmar o recebimento deste pagamento?');">
+                            <input type="hidden" name="idPagamento" value="${pagamento.id}" />
+                            <input type="hidden" name="status" value="PAGO" />
+                            <label for="forma-pagamento-${pagamento.id}">Forma de pagamento</label>
+                            <select id="forma-pagamento-${pagamento.id}" name="formaPagamento" required>
+                              <option value="">Selecione uma forma</option>
+                              <option value="PIX">PIX</option>
+                              <option value="DINHEIRO">Dinheiro</option>
+                              <option value="CREDITO">Crédito</option>
+                              <option value="DEBITO">Débito</option>
+                            </select>
+                            <button class="btn" type="submit">Confirmar pagamento</button>
+                          </form>
+                        </c:if>
 
-                      <div class="payment-modal-footer">
-                        <button class="btn ghost payment-close" type="button">Fechar</button>
-                      </div>
-                    </dialog>
-                  </c:forEach>
+                        <div class="payment-modal-footer">
+                          <button class="btn ghost payment-close" type="button">Fechar</button>
+                        </div>
+                      </dialog>
+                    </c:forEach>
                 </c:otherwise>
               </c:choose>
 
@@ -430,7 +569,7 @@
           buscaPagamento.addEventListener("input", filtrarPagamentos);
           filtroPagamento.addEventListener("change", filtrarPagamentos);
         </script>
-      
+
         <script>
           document.querySelectorAll(".payment-open").forEach(botao => {
             botao.addEventListener("click", () => {

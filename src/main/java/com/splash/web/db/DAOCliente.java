@@ -155,7 +155,7 @@ public class DAOCliente {
                     ON c.id_cliente = v.id_cliente
                     AND v.ativo = TRUE
                 WHERE c.ativo = TRUE
-                ORDER BY c.nome;
+                ORDER BY c.id_cliente DESC, v.id_veiculo DESC;
                 """;
         Map<Integer, Cliente> clientes = new LinkedHashMap<>();
 

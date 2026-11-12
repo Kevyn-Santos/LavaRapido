@@ -85,7 +85,7 @@ public class DAOAgendamento {
                     ON ags.id_agendamento = a.id_agendamento
                 LEFT JOIN pagamento p
                     ON p.id_agendamento = a.id_agendamento
-                ORDER BY a.data DESC, a.horario DESC
+                ORDER BY a.id_agendamento DESC
                 """;
 
         List<Map<String, Object>> agendamentos = new ArrayList<>();
@@ -117,8 +117,165 @@ public class DAOAgendamento {
         return agendamentos;
     }
 
-    public List<AgendamentoView> listarPorCliente(int idCliente) throws SQLException {
+    public List<Map<String, Object>> listarAgendamentosHoje()
+            throws SQLException {
 
+        String sql = """
+                SELECT
+                    a.id_agendamento,
+                    a.data,
+                    a.horario,
+                    a.status AS status_agendamento,
+
+                    c.nome AS cliente,
+
+                    CONCAT(v.marca, ' ', v.modelo) AS veiculo,
+                    v.placa,
+
+                    at.id_atendimento,
+                    at.status AS status_atendimento,
+
+                    p.id_pagamento,
+                    p.status_pagamento,
+                    p.forma_pagamento,
+                    p.valor AS valor_total,
+
+                    COALESCE(
+                        GROUP_CONCAT(
+                            s.nome ORDER BY s.nome SEPARATOR ', '
+                        ),
+                        ''
+                    ) AS servicos
+
+                FROM agendamento a
+
+                JOIN veiculo v
+                    ON v.id_veiculo = a.id_veiculo
+
+                JOIN cliente c
+                    ON c.id_cliente = v.id_cliente
+
+                LEFT JOIN atendimento at
+                    ON at.id_agendamento = a.id_agendamento
+
+                LEFT JOIN pagamento p
+                    ON p.id_agendamento = a.id_agendamento
+
+                LEFT JOIN agendamento_servico ags
+                    ON ags.id_agendamento = a.id_agendamento
+
+                LEFT JOIN servico s
+                    ON s.id_servico = ags.id_servico
+
+                WHERE a.data = ?
+                  AND a.status = 'AGENDADO'
+
+                GROUP BY
+                    a.id_agendamento,
+                    a.data,
+                    a.horario,
+                    a.status,
+                    c.nome,
+                    v.marca,
+                    v.modelo,
+                    v.placa,
+                    at.id_atendimento,
+                    at.status,
+                    p.id_pagamento,
+                    p.status_pagamento,
+                    p.forma_pagamento,
+                    p.valor
+
+                ORDER BY
+                    a.horario ASC,
+                    a.id_agendamento ASC
+                """;
+
+        List<Map<String, Object>> agendamentos = new ArrayList<>();
+
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setDate(
+                    1,
+                    Date.valueOf(LocalDate.now()));
+
+            try (ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+
+                    Map<String, Object> item = new LinkedHashMap<>();
+
+                    // Agendamento
+                    item.put(
+                            "id",
+                            result.getInt("id_agendamento"));
+
+                    item.put(
+                            "data",
+                            result.getDate("data").toLocalDate());
+
+                    item.put(
+                            "horario",
+                            result.getString("horario"));
+
+                    item.put(
+                            "statusAgendamento",
+                            result.getString("status_agendamento"));
+
+                    // Cliente e veículo
+                    item.put(
+                            "cliente",
+                            result.getString("cliente"));
+
+                    item.put(
+                            "veiculo",
+                            result.getString("veiculo"));
+
+                    item.put(
+                            "placa",
+                            result.getString("placa"));
+
+                    // Serviços
+                    item.put(
+                            "servicos",
+                            result.getString("servicos"));
+
+                    // Atendimento
+                    item.put(
+                            "idAtendimento",
+                            result.getObject("id_atendimento"));
+
+                    item.put(
+                            "statusAtendimento",
+                            result.getString("status_atendimento"));
+
+                    // Pagamento
+                    item.put(
+                            "idPagamento",
+                            result.getObject("id_pagamento"));
+
+                    item.put(
+                            "statusPagamento",
+                            result.getString("status_pagamento"));
+
+                    item.put(
+                            "formaPagamento",
+                            result.getString("forma_pagamento"));
+
+                    item.put(
+                            "valorTotal",
+                            result.getBigDecimal("valor_total"));
+
+                    agendamentos.add(item);
+                }
+            }
+        }
+
+        return agendamentos;
+    }
+
+    public List<AgendamentoView> listarPorCliente(int idCliente) throws SQLException {
 
         String sql = "SELECT a.id_agendamento, v.id_veiculo, GROUP_CONCAT(DISTINCT s.id_servico) as servicos, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
                 +
@@ -292,6 +449,71 @@ public class DAOAgendamento {
             } catch (SQLException | RuntimeException exception) {
                 connection.rollback();
                 throw exception;
+            } finally {
+                connection.setAutoCommit(true);
+            }
+        }
+    }
+
+    public boolean cancelarAdministrativo(int idAgendamento) throws SQLException {
+
+        String sqlAgendamento = """
+                UPDATE agendamento
+                SET status = 'CANCELADO'
+                WHERE id_agendamento = ?
+                  AND status = 'AGENDADO'
+
+                  AND EXISTS (
+                      SELECT 1
+                      FROM atendimento
+                      WHERE atendimento.id_agendamento =
+                            agendamento.id_agendamento
+                        AND atendimento.status = 'AGUARDANDO'
+                  )
+
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM pagamento
+                      WHERE pagamento.id_agendamento =
+                            agendamento.id_agendamento
+                        AND status_pagamento = 'PAGO'
+                  )
+                """;
+
+        String sqlPagamento = """
+                UPDATE pagamento
+                SET status_pagamento = 'CANCELADO'
+                WHERE id_agendamento = ?
+                  AND status_pagamento = 'PENDENTE'
+                """;
+
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            connection.setAutoCommit(false);
+
+            try {
+                boolean cancelado;
+
+                try (PreparedStatement statement = connection.prepareStatement(sqlAgendamento)) {
+
+                    statement.setInt(1, idAgendamento);
+                    cancelado = statement.executeUpdate() == 1;
+                }
+
+                if (cancelado) {
+                    try (PreparedStatement statement = connection.prepareStatement(sqlPagamento)) {
+
+                        statement.setInt(1, idAgendamento);
+                        statement.executeUpdate();
+                    }
+                }
+
+                connection.commit();
+                return cancelado;
+
+            } catch (SQLException | RuntimeException exception) {
+                connection.rollback();
+                throw exception;
+
             } finally {
                 connection.setAutoCommit(true);
             }
