@@ -20,7 +20,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/admin/*")
 public class AdminServlet extends HttpServlet {
 
-    private static final Set<String> STATUS_ATENDIMENTO = Set.of("AGUARDANDO", "EM_LAVAGEM", "FINALIZADO", "ENTREGUE");
+    private static final Set<String> STATUS_ATENDIMENTO = Set.of("AGUARDANDO", "EM_LAVAGEM", "FINALIZADO");
     private static final Set<String> FORMAS_PAGAMENTO = Set.of("DINHEIRO", "PIX", "CREDITO", "DEBITO");
 
     @Override
@@ -137,19 +137,94 @@ public class AdminServlet extends HttpServlet {
         daoServico.salvar(id, nome, descricao, preco);
     }
 
-    private void processarColaborador(HttpServletRequest request) throws SQLException {
+    private void processarColaborador(HttpServletRequest request)
+            throws SQLException {
+
+        String acaoColaborador = WebSupport.campo(request, "acao");
+
+        if ("remover".equals(acaoColaborador)) {
+
+            Integer id = WebSupport.inteiro(
+                    WebSupport.campo(request, "idColaborador"));
+
+            if (id == null || id <= 0) {
+                throw new IllegalArgumentException(
+                        "Colaborador inválido para remoção.");
+            }
+
+            Integer idLogado = (Integer) request.getSession()
+                    .getAttribute("colaboradorId");
+
+            if (id.equals(idLogado)) {
+                throw new IllegalArgumentException(
+                        "Você não pode remover sua própria conta.");
+            }
+
+            DAOColaborador dao = new DAOColaborador();
+
+            if (!dao.remover(id)) {
+                throw new IllegalArgumentException(
+                        "Não foi possível remover o colaborador.");
+            }
+
+            return;
+        }
+
+        String acao = WebSupport.campo(request, "acao");
         String nome = WebSupport.campo(request, "nome");
         String cargo = WebSupport.campo(request, "cargo");
         String email = WebSupport.campo(request, "email");
         String senha = request.getParameter("senha");
         String nivel = WebSupport.campo(request, "nivelAcesso");
-        if (!WebSupport.preenchidos(nome, cargo, email, senha) || nome.length() > 100
-                || cargo.length() > 60 || email.length() > 150 || senha.length() < 8
-                || !Set.of("ADMINISTRADOR", "ATENDENTE", "OPERACIONAL").contains(nivel)) {
+
+        if (!"editar".equals(acao) && !"criar".equals(acao)
+                && !acao.isBlank()) {
             throw new IllegalArgumentException(
-                    "Confira os dados do colaborador; a senha deve ter ao menos 8 caracteres.");
+                    "Ação de colaborador inválida.");
         }
-        new DAOColaborador().inserir(nome, cargo, nivel, email, senha);
+
+        if (!WebSupport.preenchidos(nome, cargo, email)
+                || nome.length() > 100
+                || cargo.length() > 60
+                || email.length() > 150
+                || !Set.of(
+                        "ADMINISTRADOR",
+                        "ATENDENTE",
+                        "OPERACIONAL").contains(nivel)) {
+            throw new IllegalArgumentException(
+                    "Confira os dados do colaborador.");
+        }
+
+        DAOColaborador dao = new DAOColaborador();
+
+        if ("editar".equals(acao)) {
+
+            Integer id = WebSupport.inteiro(
+                    WebSupport.campo(request, "idColaborador"));
+
+            if (id == null || id <= 0) {
+                throw new IllegalArgumentException(
+                        "Colaborador inválido para edição.");
+            }
+
+            if (senha != null && !senha.isBlank()
+                    && (senha.length() < 8 || senha.length() > 72)) {
+                throw new IllegalArgumentException(
+                        "A senha deve conter entre 8 e 72 caracteres.");
+            }
+
+            dao.atualizar(id, nome, cargo, nivel, email, senha);
+
+        } else {
+
+            if (senha == null || senha.length() < 8
+                    || senha.length() > 72) {
+                throw new IllegalArgumentException(
+                        "Informe uma senha entre 8 e 72 caracteres.");
+            }
+
+            dao.inserir(nome, cargo, nivel, email, senha);
+        }
     }
 
     private void processarAtendimento(HttpServletRequest request) throws SQLException {

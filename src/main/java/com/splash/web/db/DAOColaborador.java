@@ -255,20 +255,92 @@ public class DAOColaborador {
                     "ID do colaborador inválido.");
         }
 
-        String sql = """
-                UPDATE colaborador
-                SET ativo = FALSE,
-                    excluido_em = CURRENT_TIMESTAMP
-                WHERE id_colaborador = ?
-                  AND ativo = TRUE
-                """;
+        try (Connection connection = DatabaseConnection.getConnection()) {
 
-        try (Connection connection = DatabaseConnection.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
+            connection.setAutoCommit(false);
 
-            statement.setInt(1, idColaborador);
+            try {
+                // Bloqueia os administradores ativos durante a operação.
+                int totalAdministradores = 0;
 
-            return statement.executeUpdate() == 1;
+                String consultarAdministradores = """
+                        SELECT id_colaborador
+                        FROM colaborador
+                        WHERE nivel_acesso = 'ADMINISTRADOR'
+                          AND ativo = TRUE
+                        FOR UPDATE
+                        """;
+
+                try (PreparedStatement statement = connection.prepareStatement(consultarAdministradores);
+                        ResultSet result = statement.executeQuery()) {
+
+                    while (result.next()) {
+                        totalAdministradores++;
+                    }
+                }
+
+                // Consulta o colaborador que será removido.
+                String consultar = """
+                        SELECT nivel_acesso
+                        FROM colaborador
+                        WHERE id_colaborador = ?
+                          AND ativo = TRUE
+                        FOR UPDATE
+                        """;
+
+                String nivelAcesso;
+
+                try (PreparedStatement statement = connection.prepareStatement(consultar)) {
+
+                    statement.setInt(1, idColaborador);
+
+                    try (ResultSet result = statement.executeQuery()) {
+                        if (!result.next()) {
+                            throw new IllegalArgumentException(
+                                    "Colaborador não encontrado ou inativo.");
+                        }
+
+                        nivelAcesso = result.getString("nivel_acesso");
+                    }
+                }
+
+                if ("ADMINISTRADOR".equals(nivelAcesso)
+                        && totalAdministradores <= 1) {
+                    throw new IllegalArgumentException(
+                            "Não é possível remover o último administrador ativo.");
+                }
+
+                // Exclusão lógica: mantém o registro e seus vínculos.
+                String sql = """
+                        UPDATE colaborador
+                        SET ativo = FALSE,
+                            excluido_em = CURRENT_TIMESTAMP
+                        WHERE id_colaborador = ?
+                          AND ativo = TRUE
+                        """;
+
+                int linhas;
+
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+
+                    statement.setInt(1, idColaborador);
+                    linhas = statement.executeUpdate();
+                }
+
+                if (linhas != 1) {
+                    throw new IllegalArgumentException(
+                            "Não foi possível remover o colaborador.");
+                }
+
+                connection.commit();
+                return true;
+
+            } catch (SQLException | RuntimeException exception) {
+                connection.rollback();
+                throw exception;
+            } finally {
+                connection.setAutoCommit(true);
+            }
         }
     }
 

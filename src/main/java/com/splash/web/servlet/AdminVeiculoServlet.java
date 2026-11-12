@@ -31,29 +31,53 @@ public class AdminVeiculoServlet extends HttpServlet {
         try {
             String acao = WebSupport.campo(request, "acao");
 
+            if ("remover".equals(acao)) {
+
+                Integer idClienteRemover = WebSupport.inteiro(
+                        WebSupport.campo(request, "idCliente"));
+
+                Integer idVeiculoRemover = WebSupport.inteiro(
+                        WebSupport.campo(request, "idVeiculo"));
+
+                if (idClienteRemover == null || idVeiculoRemover == null
+                        || idClienteRemover <= 0 || idVeiculoRemover <= 0) {
+                    throw new IllegalArgumentException(
+                            "Cliente ou veículo inválido.");
+                }
+
+                boolean removido = new DAOVeiculo().remover(
+                        idClienteRemover, idVeiculoRemover);
+
+                if (!removido) {
+                    throw new IllegalArgumentException(
+                            "Veículo não encontrado ou já desativado.");
+                }
+
+                response.sendRedirect(
+                        request.getContextPath()
+                                + "/painel/carros?sucesso=1");
+
+                return;
+            }
+
             if (!"salvar".equals(acao)) {
                 throw new IllegalArgumentException(
-                    "Ação de veículo inválida."
-                );
+                        "Ação de veículo inválida.");
             }
 
             Integer idCliente = WebSupport.inteiro(
-                WebSupport.campo(request, "idCliente")
-            );
+                    WebSupport.campo(request, "idCliente"));
 
             Integer idVeiculo = WebSupport.inteiro(
-                WebSupport.campo(request, "idVeiculo")
-            );
+                    WebSupport.campo(request, "idVeiculo"));
 
             if (idCliente == null || idCliente <= 0) {
                 throw new IllegalArgumentException(
-                    "Selecione um cliente válido."
-                );
+                        "Selecione um cliente válido.");
             }
 
             String placa = Validacao.placa(
-                WebSupport.campo(request, "placa")
-            );
+                    WebSupport.campo(request, "placa"));
 
             String marca = WebSupport.campo(request, "marca");
             String modelo = WebSupport.campo(request, "modelo");
@@ -64,8 +88,7 @@ public class AdminVeiculoServlet extends HttpServlet {
                     || modelo.length() > 60
                     || cor.length() > 30) {
                 throw new IllegalArgumentException(
-                    "Confira marca, modelo e cor do veículo."
-                );
+                        "Confira marca, modelo e cor do veículo.");
             }
 
             DAOVeiculo dao = new DAOVeiculo();
@@ -73,8 +96,7 @@ public class AdminVeiculoServlet extends HttpServlet {
             if (idVeiculo == null) {
 
                 dao.inserir(
-                    idCliente, placa, marca, modelo, cor
-                );
+                        idCliente, placa, marca, modelo, cor);
 
             } else {
 
@@ -83,22 +105,19 @@ public class AdminVeiculoServlet extends HttpServlet {
                         placa, marca, modelo, cor)) {
 
                     throw new IllegalArgumentException(
-                        "Veículo não encontrado, inativo ou sem alterações."
-                    );
+                            "Veículo não encontrado, inativo ou sem alterações.");
                 }
             }
 
             response.sendRedirect(
-                request.getContextPath()
-                + "/painel/carros?sucesso=1"
-            );
+                    request.getContextPath()
+                            + "/painel/carros?sucesso=1");
 
         } catch (IllegalArgumentException exception) {
 
             response.sendError(
-                HttpServletResponse.SC_BAD_REQUEST,
-                exception.getMessage()
-            );
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    exception.getMessage());
 
         } catch (SQLException exception) {
 
@@ -106,9 +125,8 @@ public class AdminVeiculoServlet extends HttpServlet {
                     && exception.getSQLState().startsWith("23")) {
 
                 response.sendError(
-                    HttpServletResponse.SC_CONFLICT,
-                    "Placa já cadastrada ou dados duplicados."
-                );
+                        HttpServletResponse.SC_CONFLICT,
+                        "Placa já cadastrada ou dados duplicados.");
                 return;
             }
 

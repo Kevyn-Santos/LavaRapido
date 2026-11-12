@@ -75,9 +75,18 @@ public class PainelServlet extends HttpServlet {
                 }
 
                 case "agendamentos" -> {
+
                     request.setAttribute(
                             "agendamentos",
                             new DAOAgendamento().listarTodos());
+
+                    request.setAttribute(
+                            "clientes",
+                            new DAOCliente().getUsuariosComVeiculos());
+
+                    request.setAttribute(
+                            "servicos",
+                            new DAOServico().listar());
                 }
 
                 case "atendimentos" -> {

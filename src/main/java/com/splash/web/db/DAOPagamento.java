@@ -52,20 +52,55 @@ public class DAOPagamento {
     Update de pagamentos
     --------------------------------------*/
 
-    public void atualizar(int idPagamento, String status, String forma) throws SQLException {
-        String sql = "UPDATE pagamento SET status_pagamento = ?, "
-                + "forma_pagamento = CASE WHEN ? = 'PAGO' THEN ? ELSE forma_pagamento END, "
-                + "data_pagamento = CASE WHEN ? = 'PAGO' THEN CURRENT_TIMESTAMP ELSE data_pagamento END "
-                + "WHERE id_pagamento = ? AND status_pagamento <> 'CANCELADO'";
+    public void atualizar(int idPagamento, String status, String forma)
+            throws SQLException {
+
+        if (idPagamento <= 0) {
+            throw new IllegalArgumentException(
+                    "ID do pagamento inválido.");
+        }
+
+        if (!"PAGO".equals(status) && !"CANCELADO".equals(status)) {
+            throw new IllegalArgumentException(
+                    "Status de pagamento inválido.");
+        }
+
+        if ("PAGO".equals(status)
+                && !java.util.Set.of(
+                        "PIX", "DINHEIRO", "CREDITO", "DEBITO").contains(forma)) {
+            throw new IllegalArgumentException(
+                    "Selecione uma forma de pagamento válida.");
+        }
+
+        String sql = """
+                UPDATE pagamento p
+                JOIN agendamento a
+                    ON a.id_agendamento = p.id_agendamento
+                SET p.status_pagamento = ?,
+                    p.forma_pagamento =
+                        CASE WHEN ? = 'PAGO'
+                        THEN ? ELSE NULL END,
+                    p.data_pagamento =
+                        CASE WHEN ? = 'PAGO'
+                        THEN CURRENT_TIMESTAMP ELSE NULL END
+                WHERE p.id_pagamento = ?
+                  AND p.status_pagamento = 'PENDENTE'
+                  AND a.status <> 'CANCELADO'
+                """;
+
         try (Connection connection = DatabaseConnection.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql)) {
+
             statement.setString(1, status);
             statement.setString(2, status);
-            statement.setString(3, forma);
+            statement.setString(3, "PAGO".equals(status) ? forma : null);
             statement.setString(4, status);
             statement.setInt(5, idPagamento);
+
             if (statement.executeUpdate() != 1) {
-                throw new IllegalArgumentException("Pagamento não encontrado ou já cancelado.");
+                throw new IllegalArgumentException(
+                        "Pagamento não encontrado, já processado "
+                                + "ou vinculado a um agendamento cancelado.");
             }
         }
     }
@@ -74,5 +109,6 @@ public class DAOPagamento {
     Remoção de pagamentos
     --------------------------------------*/
 
-    // Nenhuma operação de remoção de pagamento ainda (cancelar o agendamento cancela o pagamento)
+    // Nenhuma operação de remoção de pagamento ainda (cancelar o agendamento
+    // cancela o pagamento)
 }

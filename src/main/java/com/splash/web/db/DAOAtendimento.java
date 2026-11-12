@@ -79,7 +79,8 @@ public class DAOAtendimento {
                         StatusAtendimento atual = StatusAtendimento.valueOf(result.getString("status"));
                         StatusAtendimento proximo = StatusAtendimento.valueOf(status);
                         String statusAgendamento = result.getString("status_agendamento");
-                        // Manter o mesmo status é permitido: o admin usa isso para trocar só os colaboradores
+                        // Manter o mesmo status é permitido: o admin usa isso para trocar só os
+                        // colaboradores
                         if ("CANCELADO".equals(statusAgendamento) || (atual != proximo && !atual.podeIrPara(proximo))) {
                             throw new IllegalArgumentException(
                                     "Atendimento cancelado ou transição de status não permitida.");
@@ -103,21 +104,32 @@ public class DAOAtendimento {
                         statement.executeUpdate();
                     }
                 }
-                try (PreparedStatement delete = connection.prepareStatement(
-                        "DELETE FROM colaborador_atendimento WHERE id_atendimento = ?")) {
-                    delete.setInt(1, idAtendimento);
-                    delete.executeUpdate();
-                }
+                String inserirColaborador = """
+                            INSERT INTO colaborador_atendimento
+                                (id_colaborador, id_atendimento)
+                            SELECT c.id_colaborador, ?
+                            FROM colaborador c
+                            WHERE c.id_colaborador = ?
+                            AND c.ativo = TRUE
+                            AND c.nivel_acesso = 'OPERACIONAL'
+                            AND NOT EXISTS (
+                            SELECT 1
+                            FROM colaborador_atendimento ca
+                            WHERE ca.id_colaborador = c.id_colaborador
+                                AND ca.id_atendimento = ?
+                        )
+                        """;
 
-                try (PreparedStatement insert = connection.prepareStatement(
-                        "INSERT INTO colaborador_atendimento (id_colaborador, id_atendimento) "
-                                + "VALUES (?, ?)")) {
+                try (PreparedStatement statement = connection.prepareStatement(inserirColaborador)) {
+
                     for (int idColaborador : new LinkedHashSet<>(idsColaboradores)) {
-                        insert.setInt(1, idColaborador);
-                        insert.setInt(2, idAtendimento);
-                        insert.addBatch();
+
+                        statement.setInt(1, idAtendimento);
+                        statement.setInt(2, idColaborador);
+                        statement.setInt(3, idAtendimento);
+
+                        statement.executeUpdate();
                     }
-                    insert.executeBatch();
                 }
                 connection.commit();
             } catch (SQLException | RuntimeException exception) {

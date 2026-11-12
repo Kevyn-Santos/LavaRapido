@@ -456,34 +456,88 @@
         <div id="view-form" class="hide">
           <div class="fcard">
             <h2 id="form-title">Novo agendamento</h2>
-            <form id="form-booking" method="post" action="${pageContext.request.contextPath}/agendamentos">
+            <form id="form-booking" method="post" action="${pageContext.request.contextPath}/admin/agendamentos">
               <input type="hidden" id="bk-id">
+
+              <input type="hidden" name="acao" value="agendar">
 
               <div class="field">
                 <label for="bk-client">Cliente</label>
-                <select id="bk-client" required></select>
-              </div>
 
-              <div class="field">
-                <label for="bk-car">Veículo</label>
-                <select id="bk-car" required>
-                  <option value="">Selecione o cliente primeiro</option>
+                <select id="bk-client" name="idCliente" required>
+                  <option value="">Selecione um cliente</option>
+
+                  <c:forEach var="cliente" items="${clientes}">
+                    <option value="${cliente.id_cliente}">
+                      #
+                      <c:out value="${cliente.id_cliente}" />
+                      —
+                      <c:out value="${cliente.nome}" />
+                    </option>
+                  </c:forEach>
+
                 </select>
               </div>
 
               <div class="field">
-                <label>Serviços Escolhidos</label>
-                <div id="services-checkboxes"></div>
+                <label for="bk-car">Veículo</label>
+
+                <select id="bk-car" name="idVeiculo" required>
+                  <option value="">Selecione o cliente primeiro</option>
+
+                  <c:forEach var="cliente" items="${clientes}">
+                    <c:forEach var="veiculo" items="${cliente.veiculos}">
+
+                      <option value="${veiculo.id}" data-cliente-id="${cliente.id_cliente}">
+
+                        #
+                        <c:out value="${veiculo.id}" />
+                        —
+                        <c:out value="${veiculo.marca}" />
+                        <c:out value="${veiculo.modelo}" />
+                        (
+                        <c:out value="${veiculo.placa}" />)
+
+                      </option>
+
+                    </c:forEach>
+                  </c:forEach>
+
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Serviços escolhidos</label>
+
+                <div id="services-checkboxes">
+
+                  <c:forEach var="servico" items="${servicos}">
+                    <label class="service-option">
+
+                      <span class="service-option-main">
+                        <input type="checkbox" name="idServicos" value="${servico.id}" data-preco="${servico.preco}">
+                        <c:out value="${servico.nome}" />
+                      </span>
+
+                      <span class="service-option-price">
+                        R$
+                        <c:out value="${servico.preco}" />
+                      </span>
+
+                    </label>
+                  </c:forEach>
+
+                </div>
               </div>
 
               <div class="fgrid">
                 <div class="field">
                   <label for="bk-date">Data</label>
-                  <input type="date" id="bk-date" required>
+                  <input type="date" id="bk-date" name="data" required>
                 </div>
                 <div class="field">
                   <label for="bk-slot">Horário</label>
-                  <select id="bk-slot" required>
+                  <select id="bk-slot" name="horario" required>
                     <option value="08:00">08:00</option>
                     <option value="09:00">09:00</option>
                     <option value="10:00">10:00</option>
@@ -575,6 +629,104 @@
             }
           });
         });
+      </script>
+
+      <script>
+        const campoClienteAgendamento = document.getElementById("bk-client");
+        const campoVeiculoAgendamento = document.getElementById("bk-car");
+
+        // Guarda as opções recebidas do MySQL
+        const veiculosDisponiveis = Array.from(
+          campoVeiculoAgendamento.querySelectorAll(
+            "option[data-cliente-id]"
+          )
+        ).map(opcao => ({
+          id: opcao.value,
+          clienteId: opcao.dataset.clienteId,
+          descricao: opcao.textContent.trim().replace(/\s+/g, " ")
+        }));
+
+        function atualizarVeiculosAgendamento() {
+
+          const idCliente = campoClienteAgendamento.value;
+
+          campoVeiculoAgendamento.replaceChildren();
+
+          const primeiraOpcao = document.createElement("option");
+          primeiraOpcao.value = "";
+
+          if (!idCliente) {
+            primeiraOpcao.textContent = "Selecione o cliente primeiro";
+            campoVeiculoAgendamento.appendChild(primeiraOpcao);
+            return;
+          }
+
+          const veiculosCliente = veiculosDisponiveis.filter(
+            veiculo => veiculo.clienteId === idCliente
+          );
+
+          primeiraOpcao.textContent = veiculosCliente.length
+            ? "Selecione um veículo"
+            : "Este cliente não possui veículos ativos";
+
+          campoVeiculoAgendamento.appendChild(primeiraOpcao);
+
+          veiculosCliente.forEach(veiculo => {
+
+            const opcao = document.createElement("option");
+
+            opcao.value = veiculo.id;
+            opcao.textContent = veiculo.descricao;
+
+            campoVeiculoAgendamento.appendChild(opcao);
+          });
+        }
+
+        campoClienteAgendamento.addEventListener(
+          "change",
+          atualizarVeiculosAgendamento
+        );
+
+        atualizarVeiculosAgendamento();
+
+        // Atualizar o valor total dos serviços selecionados
+        const checkboxesServicos = document.querySelectorAll(
+          '#services-checkboxes input[name="idServicos"]'
+        );
+
+        const totalAgendamento = document.getElementById("bk-total");
+
+        function calcularTotalAgendamento() {
+
+          let total = 0;
+
+          checkboxesServicos.forEach(checkbox => {
+
+            if (checkbox.checked) {
+              const preco = Number(checkbox.dataset.preco);
+
+              if (Number.isFinite(preco)) {
+                total += preco;
+              }
+            }
+          });
+
+          totalAgendamento.textContent = total.toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+          });
+        }
+
+        // Recalcular sempre que selecionar ou desmarcar um serviço
+        checkboxesServicos.forEach(checkbox => {
+          checkbox.addEventListener("change", calcularTotalAgendamento);
+        });
+
+        // Atualizar também ao abrir Novo agendamento
+        document.getElementById("btn-add-booking")
+          .addEventListener("click", calcularTotalAgendamento);
+
+        calcularTotalAgendamento();
       </script>
 
     </body>
