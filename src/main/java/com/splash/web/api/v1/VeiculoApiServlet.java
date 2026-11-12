@@ -2,8 +2,7 @@ package com.splash.web.api.v1;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.sql.SQLIntegrityConstraintViolationException;
 
 import com.splash.web.api.Json;
 import com.splash.web.api.dto.NovoVeiculoRequest;
@@ -13,134 +12,132 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
-
-import javax.lang.model.UnknownEntityException;
 
 /**
  * <pre>
- * GET    /api/v1/veiculos      -> [{id, placa, marca, modelo, cor}]
- * POST   /api/v1/veiculos      {placa, marca, modelo, cor} -> 201
- * DELETE /api/v1/veiculos/{id} -> 204
+ * GET    /api/v1/veiculos?idcliente=1       -> [{id_veiculo, placa, marca, modelo, cor}]
+ * POST   /api/v1/veiculos                   {idcliente, placa, marca, modelo, cor} -> 201 {id_cliente, placa, marca, modelo, cor}
+ * DELETE /api/v1/veiculos/{idVeiculo}?idcliente=1 -> 200 {mensagem}
  * </pre>
  *
- * TODO: implementar usando DAOVeiculo. Ver miscelaneous/analise-app-mobile.md, seção 3.5.
+ * Erros: sempre {@code {"erro": "mensagem"}} (ver {@link Json#erro}).
+ * TODO: o {@code idcliente} deve vir do token quando a autenticação for implementada.
  */
 @WebServlet("/api/v1/veiculos/*")
 public class VeiculoApiServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // TODO: DAOVeiculo.listarPorCliente(idCliente)
-
-        // cria a DAO de veículos
-        DAOVeiculo dao = new DAOVeiculo();
+        // GET não tem corpo confiável: o cliente vem na query string (?idcliente=1)
+        int idCliente;
         try {
-
-            // Cria um JsonObject para lidar com as informações enviadas pelo mobile
-            String jsonMobile = request.getReader().lines().collect(Collectors.joining());
-            JSONObject jsonObject = new JSONObject(jsonMobile);
-            int client = jsonObject.getInt("idcliente");
-
-            // cria uma lista de veículos advindas da DAO "listarPorCliente"
-            List<VeiculoView> veiculos = dao.listarPorCliente(client);
-
-            for(VeiculoView item:veiculos) { // Itera sobre cada ítem da lista
-
-                // Adiciona as infomações da lista na DTO
-                NovoVeiculoRequest listaveiculos = new NovoVeiculoRequest(
-                        item.id(), item.getPlaca(), item.getMarca(), item.getModelo(), item.getCor());
-
-                // monta o JSON com as infos
-                String json = """
-                        "Placa": %s,
-                        "Marca": %s,
-                        "modelo": %s,
-                        "Cor": %s
-                        """.formatted(
-                        listaveiculos.placa(),
-                        listaveiculos.marca(),
-                        listaveiculos.modelo(),
-                        listaveiculos.cor());
-
-                // envia o JSON
-                Json.Response_enviar(response, HttpServletResponse.SC_OK, json);
-            }
-        } catch (SQLException e) {
-            Json.erro(response, HttpServletResponse.SC_NO_CONTENT, "Não ha conteudo no banco de dados");
-            throw new RuntimeException(e);
+            idCliente = Json.parametroInt(request, "idcliente");
+        } catch (IllegalArgumentException e) {
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            return;
         }
-        return;
+
+        try {
+            JSONArray lista = new JSONArray();
+
+            for (VeiculoView item : new DAOVeiculo().listarPorCliente(idCliente)) {
+                JSONObject veiculo = new JSONObject();
+                veiculo.put("id_veiculo", item.getId());
+                veiculo.put("placa", item.getPlaca());
+                veiculo.put("marca", item.getMarca());
+                veiculo.put("modelo", item.getModelo());
+                veiculo.put("cor", Json.ouNulo(item.getCor()));
+                lista.put(veiculo);
+            }
+
+            // Uma única resposta com o array inteiro ([] quando o cliente não tem veículos)
+            Json.Response_ok(response, lista.toString());
+
+        } catch (SQLException e) {
+            getServletContext().log("Erro ao listar veículos do cliente " + idCliente, e);
+            Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro no acesso ao banco");
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // TODO: DAOVeiculo.inserir(idCliente, placa, marca, modelo, cor)
+        try {
+            JSONObject corpo = Json.lerCorpo(request);
 
-        DAOVeiculo dao = new DAOVeiculo();
-
-        try{
-            String jsonMobile = request.getReader().lines().collect(Collectors.joining());
-            JSONObject jsonObject = new JSONObject(jsonMobile);
-            int cliente = jsonObject.getInt("idcliente");
-
+            // NovoVeiculoRequest.id carrega o id do cliente dono do veículo
             NovoVeiculoRequest novoVeiculo = new NovoVeiculoRequest(
-                    cliente,
-                    jsonObject.getString("placa"),
-                    jsonObject.getString("marca"),
-                    jsonObject.getString("modelo"),
-                    jsonObject.getString("cor")
-            );
+                    corpo.getInt("idcliente"),
+                    corpo.getString("placa"),
+                    corpo.getString("marca"),
+                    corpo.getString("modelo"),
+                    corpo.getString("cor"));
 
-            dao.inserir(
+            new DAOVeiculo().inserir(
                     novoVeiculo.id(),
                     novoVeiculo.placa(),
                     novoVeiculo.marca(),
                     novoVeiculo.modelo(),
-                    novoVeiculo.cor()
-            );
+                    novoVeiculo.cor());
 
-            String json = """
-                    "cliente": %d,
-                    "placa": %s,
-                    "marca": %s,
-                    "modelo": %s,
-                    "cor": %s
-                    """.formatted(
-                            novoVeiculo.id(),
-                            novoVeiculo.placa(),
-                            novoVeiculo.marca(),
-                            novoVeiculo.modelo(),
-                            novoVeiculo.cor()
-            );
-            Json.Response_enviar(response, HttpServletResponse.SC_OK, json);
+            JSONObject criado = new JSONObject();
+            criado.put("id_cliente", novoVeiculo.id());
+            criado.put("placa", novoVeiculo.placa());
+            criado.put("marca", novoVeiculo.marca());
+            criado.put("modelo", novoVeiculo.modelo());
+            criado.put("cor", novoVeiculo.cor());
+            Json.Response_enviar(response, HttpServletResponse.SC_CREATED, criado.toString());
 
+        } catch (JSONException e) {
+            // corpo vazio/inválido, campo ausente ou com tipo errado
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Requisição inválida: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // regra da DAO (cliente inexistente ou inativo)
+            Json.erro(response, HttpServletResponse.SC_UNPROCESSABLE_CONTENT, e.getMessage());
+        } catch (SQLIntegrityConstraintViolationException e) {
+            Json.erro(response, HttpServletResponse.SC_CONFLICT, "Placa já cadastrada");
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            getServletContext().log("Erro ao cadastrar veículo", e);
+            Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro no acesso ao banco");
         }
     }
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // TODO: DAOVeiculo.remover(idCliente, idVeiculo) com o id lido do pathInfo (/{idCliente}=?{idVeiculo})
-
-        DAOVeiculo dao = new DAOVeiculo();
-        try{
-            String jsonMobile = request.getReader().lines().collect(Collectors.joining());
-            JSONObject jsonObject = new JSONObject(jsonMobile);
-            int client = jsonObject.getInt("idcliente");
-            int veiculo = jsonObject.getInt("idveiculo");
-
-            boolean removidos = dao.remover(client, veiculo);
-
-            if (removidos) {
-                Json.Response_ok(response, "Veículo %d excluído com sucesso!".formatted(veiculo));
-            }else{
-                Json.erro(response, HttpServletResponse.SC_UNPROCESSABLE_CONTENT, "Veículo ou cliente não encontrado na base");
+        // DELETE também não tem corpo confiável: o veículo vem no path (/{idVeiculo}) e o cliente na query
+        int idCliente;
+        int idVeiculo;
+        try {
+            String rota = request.getPathInfo(); // "/3" ou null
+            if (rota == null || rota.length() < 2) {
+                throw new IllegalArgumentException("Informe o veículo no caminho: /api/v1/veiculos/{idVeiculo}");
             }
-
-        } catch (SQLException _) {
+            try {
+                idVeiculo = Integer.parseInt(rota.substring(1));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Identificador de veículo inválido");
+            }
+            idCliente = Json.parametroInt(request, "idcliente");
+        } catch (IllegalArgumentException e) {
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            return;
         }
 
+        try {
+            if (new DAOVeiculo().remover(idCliente, idVeiculo)) {
+                Json.Response_ok(response, new JSONObject()
+                        .put("mensagem", "Veículo %d excluído com sucesso".formatted(idVeiculo)).toString());
+            } else {
+                Json.erro(response, HttpServletResponse.SC_NOT_FOUND, "Veículo ou cliente não encontrado na base");
+            }
+        } catch (IllegalArgumentException e) {
+            // ids <= 0 rejeitados pela DAO
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (SQLException e) {
+            getServletContext().log("Erro ao excluir veículo " + idVeiculo, e);
+            Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro no acesso ao banco");
+        }
     }
 }

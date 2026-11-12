@@ -118,7 +118,9 @@ public class DAOAgendamento {
     }
 
     public List<AgendamentoView> listarPorCliente(int idCliente) throws SQLException {
-        String sql = "SELECT a.id_agendamento, v.id_veiculo, GROUP_CONCAT(s.id_servico) as servicos, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
+
+
+        String sql = "SELECT a.id_agendamento, v.id_veiculo, GROUP_CONCAT(DISTINCT s.id_servico) as servicos, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
                 +
                 "a.data, a.horario, a.status, COALESCE(SUM(ags.valor_praticado), 0) AS total,  MAX(p.status_pagamento) AS status_pagamento, MAX(p.forma_pagamento) AS forma_pagamento "
                 +
@@ -133,8 +135,16 @@ public class DAOAgendamento {
             statement.setInt(1, idCliente);
             try (ResultSet result = statement.executeQuery()) {
                 while (result.next()) {
+                    // GROUP_CONCAT devolve "1,3,5" (ou null se o agendamento não tem serviços)
+                    List<Integer> idsServicos = new ArrayList<>();
+                    String servicosConcat = result.getString("servicos");
+                    if (servicosConcat != null && !servicosConcat.isBlank()) {
+                        for (String idServico : servicosConcat.split(",")) {
+                            idsServicos.add(Integer.parseInt(idServico.trim()));
+                        }
+                    }
                     agendamentos.add(new AgendamentoView(result.getInt("id_agendamento"), result.getInt("id_veiculo"),
-                            result.getInt("id_servico"),
+                            idsServicos,
                             result.getString("placa"), result.getString("veiculo"),
                             result.getDate("data").toLocalDate(), result.getString("horario"),
                             result.getString("status"), result.getBigDecimal("total"),

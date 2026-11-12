@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -37,13 +38,45 @@ public final class Json {
         response.getWriter().print(corpo);
     }
 
-    /** Escreve {@code { "erro": mensagem } } com o status informado. */
+    /** Escreve {@code {"erro": "mensagem"}} (JSON válido) com o status informado. */
     public static void erro(HttpServletResponse response, int status, String mensagem) throws IOException {
-        String erroJson= """
-                "Erro": %s
-                """.formatted(mensagem);
+        Response_enviar(response, status, new JSONObject().put("erro", mensagem).toString());
+    }
 
-        Response_enviar(response, status, erroJson);
+    /**
+     * Lê o corpo da requisição como um objeto JSON.
+     *
+     * @throws JSONException se o corpo estiver vazio ou não for um objeto JSON válido (os servlets
+     *                       respondem 400 nesse caso)
+     */
+    public static JSONObject lerCorpo(HttpServletRequest request) throws IOException {
+        String corpo = request.getReader().lines().collect(Collectors.joining());
+        if (corpo.isBlank()) {
+            throw new JSONException("Corpo da requisição vazio");
+        }
+        return new JSONObject(corpo);
+    }
+
+    /**
+     * Lê um parâmetro inteiro da query string (ex.: {@code ?idcliente=1}).
+     *
+     * @throws IllegalArgumentException se o parâmetro faltar ou não for um inteiro
+     */
+    public static int parametroInt(HttpServletRequest request, String nome) {
+        String valor = request.getParameter(nome);
+        try {
+            return Integer.parseInt(valor);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Parâmetro '" + nome + "' ausente ou inválido");
+        }
+    }
+
+    /**
+     * Valor pronto para {@link JSONObject#put(String, Object)}: {@code put(chave, null)} remove a
+     * chave, então {@code null} vira {@link JSONObject#NULL} para o campo continuar no JSON.
+     */
+    public static Object ouNulo(Object valor) {
+        return valor == null ? JSONObject.NULL : valor;
     }
 
     /** Lê e desserializa o corpo da requisição para o tipo informado. */
