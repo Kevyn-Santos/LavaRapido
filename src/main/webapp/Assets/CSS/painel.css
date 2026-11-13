@@ -1154,3 +1154,475 @@ body.panel-home .btn-light:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* TESTE EXPERIMENTAL — Fundo Aqua Flow */
+
+body.panel-home {
+  background:
+    radial-gradient(ellipse at 90% 25%,
+      rgba(0, 204, 218, 0.22),
+      transparent 48%),
+    radial-gradient(ellipse at 10% 80%,
+      rgba(0, 119, 174, 0.28),
+      transparent 48%),
+    radial-gradient(ellipse at 55% 105%,
+      rgba(0, 169, 162, 0.15),
+      transparent 45%),
+    linear-gradient(145deg,
+      #03121D 0%,
+      #082C3D 40%,
+      #041925 72%,
+      #020C13 100%);
+
+  background-attachment: fixed;
+}
+
+
+/* ==========================================
+   TESTE EXPERIMENTAL — Cards Aqua Flow
+========================================== */
+
+body.panel-home .pcard {
+  background: linear-gradient(145deg,
+      #0B3544 0%,
+      #082633 55%,
+      #041A25 100%);
+
+  border: 1px solid rgba(0, 213, 230, 0.65);
+  border-radius: 16px;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(117, 239, 247, 0.12);
+
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+body.panel-home .pcard:hover {
+  transform: translateY(-5px);
+
+  border-color: #28F0F5;
+
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.28),
+    0 0 18px rgba(0, 213, 230, 0.18);
+}
+
+/* Ícones */
+
+body.panel-home .pcard .pi {
+  stroke: #16E0EC;
+  width: 30px;
+  height: 30px;
+}
+
+/* Títulos */
+
+body.panel-home .pcard .pt {
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+/* Descrições */
+
+body.panel-home .pcard .pc {
+  color: #BBD9E3;
+}
+
+/* Indicador exclusivo do administrador */
+
+body.panel-home .pcard .pdot {
+  background: #FF8617;
+
+  box-shadow:
+    0 0 10px rgba(255, 134, 23, 0.45);
+}
+
+
+/* ==========================================
+   TESTE EXPERIMENTAL — Cabeçalho Aqua Flow
+========================================== */
+
+body.panel-home .top.panel-page-header {
+  background:
+    linear-gradient(110deg,
+      #03131D 0%,
+      #083545 55%,
+      #041A26 100%);
+
+  border-bottom: 1px solid #00C9DA;
+
+  box-shadow:
+    0 3px 18px rgba(0, 201, 218, 0.14);
+}
+
+/* Logotipo */
+
+body.panel-home .panel-page-header .wm .s {
+  color: #19E3ED;
+}
+
+/* Botão Sair */
+
+body.panel-home .panel-page-header .btn-sair {
+  background: rgba(0, 201, 218, 0.07);
+  color: #FFFFFF;
+
+  border: 1px solid #00C9DA;
+  border-radius: 10px;
+
+  transition: all 0.25s ease;
+}
+
+body.panel-home .panel-page-header .btn-sair:hover {
+  background: #0B4856;
+
+  box-shadow:
+    0 0 14px rgba(0, 224, 237, 0.28);
+}
+
+
+/* ==========================================
+   TESTE EXPERIMENTAL — Agendamentos de hoje
+========================================== */
+
+body.panel-home .agenda-hoje {
+  background:
+    radial-gradient(ellipse at 88% 20%,
+      rgba(0, 204, 218, 0.18),
+      transparent 50%),
+    linear-gradient(135deg,
+      #0B3544 0%,
+      #082633 60%,
+      #041A25 100%);
+
+  border: 1px solid rgba(0, 213, 230, 0.7);
+  border-radius: 18px;
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(117, 239, 247, 0.15);
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* Detalhe laranja na lateral */
+
+body.panel-home .agenda-hoje::before {
+  content: "";
+  position: absolute;
+
+  top: 24px;
+  left: 0;
+
+  width: 5px;
+  height: 52px;
+
+  background: #FF8617;
+
+  border-radius: 0 4px 4px 0;
+}
+
+/* Título */
+
+body.panel-home .agenda-hoje h2 {
+  color: #FFFFFF;
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+
+/* Descrição */
+
+body.panel-home .agenda-hoje-subtitulo,
+body.panel-home .agenda-hoje-vazia {
+  color: #BBD9E3;
+}
+
+/* Contador de agendamentos */
+
+body.panel-home .agenda-hoje-total {
+  background: linear-gradient(120deg,
+      #075364,
+      #087587);
+
+  color: #FFFFFF;
+
+  border: 1px solid rgba(0, 224, 237, 0.4);
+  border-radius: 10px;
+
+  box-shadow:
+    0 0 14px rgba(0, 213, 230, 0.12);
+}
+
+/* Linhas dos agendamentos existentes */
+
+body.panel-home .agenda-hoje-item {
+  border-bottom-color: rgba(0, 213, 230, 0.25);
+}
+
+/* Botão Ver detalhes */
+
+body.panel-home .agenda-hoje-detalhes {
+  border-color: #00C9DA;
+  color: #FFFFFF;
+  border-radius: 9px;
+}
+
+body.panel-home .agenda-hoje-detalhes:hover {
+  background: #0B4856;
+}
+
+
+/* ==========================================
+   EXPERIMENTAL — Gotas e iluminação do topo
+========================================== */
+
+body.panel-home .top.panel-page-header {
+  position: fixed;
+  background:
+    linear-gradient(125deg,
+      transparent 28%,
+      rgba(0, 196, 225, 0.12) 29%,
+      rgba(0, 196, 225, 0.12) 31%,
+      transparent 32%,
+      transparent 35%,
+      rgba(0, 196, 225, 0.09) 36%,
+      transparent 39%),
+    linear-gradient(110deg,
+      #03131D,
+      #083545 55%,
+      #041A26);
+
+  border-bottom: 0;
+}
+
+/* Gotas de água decorativas */
+
+body.panel-home .top.panel-page-header::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+
+  top: 0;
+  left: 35%;
+  width: 28%;
+  height: 100%;
+
+  background:
+    radial-gradient(circle at 35% 35%,
+      rgba(94, 245, 255, 0.7) 0 2px,
+      rgba(0, 180, 210, 0.25) 3px,
+      transparent 5px),
+
+    radial-gradient(circle at 62% 65%,
+      rgba(100, 240, 255, 0.75) 0 5px,
+      rgba(0, 175, 215, 0.3) 6px,
+      transparent 9px),
+
+    radial-gradient(circle at 77% 28%,
+      rgba(120, 245, 255, 0.7) 0 3px,
+      transparent 6px),
+
+    radial-gradient(circle at 20% 75%,
+      rgba(0, 210, 235, 0.5) 0 2px,
+      transparent 4px),
+
+    radial-gradient(circle at 48% 17%,
+      rgba(0, 225, 245, 0.55) 0 4px,
+      transparent 7px);
+
+  opacity: 0.8;
+}
+
+/* Linha ciano com transição para laranja */
+
+body.panel-home .top.panel-page-header::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+
+  background: linear-gradient(90deg,
+      #00DCEB 0%,
+      #00E8F5 55%,
+      #00C3D7 70%,
+      #FF8617 90%,
+      #FF9A22 100%);
+
+  box-shadow:
+    0 0 8px rgba(0, 224, 237, 0.5),
+    0 0 15px rgba(255, 134, 23, 0.3);
+}
+
+/* Mantém logotipo e botão acima das decorações */
+
+body.panel-home .panel-page-header .top-in {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ==========================================
+   EXPERIMENTAL — Agendamentos Aqua Neon
+========================================== */
+
+body.panel-home .agenda-hoje {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  background:
+    /* Gotas superiores */
+    radial-gradient(circle at 77% 19%,
+      #55eefa 0 5px,
+      #08788d 6px,
+      transparent 9px),
+
+    radial-gradient(circle at 81% 35%,
+      #36c8dc 0 8px,
+      #064253 9px,
+      transparent 13px),
+
+    radial-gradient(circle at 74% 42%,
+      #43ddeb 0 3px,
+      transparent 6px),
+
+    radial-gradient(circle at 86% 17%,
+      #36c8dc 0 3px,
+      transparent 5px),
+
+    /* Iluminação ciano */
+    radial-gradient(ellipse at 78% 0%,
+      rgba(0, 225, 240, 0.30),
+      transparent 48%),
+
+    /* Fundo principal */
+    linear-gradient(120deg,
+      #041c27 0%,
+      #083b49 52%,
+      #03151e 100%);
+
+  border: 1px solid #00dce9;
+  border-radius: 16px;
+
+  box-shadow:
+    0 0 14px rgba(0, 220, 235, 0.24),
+    inset 0 1px 5px rgba(75, 245, 255, 0.35);
+}
+
+/* Detalhe laranja inclinado */
+
+body.panel-home .agenda-hoje::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 9px;
+  width: 7px;
+  height: 72px;
+
+  background: linear-gradient(#ff9d24,
+      #ff7610);
+
+  transform: skew(-22deg);
+  box-shadow: 0 0 10px rgba(255, 134, 23, 0.65);
+  pointer-events: none;
+}
+
+/* Espuma e bolhas na parte inferior direita */
+
+body.panel-home .agenda-hoje::after {
+  content: "";
+  position: absolute;
+  right: -15px;
+  bottom: -18px;
+  width: 33%;
+  height: 100px;
+
+  background:
+    radial-gradient(circle at 90% 30%,
+      #b8faff 0 7px, transparent 9px),
+
+    radial-gradient(circle at 77% 56%,
+      #4ce9f4 0 11px, transparent 13px),
+
+    radial-gradient(circle at 61% 74%,
+      #24cddd 0 9px, transparent 11px),
+
+    radial-gradient(circle at 95% 75%,
+      #a2f8ff 0 23px, transparent 25px),
+
+    radial-gradient(ellipse at 85% 110%,
+      rgba(0, 226, 245, 0.80),
+      transparent 73%);
+
+  filter: drop-shadow(0 0 8px rgba(0, 225, 245, 0.30));
+  pointer-events: none;
+}
+
+/* Conteúdo sempre acima das decorações */
+
+body.panel-home .agenda-hoje>* {
+  position: relative;
+  z-index: 1;
+}
+
+/* Contador iluminado */
+
+body.panel-home .agenda-hoje-total {
+  background: linear-gradient(120deg,
+      #07566a,
+      #00869a);
+
+  border: 1px solid #00dce9;
+  border-radius: 11px;
+
+  box-shadow: 0 0 12px rgba(0, 225, 245, 0.28);
+}
+
+
+/* ==========================================
+   EXPERIMENTAL — Overlays realistas de água
+   Agendamentos de hoje
+========================================== */
+
+body.panel-home .agenda-hoje {
+  background-image:
+    url("gotas-reais-fastsplash.png"),
+    url("espuma-real-fastsplash.png"),
+    radial-gradient(ellipse at 78% 0%,
+      rgba(0, 225, 240, 0.20),
+      transparent 48%),
+    linear-gradient(120deg,
+      #041c27 0%,
+      #083b49 52%,
+      #03151e 100%);
+
+  background-position:
+    right 16% top 0,
+    right bottom,
+    center,
+    center;
+
+  background-size:
+    24% auto,
+    30% auto,
+    cover,
+    cover;
+
+  background-repeat: no-repeat;
+}
+
+/* Remove apenas a espuma antiga feita com círculos CSS */
+
+body.panel-home .agenda-hoje::after {
+  content: none;
+}
