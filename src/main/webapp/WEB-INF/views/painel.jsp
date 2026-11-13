@@ -296,6 +296,28 @@
             opacity: .5;
             cursor: not-allowed;
           }
+
+
+          .panel-page-header .btn-sair {
+            background: transparent;
+            color: #ffffff;
+            border: 1px solid #52718b;
+            border-radius: 8px;
+            padding: 9px 20px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease;
+          }
+
+          .panel-page-header .btn-sair:hover {
+            background: #17496a;
+            border-color: #9fc7e0;
+          }
+
+          .panel-page-header nav form {
+            margin: 0;
+          }
         </style>
 
       </head>
@@ -307,7 +329,15 @@
             <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
               <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
             </a>
-            <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
+
+            <nav>
+              <form method="post" action="${pageContext.request.contextPath}/sair">
+                <button type="submit" class="btn-sair">
+                  Sair
+                </button>
+              </form>
+            </nav>
+
           </div>
         </header>
 
@@ -595,8 +625,8 @@
             <div class="phead">
               <div>
                 <h2>Acesso rápido</h2>
-                <p class="small">Escolha uma área para trabalhar. O ponto laranja marca o que é exclusivo do
-                  administrador.</p>
+                <p class="small">Gerencie clientes, veículos, agendamentos, atendimentos e demais operações do
+                  lava-rápido.</p>
               </div>
             </div>
 
