@@ -11,6 +11,7 @@ import com.splash.web.db.DAOPagamento;
 import com.splash.web.db.DAOColaborador;
 import com.splash.web.db.DAOServico;
 import com.splash.web.db.DAOAgendamento;
+import com.splash.web.db.DAOHistorico;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -28,7 +29,8 @@ public class PainelServlet extends HttpServlet {
             "atendimentos", "/WEB-INF/views/painel-atendimentos.jsp",
             "pagamentos", "/WEB-INF/views/painel-pagamentos.jsp",
             "colaboradores", "/WEB-INF/views/painel-colaboradores.jsp",
-            "servicos", "/WEB-INF/views/painel-servicos.jsp");
+            "servicos", "/WEB-INF/views/painel-servicos.jsp",
+            "historico", "/WEB-INF/views/painel-historico.jsp");
 
     @Override
     protected void doGet(HttpServletRequest request,
@@ -121,6 +123,39 @@ public class PainelServlet extends HttpServlet {
                     // Carros e agendamentos serão
                     // integrados nas próximas etapas.
                 }
+
+                case "historico" -> {
+
+                    DAOHistorico daoHistorico = new DAOHistorico();
+
+                    String pesquisa = request.getParameter("pesquisa");
+                    String parametroId = request.getParameter("idCliente");
+
+                    request.setAttribute("pesquisa", pesquisa);
+
+                    // Pesquisa por nome ou ID
+                    request.setAttribute(
+                            "clientesHistorico",
+                            daoHistorico.pesquisarClientes(pesquisa));
+
+                    // Histórico detalhado do cliente selecionado
+                    if (parametroId != null && !parametroId.isBlank()) {
+
+                        Integer idCliente = WebSupport.inteiro(parametroId);
+
+                        if (idCliente == null || idCliente <= 0) {
+                            throw new IllegalArgumentException(
+                                    "ID do cliente inválido.");
+                        }
+
+                        request.setAttribute("idClienteSelecionado", idCliente);
+
+                        request.setAttribute(
+                                "registrosHistorico",
+                                daoHistorico.listarHistoricoCliente(idCliente));
+                    }
+                }
+
             }
 
             request.getRequestDispatcher(pagina)

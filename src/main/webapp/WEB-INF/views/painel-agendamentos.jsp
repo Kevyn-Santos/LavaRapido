@@ -234,10 +234,15 @@
 
       <header class="top panel-page-header">
         <div class="top-in">
-          <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
+          <a class="lock" href="${pageContext.request.contextPath}/admin/inicio" aria-label="Fast Splash, início">
             <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
           </a>
-          <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
+
+          <nav>
+            <a href="${pageContext.request.contextPath}/admin/inicio">
+              Voltar ao painel
+            </a>
+          </nav>
         </div>
       </header>
 
@@ -261,8 +266,14 @@
               aria-current="page">Agendamentos</a>
             <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
             <a href="${pageContext.request.contextPath}/painel/pagamentos">Pagamentos</a>
-            <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
-            <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
+
+            <c:if test="${sessionScope.nivelAcesso == 'ADMINISTRADOR'}">
+              <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
+              <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
+            </c:if>
+
+            <a href="${pageContext.request.contextPath}/painel/historico">Histórico</a>
+
           </nav>
 
           <!-- 1. TELA DA LISTA DE AGENDAMENTOS -->

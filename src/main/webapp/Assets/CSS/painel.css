@@ -1626,3 +1626,78 @@ body.panel-home .agenda-hoje {
 body.panel-home .agenda-hoje::after {
   content: none;
 }
+
+
+/* ==========================================
+   RODAPÉ — FastSplash
+========================================== */
+
+body.panel-home {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+body.panel-home main.page {
+  flex: 1;
+}
+
+.fastsplash-footer {
+  background: #041A2D;
+  border-top: 1px solid rgba(143, 201, 232, 0.28);
+  padding: 20px 28px;
+  color: #EDF3F4;
+}
+
+.fastsplash-footer-content {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.fastsplash-footer-brand {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.fastsplash-footer-brand strong {
+  font-size: 1.25rem;
+  font-style: italic;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.fastsplash-footer-brand strong span {
+  color: #8FC9E8;
+}
+
+.fastsplash-footer-divider {
+  width: 3px;
+  height: 24px;
+  background: #FF8617;
+  border-radius: 3px;
+}
+
+.fastsplash-footer-brand p {
+  font-size: 0.85rem;
+  color: #9FBACB;
+}
+
+.fastsplash-footer-version {
+  font-size: 0.85rem;
+  color: #9FBACB;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .fastsplash-footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

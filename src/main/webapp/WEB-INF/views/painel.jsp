@@ -326,8 +326,9 @@
 
         <header class="top panel-page-header">
           <div class="top-in">
-            <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
-              <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
+            <a class="lock" href="${pageContext.request.contextPath}/admin/inicio"
+              aria-label="Fast Splash, atualizar painel"> <span class="wm"><span class="f">fast</span> <span
+                  class="s">splash</span></span>
             </a>
 
             <nav>
@@ -701,9 +702,42 @@
                   <span class="pc">Defina os serviços oferecidos, a duração e os preços.</span>
               </c:if>
               </a>
+
+              <a class="pcard" href="${pageContext.request.contextPath}/painel/historico">
+
+                <svg class="pi" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 7v5l3.5 2" />
+                  <path d="M3 12H1M12 3V1" />
+                </svg>
+
+                <b class="pt">Histórico de Clientes</b>
+
+                <span class="pc">
+                  Consulte o histórico de serviços,
+                  agendamentos, atendimentos e pagamentos
+                  de cada cliente.
+                </span>
+
+              </a>
+
             </div>
           </div>
         </main>
+
+        <footer class="fastsplash-footer">
+          <div class="fastsplash-footer-content">
+            <div class="fastsplash-footer-brand">
+              <strong>fast <span>splash</span></strong>
+              <span class="fastsplash-footer-divider"></span>
+              <p>Sistema de Gestão para Lava-Rápido</p>
+            </div>
+
+            <span class="fastsplash-footer-version">
+              v1.0.0
+            </span>
+          </div>
+        </footer>
 
         <script src="${pageContext.request.contextPath}/Assets/Js/bdPainel.js"></script>
 
