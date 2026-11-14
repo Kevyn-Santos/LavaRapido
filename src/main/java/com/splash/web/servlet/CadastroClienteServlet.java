@@ -29,20 +29,13 @@ public class CadastroClienteServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String path = request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo(): "");
-
-        if(path.equals("/index.jsp")){
         request.getRequestDispatcher(FORMULARIO).forward(request, response);
-        } else if (path.equals("/painel/clientes")) {
-            doPost(request, response);
-        }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String senha = request.getParameter("pass");
-        String path = request.getServletPath() + (request.getPathInfo() != null ? request.getPathInfo(): "");
 
         try {
             // O tamanho mínimo é conferido antes do hash, porque o hash BCrypt sempre tem 60 caracteres
@@ -55,11 +48,8 @@ public class CadastroClienteServlet extends HttpServlet {
                     Passwords.hash(senha));
             new DAOCliente().insertUsuario(cliente);
 
-            if (path.equals("/cadastro.jsp")) {
-                response.sendRedirect(request.getContextPath() + "/baixar-app");
-            } else if (path.equals("/cadastro")) {
-                response.sendRedirect(request.getContextPath() + "/painel/clientes");
-            }
+            // Post/Redirect/Get: o cadastro público sempre termina na tela de baixar o app
+            response.sendRedirect(request.getContextPath() + "/baixar-app");
 
         } catch (IllegalArgumentException exception) {
             voltarAoFormulario(request, response, HttpServletResponse.SC_BAD_REQUEST, exception.getMessage());
