@@ -13,6 +13,7 @@ import com.splash.web.api.Json;
 import com.splash.web.db.DAOAgendamento;
 import com.splash.web.db.DAOPagamento;
 import com.splash.web.model.dto.AgendamentoView;
+import com.splash.web.model.dto.ServicoView;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +25,8 @@ import org.json.JSONObject;
 /**
  * <pre>
  * GET  /api/v1/agendamentos                -> [{id_agendamento, id_veiculo, data_agendamento, hora_agendamento,
- *                                              id_servico[], total_servico, status, status_atendimento,
+ *                                              id_servico[], servicos[{id_servico, nome, valor}],
+ *                                              total_servico, status, status_atendimento,
  *                                              status_pagamento, forma_pagamento}]
  *                                              (data em yyyy-MM-dd; status_atendimento é null se não houver)
  * POST /api/v1/agendamentos               {idveiculo, dataAgendamento (yyyy-MM-dd),
@@ -59,6 +61,15 @@ public class AgendamentoApiServlet extends HttpServlet {
                 agendamento.put("data_agendamento", item.getData().toString()); // ISO yyyy-MM-dd
                 agendamento.put("hora_agendamento", item.getHorario());
                 agendamento.put("id_servico", new JSONArray(item.getIdServico()));
+                JSONArray servicos = new JSONArray();
+                for (ServicoView servico : item.getServicos()) {
+                    // "valor" = valor praticado na época do agendamento (não o preço atual do catálogo)
+                    servicos.put(new JSONObject()
+                            .put("id_servico", servico.getId())
+                            .put("nome", servico.getNome())
+                            .put("valor", servico.getPreco()));
+                }
+                agendamento.put("servicos", servicos);
                 agendamento.put("total_servico", item.getTotal());
                 agendamento.put("status", Json.ouNulo(item.getStatus()));
                 agendamento.put("status_atendimento", Json.ouNulo(item.getStatusAtendimento()));
