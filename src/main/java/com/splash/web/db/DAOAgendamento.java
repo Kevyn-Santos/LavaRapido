@@ -157,7 +157,9 @@ public class DAOAgendamento {
     public List<AgendamentoView> listarPorCliente(int idCliente) throws SQLException {
 
 
-        String sql = "SELECT a.id_agendamento, v.id_veiculo, GROUP_CONCAT(DISTINCT s.id_servico) as servicos, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
+        String sql = "SELECT a.id_agendamento, v.id_veiculo, GROUP_CONCAT(DISTINCT s.id_servico) as servicos, "
+                +
+                "GROUP_CONCAT(DISTINCT CONCAT(s.id_servico, ':', ags.valor_praticado, ':', s.nome) ORDER BY s.id_servico SEPARATOR '\n') AS servicos_detalhe, v.placa, CONCAT(v.marca, ' ', v.modelo) AS veiculo, "
                 +
                 "a.data, a.horario, a.status, COALESCE(SUM(ags.valor_praticado), 0) AS total,  MAX(p.status_pagamento) AS status_pagamento, MAX(p.forma_pagamento) AS forma_pagamento, MAX(at.status) AS status_atendimento "
                 +
@@ -181,12 +183,25 @@ public class DAOAgendamento {
                             idsServicos.add(Integer.parseInt(idServico.trim()));
                         }
                     }
+                    // "id:valor:nome" por linha; o nome fica por último porque pode conter ':'
+                    List<ServicoView> servicos = new ArrayList<>();
+                    String detalhe = result.getString("servicos_detalhe");
+                    if (detalhe != null && !detalhe.isBlank()) {
+                        for (String linha : detalhe.split("\n")) {
+                            String[] partes = linha.split(":", 3);
+                            if (partes.length == 3) {
+                                servicos.add(new ServicoView(Integer.parseInt(partes[0].trim()), partes[2], null,
+                                        new BigDecimal(partes[1].trim())));
+                            }
+                        }
+                    }
                     agendamentos.add(new AgendamentoView(result.getInt("id_agendamento"), result.getInt("id_veiculo"),
                             idsServicos,
                             result.getString("placa"), result.getString("veiculo"),
                             result.getDate("data").toLocalDate(), result.getString("horario"),
                             result.getString("status"), result.getBigDecimal("total"),
-                            result.getString("status_pagamento"), result.getString("forma_pagamento"), result.getString("status_atendimento")));
+                            result.getString("status_pagamento"), result.getString("forma_pagamento"), result.getString("status_atendimento"),
+                            servicos));
                 }
             }
         }
