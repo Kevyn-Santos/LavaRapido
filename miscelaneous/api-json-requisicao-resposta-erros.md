@@ -2,6 +2,8 @@
 
 Escrito em 2026-11-12 (registro da correção feita em 2026-11-11, após o veredito sobre os servlets de `api/v1`).
 
+> **Atualizado em 2026-11-15.** Este registro descreve o estado de 2026-11-12. Mudanças posteriores: o `idcliente` saiu da query/corpo (cliente vem da sessão, `autenticacao-sessao-api-mobile.md`); `JwtService` foi removido e não será usado; cancelar e `GET /horarios` foram implementados; `POST /veiculos` devolve `id_veiculo`, não `id_cliente`; `Json.parametroInt` e os DTOs `ErroResponse`/`ServicoResponse` foram removidos (`remocao-codigo-sem-uso-api.md`). Contrato vigente: `openapi.yml`.
+
 ## Por quê
 Os servlets de `/api/v1/*` montavam JSON com `String.formatted` (sem `{}`, sem aspas, sem `[]`), escreviam uma resposta por item dentro do `for`, liam o corpo de GET/DELETE (que muitos clientes não enviam), deixavam `JSONException` sem tratamento (500) e respondiam erros com `"Erro": msg` (também inválido). O app Flutter (`app-mobile/`) vai consumir essas rotas, então toda resposta precisa ser JSON válido e todo erro precisa ter o mesmo formato. Autenticação (`ApiAuthFilter`/`JwtService`/login) ficou **fora** desta etapa e será feita depois; os servlets ainda recebem `idcliente` do chamador (marcado com TODO).
 
@@ -42,8 +44,7 @@ Os servlets de `/api/v1/*` montavam JSON com `String.formatted` (sem `{}`, sem a
 - Contratos dos endpoints: Javadoc de cada servlet (atualizado) e `analise-app-mobile.md`, seção 3.5. O app Flutter ainda usa dados em memória, então nenhum cliente foi quebrado; quando for integrado deve enviar `idcliente` na query (GET/DELETE) ou no corpo (POST/PATCH) até a autenticação existir.
 - Mudanças de contrato visíveis ao chamador: GET de veículos/usuários/agendamentos exige `?idcliente=`; DELETE de veículo usa o path; chaves de veículo em minúsculas; `usuarios` devolve 1 objeto.
 
-## Pendências
-- Autenticação (`ApiAuthFilter`, `JwtService`, `AuthApiServlet`): trocar `idcliente` por `idClienteAutenticado(request)` (os servlets de agendamento e veículo ainda precisam herdar de `ApiServlet`). Hoje qualquer um lê/altera dados de qualquer cliente.
-- `AgendamentoApiServlet.cancelar` e `HorarioApiServlet` não implementados.
-- Validar `horarioAgendamento` (hoje vai direto para a DAO).
-- Sem testes automatizados dos servlets; `mvn compile` e `mvn test` passam, mas as rotas não foram exercitadas contra o Tomcat.
+## Pendências (estado em 2026-11-15)
+- Autenticação: resolvida por `HttpSession` (`autenticacao-sessao-api-mobile.md`).
+- `AgendamentoApiServlet.cancelar` e `HorarioApiServlet`: implementados (`cancelar-agendamento-api-mobile.md`, `horarios-api-mobile.md`); `horarioAgendamento` agora é validado na DAO.
+- Sem testes automatizados dos servlets: ficam para a Fase 4 de `plano-pendencias-api-mobile.md`.

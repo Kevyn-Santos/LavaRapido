@@ -1,14 +1,19 @@
 openapi: 3.0.3
 info:
   title: SplashFast
-  version: "1.1"
+  version: "1.2"
   description: |
     Documentação das rotas HTTP da aplicação web SplashFast (Jakarta Servlets + JSP, Tomcat 10).
 
     Observações gerais:
     - Não há `web.xml`; todas as rotas vêm de `@WebServlet` e de JSPs públicas (fora de `WEB-INF`).
     - `EncodingFilter` (`@WebFilter("/*")`) força UTF-8 em todas as requisições e respostas.
-    - As rotas renderizam HTML (forward para JSP) ou redirecionam (302); não há API JSON.
+    - As rotas do site renderizam HTML (forward para JSP) ou redirecionam (302).
+    - A API JSON do app mobile fica em `/api/v1/*` (tag *API mobile*): corpo e resposta `application/json; charset=UTF-8`,
+      erros sempre `{"erro": "mensagem"}`, autenticação pela mesma sessão do site (cookie `JSESSIONID`, atributo `clienteId`).
+      `ApiAuthFilter` devolve 401 sem sessão; públicas: `POST /api/v1/auth/login` e `GET /api/v1/servicos`.
+      O cliente é sempre o da sessão (nenhuma rota recebe `idcliente`). Sem logout (a sessão expira) e sem cadastro pela API
+      (o cadastro é só na web). Registros: `plano-pendencias-api-mobile.md`.
     - Os formulários enviam `application/x-www-form-urlencoded`.
     - Autenticação por sessão HTTP (cookie `JSESSIONID`):
       - cliente: `POST /login` grava `clienteId`/`clienteNome` na sessão;
@@ -20,15 +25,15 @@ info:
       Erros não tratados (`RuntimeException`) resultam na página de erro padrão do Tomcat (HTTP 500).
 servers:
   - url: http://{host}:{port}/{contextPath}
-    description: Tomcat local (o build.sh publica target/SplashFast-1.0.war em /var/lib/tomcat10/webapps)
+    description: Tomcat local (copiar target/SplashFast.war para /var/lib/tomcat10/webapps; em Docker/Render o WAR é ROOT.war e o contexto é vazio)
     variables:
       host:
         default: localhost
       port:
         default: "8080"
       contextPath:
-        default: SplashFast-1.0
-        description: Nome do WAR implantado (artifactId-version, sem finalName no pom.xml).
+        default: SplashFast
+        description: Nome do WAR implantado (finalName `SplashFast` no pom.xml).
 security:
   - {}
 tags:
@@ -42,6 +47,8 @@ tags:
     description: Painel de colaboradores (serviços, equipe, atendimentos, pagamentos)
   - name: Clientes
     description: Cadastro de clientes
+  - name: API mobile
+    description: API JSON `/api/v1/*` consumida pelo app Flutter (sessão `HttpSession`)
 paths:
   /:
     get:
@@ -525,6 +532,453 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/Html"
+  /api/v1/auth/login:
+    post:
+      tags: [API mobile]
+      summary: Login do cliente no app
+      description: |
+        `AuthApiServlet`. Confere a senha (BCrypt) e abre a sessão (`clienteId`); o cookie `JSESSIONID` vem no `Set-Cookie`
+        e o app deve reenviá-lo. Descarta a sessão anterior. A mensagem 401 é única (não revela se o e-mail existe).
+      operationId: apiLogin
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiLoginRequest"
+      responses:
+        "200":
+          description: Login ok.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cliente:
+                    $ref: "#/components/schemas/ApiCliente"
+        "400":
+          description: Corpo inválido ou e-mail/senha vazios.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: E-mail ou senha inválidos.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+  /api/v1/servicos:
+    get:
+      tags: [API mobile]
+      summary: Lista os serviços ativos
+      description: |
+        `ServicoApiServlet`. Rota pública.
+      operationId: apiServicos
+      security:
+        - {}
+      responses:
+        "200":
+          description: Serviços.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiServico"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+  /api/v1/veiculos:
+    get:
+      tags: [API mobile]
+      summary: Lista os veículos do cliente logado
+      description: |
+        `VeiculoApiServlet`.
+      operationId: apiVeiculosListar
+      security:
+        - sessaoCliente: []
+      responses:
+        "200":
+          description: Veículos (`[]` se não houver).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiVeiculo"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+    post:
+      tags: [API mobile]
+      summary: Cadastra um veículo
+      description: |
+        `VeiculoApiServlet`. A placa é normalizada (maiúsculas). `cor` é opcional.
+      operationId: apiVeiculosCriar
+      security:
+        - sessaoCliente: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiNovoVeiculo"
+      responses:
+        "201":
+          description: Criado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiVeiculo"
+        "400":
+          description: Corpo vazio/inválido ou campo obrigatório ausente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "409":
+          description: Placa já cadastrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "422":
+          description: Regra da DAO (cliente inativo/inexistente).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+  /api/v1/veiculos/{idVeiculo}:
+    delete:
+      tags: [API mobile]
+      summary: Exclui um veículo do cliente logado
+      description: |
+        `VeiculoApiServlet`.
+      operationId: apiVeiculosExcluir
+      security:
+        - sessaoCliente: []
+      parameters:
+        - name: idVeiculo
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Excluído.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMensagem"
+        "400":
+          description: Identificador inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "404":
+          description: Veículo não encontrado para este cliente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+  /api/v1/agendamentos:
+    get:
+      tags: [API mobile]
+      summary: Lista os agendamentos do cliente logado
+      description: |
+        `AgendamentoApiServlet`. Atenção: `data_agendamento` sai como `yyyy/MM/dd`, mas o `POST` recebe `dd/MM/yyyy`.
+      operationId: apiAgendamentosListar
+      security:
+        - sessaoCliente: []
+      responses:
+        "200":
+          description: Agendamentos (`[]` se não houver).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApiAgendamento"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+    post:
+      tags: [API mobile]
+      summary: Cria um agendamento
+      description: |
+        `AgendamentoApiServlet` → `DAOAgendamento.criar`. Grade de 06:00 a 17:30, de 30 em 30 minutos, um agendamento por horário
+        (ver `GET /api/v1/horarios`). Horário fora da grade, em data/hora passada ou já ocupado → 422.
+      operationId: apiAgendamentosCriar
+      security:
+        - sessaoCliente: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiNovoAgendamento"
+      responses:
+        "201":
+          description: Criado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMensagem"
+        "400":
+          description: Corpo inválido, campo ausente ou data fora de `dd/MM/yyyy`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "422":
+          description: Regra de negócio (veículo inativo/de outro cliente, serviço inexistente/repetido, horário fora da grade, passado ou indisponível).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+  /api/v1/agendamentos/{idAgendamento}/cancelar:
+    post:
+      tags: [API mobile]
+      summary: Cancela um agendamento do cliente logado
+      description: |
+        `AgendamentoApiServlet` → `DAOAgendamento.cancelar`. Só cancela se for do cliente e estiver `AGENDADO`; o pagamento pendente vira `CANCELADO`. Sem corpo.
+      operationId: apiAgendamentosCancelar
+      security:
+        - sessaoCliente: []
+      parameters:
+        - name: idAgendamento
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Cancelado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiMensagem"
+        "400":
+          description: Caminho inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "404":
+          description: Inexistente, de outro cliente ou fora do status `AGENDADO` (mesma resposta nos três casos).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+  /api/v1/horarios:
+    get:
+      tags: [API mobile]
+      summary: Horários livres de uma data
+      description: |
+        `HorarioApiServlet`. Grade 06:00–17:30 de 30 em 30 min menos os ocupados (agendamentos não cancelados). Data passada → `[]`; hoje → só os que ainda não passaram.
+      operationId: apiHorarios
+      security:
+        - sessaoCliente: []
+      parameters:
+        - name: data
+          in: query
+          required: true
+          description: Data no formato `dd/MM/yyyy`.
+          schema:
+            type: string
+            example: 20/10/2026
+      responses:
+        "200":
+          description: Horários livres em `HH:mm`.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: "06:30"
+        "400":
+          description: '`data` ausente ou inválida.'
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+  /api/v1/usuarios:
+    get:
+      tags: [API mobile]
+      summary: Dados do cliente logado
+      description: |
+        `ClienteApiServlet`.
+      operationId: apiUsuarioConsultar
+      security:
+        - sessaoCliente: []
+      responses:
+        "200":
+          description: Cliente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiCliente"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "404":
+          description: Cliente não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+    patch:
+      tags: [API mobile]
+      summary: Atualiza nome, telefone e e-mail do cliente logado
+      description: |
+        `ClienteApiServlet`. Campos ausentes não são alterados; os setters de `Cliente` validam (`Validacao`).
+      operationId: apiUsuarioAtualizar
+      security:
+        - sessaoCliente: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiAtualizarPerfil"
+      responses:
+        "200":
+          description: Cliente atualizado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiCliente"
+        "400":
+          description: Corpo vazio ou inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: Sem sessão de cliente (`Faça login para continuar`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "404":
+          description: Cliente não encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "422":
+          description: Valor rejeitado pela validação (nome, telefone ou e-mail).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "500":
+          description: Erro de banco (mensagem genérica; detalhe no log do servidor).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
 components:
   securitySchemes:
     sessaoCliente:
@@ -788,3 +1242,134 @@ components:
           type: string
         cor:
           type: string
+    ApiErro:
+      type: object
+      required: [erro]
+      properties:
+        erro:
+          type: string
+    ApiMensagem:
+      type: object
+      properties:
+        mensagem:
+          type: string
+    ApiLoginRequest:
+      type: object
+      required: [email, senha]
+      properties:
+        email:
+          type: string
+          format: email
+        senha:
+          type: string
+          format: password
+    ApiCliente:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+          nullable: true
+        cpf:
+          type: string
+          nullable: true
+        telefone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+    ApiAtualizarPerfil:
+      type: object
+      description: Todos os campos são opcionais; ausente = não altera.
+      properties:
+        nome:
+          type: string
+        telefone:
+          type: string
+        email:
+          type: string
+    ApiServico:
+      type: object
+      properties:
+        id_servico:
+          type: integer
+        nome:
+          type: string
+        descricao:
+          type: string
+          nullable: true
+        preco:
+          type: number
+    ApiVeiculo:
+      type: object
+      properties:
+        id_veiculo:
+          type: integer
+        placa:
+          type: string
+        marca:
+          type: string
+        modelo:
+          type: string
+        cor:
+          type: string
+          nullable: true
+    ApiNovoVeiculo:
+      type: object
+      required: [placa, marca, modelo]
+      properties:
+        placa:
+          type: string
+        marca:
+          type: string
+        modelo:
+          type: string
+        cor:
+          type: string
+          nullable: true
+    ApiAgendamento:
+      type: object
+      properties:
+        id_agendamento:
+          type: integer
+        id_veiculo:
+          type: integer
+        data_agendamento:
+          type: string
+          example: 2026/10/20
+          description: Formato `yyyy/MM/dd`.
+        hora_agendamento:
+          type: string
+          example: "10:00:00"
+        id_servico:
+          type: array
+          items:
+            type: integer
+        total_servico:
+          type: number
+        status_pagamento:
+          type: string
+          nullable: true
+        forma_pagamento:
+          type: string
+          nullable: true
+    ApiNovoAgendamento:
+      type: object
+      required: [idveiculo, dataAgendamento, horarioAgendamento, idservico]
+      properties:
+        idveiculo:
+          type: integer
+        dataAgendamento:
+          type: string
+          example: 20/10/2026
+          description: Formato `dd/MM/yyyy`.
+        horarioAgendamento:
+          type: string
+          example: "10:00"
+          description: '`HH:mm`, de 06:00 a 17:30, de 30 em 30 minutos.'
+        idservico:
+          type: array
+          items:
+            type: integer

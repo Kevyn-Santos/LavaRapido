@@ -238,6 +238,8 @@ Regras que seguem o `CLAUDE.md`:
 
 ### 3.4 Autenticação sem sessão (JWT HS256 com o JDK)
 
+> **Não adotado (2026-11-14).** O projeto autentica a API por `HttpSession`; ver `autenticacao-sessao-api-mobile.md`. Esta seção fica como desenho do upgrade técnico futuro para JWT.
+
 O app não usa cookie `JSESSIONID`. Fluxo:
 
 1. `POST /api/v1/auth/login` com `{"cpf": "52998224725", "senha": "..."}`.
@@ -315,6 +317,8 @@ final class Tokens {
 
 ### 3.5 Endpoints (v1, área do cliente)
 
+> **Desenho inicial.** O contrato implementado e vigente está em `openapi.yml` (tag *API mobile*). Diferenças principais: rotas `/usuarios` (não `/me`); login por `{email, senha}` sem token (sessão `HttpSession`); sem `/auth/cadastro`; datas `dd/MM/yyyy`; horários de 06:00 a 17:30; cancelar e exclusão de veículo respondem 200 `{mensagem}`; sem `PUT /veiculos/{id}` por ora.
+
 Base: `/api/v1`. Corpo e resposta em `application/json; charset=UTF-8`. Datas `yyyy-MM-dd`, horários `HH:mm`.
 
 | Método | Rota | Corpo → resposta | DAO | Substitui no app |
@@ -331,7 +335,7 @@ Base: `/api/v1`. Corpo e resposta em `application/json; charset=UTF-8`. Datas `y
 | GET | `/agendamentos` | → `[{id, placa, veiculo, data, horario, status, total, statusPagamento, formaPagamento}]` | `DAOAgendamento.listarPorCliente` | `Repositorio.agendamentos` |
 | POST | `/agendamentos` | `{idVeiculo, data, horario, idsServicos: [1,2]}` → `201` | `DAOAgendamento.criar` | `adicionarAgendamento` |
 | POST | `/agendamentos/{id}/cancelar` | → `204`; `409` se não estiver `AGENDADO` | `DAOAgendamento.cancelar` | `cancelarAgendamento` |
-| GET | `/horarios?data=2026-10-23` | → `["08:00","08:30",...]` | *(novo)* | corrige E6 |
+| GET | `/horarios?data=23/10/2026` | → `["06:00","06:30",...,"17:30"]` | *(novo)* | corrige E6 |
 
 Ajustes de DAO pedidos por esses endpoints:
 
