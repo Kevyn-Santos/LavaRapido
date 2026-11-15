@@ -62,7 +62,7 @@
           <span>Aceito que meus dados sejam usados para agendamentos e para falar sobre minhas lavagens.</span>
         </label>
 
-        <button class="btn" type="submit">Criar conta e baixar o app</b utton>
+        <button class="btn" type="submit">Criar conta e baixar o app</button>
       </form>
     </div>
     <a class="staff-login-back" href="index.jsp"><- Voltar ao site</a>

@@ -86,7 +86,7 @@
     <!-- Seção de Serviços -->
     <section class="svc" id="servicos">
       <div class="wrap">
-        <h2 class="svc-h reveal">Quatro jeitos de lavar.</h2>
+        <h2 class="svc-h reveal">Diversos jeitos de lavar!</h2>
         <div class="svc-grid">
 
           <c:forEach var="servico" items="${servicos}" varStatus="st">

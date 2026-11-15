@@ -78,10 +78,14 @@ public class AgendamentoServlet extends HttpServlet {
                 return;
             }
             response.sendRedirect(request.getContextPath() + "/agendamentos?sucesso=1");
-        } catch (DateTimeParseException | IllegalArgumentException exception) {
+        } catch (DateTimeParseException exception) {
+            // A mensagem do Java é em inglês: o usuário recebe texto fixo em português
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            request.setAttribute("erro", exception.getMessage() == null
-                    ? "Informe uma data e um horário válidos." : exception.getMessage());
+            request.setAttribute("erro", "Informe uma data e um horário válidos.");
+            doGet(request, response);
+        } catch (IllegalArgumentException exception) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            request.setAttribute("erro", exception.getMessage());
             doGet(request, response);
         } catch (SQLException exception) {
             if (exception.getSQLState() != null && exception.getSQLState().startsWith("23")) {

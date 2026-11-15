@@ -42,7 +42,10 @@ public class VeiculoServlet extends HttpServlet {
             if ("remover".equals(acao)) {
                 Integer idVeiculo = WebSupport.inteiro(WebSupport.campo(request, "idVeiculo"));
                 if (idVeiculo == null || !daoVeiculo.remover(clienteId, idVeiculo)) {
-                    request.setAttribute("erro", "Veículo não encontrado ou vinculado a um agendamento.");
+                    // A remoção é lógica (ativo = FALSE): só falha se o veículo não existe,
+                    // não é do cliente ou já foi desativado
+                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                    request.setAttribute("erro", "Veículo não encontrado.");
                     doGet(request, response);
                     return;
                 }
@@ -64,6 +67,11 @@ public class VeiculoServlet extends HttpServlet {
                 return;
             }
             response.sendRedirect(request.getContextPath() + "/veiculos");
+        } catch (IllegalArgumentException exception) {
+            // regra da DAO: placa inválida ou cliente inexistente/inativo
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            request.setAttribute("erro", exception.getMessage());
+            doGet(request, response);
         } catch (SQLException exception) {
             if (exception.getSQLState() != null && exception.getSQLState().startsWith("23")) {
                 response.setStatus(HttpServletResponse.SC_CONFLICT);

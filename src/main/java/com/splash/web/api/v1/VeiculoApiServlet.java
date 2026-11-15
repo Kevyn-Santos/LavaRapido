@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
+import com.splash.web.api.ApiAuthFilter;
 import com.splash.web.api.Json;
 import com.splash.web.api.dto.NovoVeiculoRequest;
 import com.splash.web.db.DAOVeiculo;
+import com.splash.web.model.Validacao;
 import com.splash.web.model.dto.VeiculoView;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -18,27 +20,21 @@ import org.json.JSONObject;
 
 /**
  * <pre>
- * GET    /api/v1/veiculos?idcliente=1       -> [{id_veiculo, placa, marca, modelo, cor}]
- * POST   /api/v1/veiculos                   {idcliente, placa, marca, modelo, cor} -> 201 {id_cliente, placa, marca, modelo, cor}
- * DELETE /api/v1/veiculos/{idVeiculo}?idcliente=1 -> 200 {mensagem}
+ * GET    /api/v1/veiculos              -> [{id_veiculo, placa, marca, modelo, cor}]
+ * POST   /api/v1/veiculos              {placa, marca, modelo, cor?} -> 201 {id_veiculo, placa, marca, modelo, cor}
+ * DELETE /api/v1/veiculos/{idVeiculo}  -> 200 {mensagem}
  * </pre>
  *
  * Erros: sempre {@code {"erro": "mensagem"}} (ver {@link Json#erro}).
- * TODO: o {@code idcliente} deve vir do token quando a autenticação for implementada.
+ * Autenticação: o cliente é o da sessão (ver {@link ApiAuthFilter}); o app não envia {@code idcliente}.
  */
 @WebServlet("/api/v1/veiculos/*")
 public class VeiculoApiServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // GET não tem corpo confiável: o cliente vem na query string (?idcliente=1)
-        int idCliente;
-        try {
-            idCliente = Json.parametroInt(request, "idcliente");
-        } catch (IllegalArgumentException e) {
-            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            return;
-        }
+        // O cliente vem da sessão (ApiAuthFilter), nunca da URL
+        int idCliente = ApiAuthFilter.idAutenticado(request);
 
         try {
             JSONArray lista = new JSONArray();
@@ -69,13 +65,13 @@ public class VeiculoApiServlet extends HttpServlet {
 
             // NovoVeiculoRequest.id carrega o id do cliente dono do veículo
             NovoVeiculoRequest novoVeiculo = new NovoVeiculoRequest(
-                    corpo.getInt("idcliente"),
+                    ApiAuthFilter.idAutenticado(request),
                     corpo.getString("placa"),
                     corpo.getString("marca"),
                     corpo.getString("modelo"),
-                    corpo.getString("cor"));
+                    corpo.optString("cor", null)); // cor é opcional
 
-            new DAOVeiculo().inserir(
+            int idVeiculo = new DAOVeiculo().inserir(
                     novoVeiculo.id(),
                     novoVeiculo.placa(),
                     novoVeiculo.marca(),
@@ -83,18 +79,19 @@ public class VeiculoApiServlet extends HttpServlet {
                     novoVeiculo.cor());
 
             JSONObject criado = new JSONObject();
-            criado.put("id_cliente", novoVeiculo.id());
-            criado.put("placa", novoVeiculo.placa());
-            criado.put("marca", novoVeiculo.marca());
-            criado.put("modelo", novoVeiculo.modelo());
-            criado.put("cor", novoVeiculo.cor());
+            criado.put("id_veiculo", idVeiculo);
+            criado.put("placa", Validacao.placa(novoVeiculo.placa())); // já validada pela DAO
+            criado.put("marca", novoVeiculo.marca().trim());
+            criado.put("modelo", novoVeiculo.modelo().trim());
+            criado.put("cor", Json.ouNulo(novoVeiculo.cor() == null || novoVeiculo.cor().isBlank()
+                    ? null : novoVeiculo.cor().trim()));
             Json.Response_enviar(response, HttpServletResponse.SC_CREATED, criado.toString());
 
         } catch (JSONException e) {
             // corpo vazio/inválido, campo ausente ou com tipo errado
             Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Requisição inválida: " + e.getMessage());
         } catch (IllegalArgumentException e) {
-            // regra da DAO (cliente inexistente ou inativo)
+            // regra da DAO (placa inválida, cliente inexistente ou inativo)
             Json.erro(response, HttpServletResponse.SC_UNPROCESSABLE_CONTENT, e.getMessage());
         } catch (SQLIntegrityConstraintViolationException e) {
             Json.erro(response, HttpServletResponse.SC_CONFLICT, "Placa já cadastrada");
@@ -106,8 +103,8 @@ public class VeiculoApiServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // DELETE também não tem corpo confiável: o veículo vem no path (/{idVeiculo}) e o cliente na query
-        int idCliente;
+        // DELETE também não tem corpo confiável: o veículo vem no path (/{idVeiculo}); o cliente, da sessão
+        int idCliente = ApiAuthFilter.idAutenticado(request);
         int idVeiculo;
         try {
             String rota = request.getPathInfo(); // "/3" ou null
@@ -119,7 +116,6 @@ public class VeiculoApiServlet extends HttpServlet {
             } catch (NumberFormatException e) {
                 throw new IllegalArgumentException("Identificador de veículo inválido");
             }
-            idCliente = Json.parametroInt(request, "idcliente");
         } catch (IllegalArgumentException e) {
             Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             return;

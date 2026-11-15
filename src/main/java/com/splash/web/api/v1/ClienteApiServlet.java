@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.splash.web.api.ApiServlet;
+import com.splash.web.api.ApiAuthFilter;
 import com.splash.web.api.Json;
 import com.splash.web.api.dto.AtualizarPerfilRequest;
 import com.splash.web.api.dto.ClienteResumo;
@@ -18,26 +19,20 @@ import org.json.JSONObject;
 
 /**
  * <pre>
- * GET   /api/v1/usuarios?idcliente=1 -> {id, nome, cpf, telefone, email}
- * PATCH /api/v1/usuarios {idcliente, nome?, telefone?, email?} -> {id, nome, cpf, telefone, email}
+ * GET   /api/v1/usuarios -> {id, nome, cpf, telefone, email}
+ * PATCH /api/v1/usuarios {nome?, telefone?, email?} -> {id, nome, cpf, telefone, email}
  * </pre>
  *
  * Erros: sempre {@code {"erro": "mensagem"}} (ver {@link Json#erro}).
- * TODO: o {@code idcliente} deve vir do token quando a autenticação for implementada.
+ * Autenticação: o cliente é o da sessão (ver {@link ApiAuthFilter}); o app não envia {@code idcliente}.
  */
 @WebServlet("/api/v1/usuarios")
 public class ClienteApiServlet extends ApiServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // GET não tem corpo confiável: o cliente vem na query string (?idcliente=1)
-        int idCliente;
-        try {
-            idCliente = Json.parametroInt(request, "idcliente");
-        } catch (IllegalArgumentException e) {
-            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            return;
-        }
+        // O cliente vem da sessão (ApiAuthFilter), nunca da URL
+        int idCliente = ApiAuthFilter.idAutenticado(request);
 
         try {
             Cliente cliente = new DAOCliente().getusuario(idCliente);
@@ -57,11 +52,10 @@ public class ClienteApiServlet extends ApiServlet {
             throws ServletException, IOException {
         DAOCliente dao = new DAOCliente();
 
-        int idCliente;
+        int idCliente = ApiAuthFilter.idAutenticado(request);
         AtualizarPerfilRequest perfil;
         try {
             JSONObject corpo = Json.lerCorpo(request);
-            idCliente = corpo.getInt("idcliente");
             // "opt": nem toda atualização envia todos os campos (ausente → null → não altera)
             perfil = new AtualizarPerfilRequest(
                     corpo.optString("nome", null),

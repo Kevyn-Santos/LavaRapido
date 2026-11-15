@@ -9,7 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Base para os servlets de {@code /api/v1/*}. Dá suporte a PATCH (sem método dedicado em
- * HttpServlet) e expõe o id do cliente autenticado, posto pelo ApiAuthFilter.
+ * HttpServlet). Hoje só {@code ClienteApiServlet} (PATCH) a estende; todos os servlets leem o
+ * cliente autenticado por {@code ApiAuthFilter.idAutenticado}.
  */
 public abstract class ApiServlet extends HttpServlet {
 
@@ -27,11 +28,5 @@ public abstract class ApiServlet extends HttpServlet {
     protected void doPatch(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
-    }
-
-    /** Id do cliente autenticado, posto por {@link ApiAuthFilter}. -1 se não houver. */
-    protected int idClienteAutenticado(HttpServletRequest request) {
-        Object id = request.getAttribute("idCliente");
-        return id instanceof Integer idCliente ? idCliente : -1;
     }
 }

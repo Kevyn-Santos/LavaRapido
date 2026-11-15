@@ -109,16 +109,17 @@ public class AdminAgendamentoServlet extends HttpServlet {
                 + "/painel/agendamentos?sucesso=1"
             );
 
-        } catch (DateTimeParseException |
-                 IllegalArgumentException exception) {
-
+        } catch (DateTimeParseException exception) {
+            // A mensagem do Java é em inglês: o usuário recebe texto fixo em português
             response.sendError(
                 HttpServletResponse.SC_BAD_REQUEST,
-                exception.getMessage() == null
-                    ? "Dados do agendamento inválidos."
-                    : exception.getMessage()
+                "Informe uma data e um horário válidos."
             );
-
+        } catch (IllegalArgumentException exception) {
+            response.sendError(
+                HttpServletResponse.SC_BAD_REQUEST,
+                exception.getMessage()
+            );
         } catch (SQLException exception) {
 
             if (exception.getSQLState() != null

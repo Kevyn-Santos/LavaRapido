@@ -8,6 +8,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.splash.web.api.ApiAuthFilter;
 import com.splash.web.api.Json;
 import com.splash.web.db.DAOAgendamento;
 import com.splash.web.model.dto.AgendamentoView;
@@ -21,29 +22,26 @@ import org.json.JSONObject;
 
 /**
  * <pre>
- * GET  /api/v1/agendamentos?idcliente=1   -> [{id_agendamento, id_veiculo, data_agendamento, hora_agendamento,
+ * GET  /api/v1/agendamentos                -> [{id_agendamento, id_veiculo, data_agendamento, hora_agendamento,
  *                                              id_servico[], total_servico, status_pagamento, forma_pagamento}]
- * POST /api/v1/agendamentos               {idcliente, idveiculo, dataAgendamento (dd/MM/yyyy),
- *                                          horarioAgendamento, idservico[]} -> 201 {mensagem}
- * POST /api/v1/agendamentos/{id}/cancelar -> 204
+ * POST /api/v1/agendamentos               {idveiculo, dataAgendamento (dd/MM/yyyy),
+ *                                          horarioAgendamento (HH:mm, grade 06:00-17:30 de 30 em 30 min),
+ *                                          idservico[]} -> 201 {mensagem}; 422 se o horário estiver
+ *                                          fora da grade, já passado ou indisponível (ver GET /horarios)
+ * POST /api/v1/agendamentos/{id}/cancelar -> 200 {mensagem}; 404 se não existir, for de outro cliente
+ *                                            ou não estiver AGENDADO
  * </pre>
  *
  * Erros: sempre {@code {"erro": "mensagem"}} (ver {@link Json#erro}).
- * TODO: o {@code idcliente} deve vir do token quando a autenticação for implementada.
+ * Autenticação: o cliente é o da sessão (ver {@link ApiAuthFilter}); o app não envia {@code idcliente}.
  */
 @WebServlet("/api/v1/agendamentos/*")
 public class AgendamentoApiServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // GET não tem corpo confiável: o cliente vem na query string (?idcliente=1)
-        int idCliente;
-        try {
-            idCliente = Json.parametroInt(request, "idcliente");
-        } catch (IllegalArgumentException e) {
-            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-            return;
-        }
+        // O cliente vem da sessão (ApiAuthFilter), nunca da URL
+        int idCliente = ApiAuthFilter.idAutenticado(request);
 
         try {
             DateTimeFormatter formatoData = DateTimeFormatter.ofPattern("yyyy/MM/dd");
@@ -84,7 +82,7 @@ public class AgendamentoApiServlet extends HttpServlet {
     private void criar(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             JSONObject corpo = Json.lerCorpo(request);
-            int idCliente = corpo.getInt("idcliente");
+            int idCliente = ApiAuthFilter.idAutenticado(request);
             int idVeiculo = corpo.getInt("idveiculo");
             String horario = corpo.getString("horarioAgendamento");
             LocalDate data = LocalDate.parse(corpo.getString("dataAgendamento"),
@@ -101,8 +99,11 @@ public class AgendamentoApiServlet extends HttpServlet {
             Json.Response_enviar(response, HttpServletResponse.SC_CREATED,
                     new JSONObject().put("mensagem", "Agendamento criado com sucesso").toString());
 
-        } catch (JSONException | DateTimeParseException e) {
-            // corpo vazio/inválido, campo ausente ou com tipo errado, data fora de dd/MM/yyyy
+        } catch (DateTimeParseException e) {
+            // a mensagem do Java é em inglês: texto fixo em português
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Data inválida. Use dd/MM/yyyy");
+        } catch (JSONException e) {
+            // corpo vazio/inválido, campo ausente ou com tipo errado
             Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Requisição inválida: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             // regra de negócio da DAO (veículo inativo, serviço inexistente/repetido...)
@@ -114,7 +115,34 @@ public class AgendamentoApiServlet extends HttpServlet {
     }
 
     private void cancelar(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // TODO: DAOAgendamento.cancelar(idCliente, id) com o id lido do pathInfo (/{id}/cancelar)
-        response.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
+        // O cliente vem da sessão (ApiAuthFilter); o agendamento, do path (/{id}/cancelar)
+        int idCliente = ApiAuthFilter.idAutenticado(request);
+        int idAgendamento;
+        String[] partes = request.getPathInfo().split("/"); // "", "{id}", "cancelar"
+        try {
+            if (partes.length != 3) {
+                throw new NumberFormatException();
+            }
+            idAgendamento = Integer.parseInt(partes[1]);
+        } catch (NumberFormatException e) {
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST,
+                    "Informe o agendamento no caminho: /api/v1/agendamentos/{idAgendamento}/cancelar");
+            return;
+        }
+
+        try {
+            if (new DAOAgendamento().cancelar(idCliente, idAgendamento)) {
+                Json.Response_ok(response, new JSONObject()
+                        .put("mensagem", "Agendamento %d cancelado com sucesso".formatted(idAgendamento))
+                        .toString());
+            } else {
+                // Mesma resposta para id inexistente, de outro cliente ou já fora do status AGENDADO
+                Json.erro(response, HttpServletResponse.SC_NOT_FOUND,
+                        "Agendamento não encontrado ou não pode ser cancelado");
+            }
+        } catch (SQLException e) {
+            getServletContext().log("Erro ao cancelar agendamento " + idAgendamento, e);
+            Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro no acesso ao banco");
+        }
     }
 }
