@@ -42,6 +42,26 @@ public class DAOPagamento {
         return pagamentos;
     }
 
+    /**
+     * Id do pagamento do agendamento, só se o agendamento for de um veículo do cliente
+     * ({@code null} caso contrário). Existe para a API conferir o dono antes de chamar
+     * {@link #atualizar}, que não conhece o cliente.
+     */
+    public Integer idDoAgendamentoDoCliente(int idCliente, int idAgendamento) throws SQLException {
+        String sql = "SELECT p.id_pagamento FROM pagamento p "
+                + "JOIN agendamento a ON a.id_agendamento = p.id_agendamento "
+                + "JOIN veiculo v ON v.id_veiculo = a.id_veiculo "
+                + "WHERE a.id_agendamento = ? AND v.id_cliente = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, idAgendamento);
+            statement.setInt(2, idCliente);
+            try (ResultSet result = statement.executeQuery()) {
+                return result.next() ? result.getInt("id_pagamento") : null;
+            }
+        }
+    }
+
     /*--------------------------------------
     Inserção de pagamentos
     --------------------------------------*/
