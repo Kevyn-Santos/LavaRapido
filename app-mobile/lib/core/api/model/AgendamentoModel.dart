@@ -1,4 +1,4 @@
-/// Agendamento como a API manda: `{id_agendamento, id_veiculo, data_agendamento ("yyyy/MM/dd"),
+/// Agendamento como a API manda: `{id_agendamento, id_veiculo, data_agendamento ("yyyy-MM-dd"),
 /// hora_agendamento, id_servico[], total_servico, status_pagamento, forma_pagamento}`.
 class AgendamentoModel {
   final String id;
@@ -22,7 +22,7 @@ class AgendamentoModel {
   });
 
   factory AgendamentoModel.fromJson(Map<String, dynamic> json) {
-    final partes = (json['data_agendamento'] as String).split('/');
+    final partes = (json['data_agendamento'] as String).split('-'); // yyyy-MM-dd
     return AgendamentoModel(
       id: json['id_agendamento'].toString(),
       idVeiculo: json['id_veiculo'].toString(),

@@ -37,6 +37,26 @@ class VeiculoApi {
         if (resposta.statusCode != 201) throw ApiException.deResposta(resposta);
       });
 
+  /// `PATCH /veiculos/{id}` (200). Só os campos informados mudam; [cor] vazia apaga a cor.
+  /// Erros: 404 veículo de outro cliente, 409 placa repetida, 422 placa inválida.
+  Future<VeiculoModel> atualizar(
+    String idVeiculo, {
+    String? placa,
+    String? marca,
+    String? modelo,
+    String? cor,
+  }) =>
+      comTratamentoDeRede(() async {
+        final resposta = await apiClient.patch('/veiculos/$idVeiculo', body: {
+          if (placa != null) 'placa': placa,
+          if (marca != null) 'marca': marca,
+          if (modelo != null) 'modelo': modelo,
+          if (cor != null) 'cor': cor,
+        });
+        if (resposta.statusCode != 200) throw ApiException.deResposta(resposta);
+        return VeiculoModel.fromJson(jsonDecode(utf8.decode(resposta.bodyBytes)) as Map<String, dynamic>);
+      });
+
   /// `DELETE /veiculos/{id}` (200). 404 se o veículo não for do cliente logado.
   Future<void> excluir(String idVeiculo) => comTratamentoDeRede(() async {
         final resposta = await apiClient.delete('/veiculos/$idVeiculo');
