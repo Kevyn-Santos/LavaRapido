@@ -6,7 +6,6 @@ import java.util.List;
 
 public class Cliente extends Pessoa {
 
-    private int id_cliente;
     private String cpf;
     private String telefone;
     private final List<Veiculo> veiculos = new ArrayList<>();
@@ -31,18 +30,20 @@ public class Cliente extends Pessoa {
         Cliente cliente = new Cliente();
         cliente.carregarDadosPessoa(nome, email);
         cliente.setId(id);
-        cliente.id_cliente = id;
         cliente.cpf = cpf;
         cliente.telefone = telefone;
         return cliente;
     }
 
+    /** Id do cliente: o mesmo de {@link #getId()} (0 enquanto não persistido). Nome mantido para JSP/EL. */
     public int getId_cliente() {
-        return id_cliente;
+        Integer id = getId();
+        return id == null ? 0 : id;
     }
 
+    /** Define o id uma única vez (regra de {@link EntidadeBase#setId}). */
     public void setId_cliente(int id) {
-        this.id_cliente = id;
+        setId(id);
     }
 
     public void setCPF(String cpf) {

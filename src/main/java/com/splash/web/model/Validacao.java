@@ -81,7 +81,11 @@ public class Validacao {
         if (valor.signum() < 0) {
             throw new IllegalArgumentException(campo + " não pode ser negativo.");
         }
-        return valor.setScale(2, RoundingMode.HALF_UP);
+        // Só reais e centavos: 10.50 e 10.500 passam; 10.125 é recusado (nada de arredondar em silêncio)
+        if (valor.stripTrailingZeros().scale() > 2) {
+            throw new IllegalArgumentException(campo + " deve ter no máximo 2 casas decimais.");
+        }
+        return valor.setScale(2, RoundingMode.UNNECESSARY);
     }
 
     private static String somenteDigitos(String valor) {
