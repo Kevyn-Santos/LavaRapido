@@ -1,7 +1,7 @@
 # Plano: ajustes de usabilidade encontrados no teste como cliente (2026-11-15)
 
-> **Status: apenas planejamento.** Nenhum código foi alterado. Este documento registra o diagnóstico,
-> a viabilidade e a proposta de cada um dos 4 pontos, para decidirmos antes de implementar.
+> **Status: pontos 2, 3 e 4 implementados** (ver `ajustes-agendamento-atendimento-painel.md`). O ponto 1 segue só planejado.
+> Decisões tomadas: pagamento `PAGO` não pode ser revertido (já garantido por `DAOPagamento.atualizar`) e o erro de data aparece na própria tela.
 
 ## Por que
 Teste manual de ponta a ponta mostrou quatro pontos de usabilidade/regra de negócio. Dois são regras
