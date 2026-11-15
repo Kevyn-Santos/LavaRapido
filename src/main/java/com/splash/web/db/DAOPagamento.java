@@ -65,9 +65,10 @@ public class DAOPagamento {
                     "Status de pagamento inválido.");
         }
 
+        // Set.of(...).contains(null) lança NullPointerException: forma nula é checada antes
         if ("PAGO".equals(status)
-                && !java.util.Set.of(
-                        "PIX", "DINHEIRO", "CREDITO", "DEBITO").contains(forma)) {
+                && (forma == null || !java.util.Set.of(
+                        "PIX", "DINHEIRO", "CREDITO", "DEBITO").contains(forma))) {
             throw new IllegalArgumentException(
                     "Selecione uma forma de pagamento válida.");
         }

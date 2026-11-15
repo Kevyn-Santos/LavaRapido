@@ -1,5 +1,6 @@
 package com.splash.web.db;
 
+import com.splash.web.model.GradeHorarios;
 import com.splash.web.model.dto.AgendamentoView;
 import com.splash.web.model.dto.ServicoView;
 import java.util.Map;
@@ -12,7 +13,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -117,6 +120,40 @@ public class DAOAgendamento {
         return agendamentos;
     }
 
+    /** Horários da grade já ocupados na data (agendamentos não cancelados). */
+    public List<LocalTime> horariosOcupados(LocalDate data) throws SQLException {
+        String sql = "SELECT horario FROM agendamento WHERE data = ? AND status <> 'CANCELADO'";
+        List<LocalTime> ocupados = new ArrayList<>();
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, Date.valueOf(data));
+            try (ResultSet result = statement.executeQuery()) {
+                while (result.next()) {
+                    ocupados.add(result.getTime("horario").toLocalTime());
+                }
+            }
+        }
+        return ocupados;
+    }
+
+    /**
+     * Horários livres da grade na data. Data passada: lista vazia; hoje: só os horários que ainda
+     * não passaram.
+     */
+    public List<LocalTime> horariosLivres(LocalDate data) throws SQLException {
+        LocalDate hoje = LocalDate.now();
+        if (data.isBefore(hoje)) {
+            return new ArrayList<>();
+        }
+        List<LocalTime> livres = GradeHorarios.todos();
+        livres.removeAll(horariosOcupados(data));
+        if (data.equals(hoje)) {
+            LocalTime agora = LocalTime.now();
+            livres.removeIf(horario -> !horario.isAfter(agora));
+        }
+        return livres;
+    }
+
     public List<AgendamentoView> listarPorCliente(int idCliente) throws SQLException {
 
 
@@ -161,6 +198,13 @@ public class DAOAgendamento {
 
     public void criar(int idCliente, int idVeiculo, LocalDate data, String horario,
             List<Integer> idsServicos) throws SQLException {
+        // Regras de horário: grade, não passado e um agendamento por horário (checado na transação)
+        LocalTime horarioAgendado = GradeHorarios.interpretar(horario);
+        LocalDate hoje = LocalDate.now();
+        if (data.isBefore(hoje) || (data.equals(hoje) && !horarioAgendado.isAfter(LocalTime.now()))) {
+            throw new IllegalArgumentException("Não é possível agendar em data ou horário que já passou.");
+        }
+
         Set<Integer> servicosUnicos = new LinkedHashSet<>(idsServicos);
         if (servicosUnicos.isEmpty() || servicosUnicos.size() != idsServicos.size()) {
             throw new IllegalArgumentException("Selecione ao menos um serviço, sem repetições.");
@@ -202,6 +246,18 @@ public class DAOAgendamento {
                     }
                 }
 
+                // FOR UPDATE trava o intervalo: duas reservas simultâneas do mesmo horário se serializam
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "SELECT 1 FROM agendamento WHERE data = ? AND horario = ? AND status <> 'CANCELADO' FOR UPDATE")) {
+                    statement.setDate(1, Date.valueOf(data));
+                    statement.setTime(2, Time.valueOf(horarioAgendado));
+                    try (ResultSet result = statement.executeQuery()) {
+                        if (result.next()) {
+                            throw new IllegalArgumentException("Horário indisponível.");
+                        }
+                    }
+                }
+
                 List<ServicoView> selecionados = new ArrayList<>();
                 BigDecimal total = BigDecimal.ZERO;
                 try (PreparedStatement statement = connection.prepareStatement(getPrice)) {
@@ -224,7 +280,7 @@ public class DAOAgendamento {
                         Statement.RETURN_GENERATED_KEYS)) {
                     statement.setInt(1, idVeiculo);
                     statement.setDate(2, Date.valueOf(data));
-                    statement.setString(3, horario);
+                    statement.setTime(3, Time.valueOf(horarioAgendado));
                     statement.executeUpdate();
                     try (ResultSet keys = statement.getGeneratedKeys()) {
                         if (!keys.next()) {
@@ -297,11 +353,5 @@ public class DAOAgendamento {
             }
         }
     }
-
-    /*--------------------------------------
-    Remoção de agendamentos
-    --------------------------------------*/
-
-    // Nenhuma operação de remoção de agendamento ainda (cancelar só troca o status)
 
 }

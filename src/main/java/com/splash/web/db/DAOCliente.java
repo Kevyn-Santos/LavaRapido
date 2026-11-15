@@ -58,13 +58,12 @@ public class DAOCliente {
     public Cliente getusuario(int id) throws SQLException {
         String sql = "SELECT id_cliente, nome, cpf, telefone, email FROM cliente WHERE id_cliente=?";
         try (Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(sql);) {
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, id);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (!rs.next())
                     throw new IllegalArgumentException("nenhum usuario encontrado com este ID");
-                ;
                 return mapearCliente(rs);
             }
         }
@@ -228,6 +227,33 @@ public class DAOCliente {
                 if (result.next() && Passwords.matches(senha, result.getString("senha_hash"))) {
                     return new ClienteView(result.getInt("id_cliente"), result.getString("nome"),
                             result.getString("email"));
+                }
+                return null;
+            }
+        }
+    }
+
+    /**
+     * Login da API mobile: busca o cliente ativo pelo e-mail e confere a senha em texto puro
+     * contra o hash BCrypt do banco. O hash tem salt aleatório, então a comparação não pode ser
+     * feita no SQL ({@code WHERE senha_hash = ?}); ela é feita por {@link Passwords#matches}.
+     *
+     * @return O {@link Cliente} (com cpf e telefone) ou {@code null} se e-mail/senha não conferem.
+     */
+    public Cliente autenticarPorEmail(String email, String senha) throws SQLException {
+        String sql = """
+                SELECT id_cliente, nome, cpf, telefone, email, senha_hash
+                FROM cliente
+                WHERE email = ?
+                  AND ativo = TRUE
+                LIMIT 1
+                """;
+        try (Connection conn = DatabaseConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email.trim().toLowerCase());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next() && Passwords.matches(senha, rs.getString("senha_hash"))) {
+                    return mapearCliente(rs);
                 }
                 return null;
             }

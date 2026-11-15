@@ -1,11 +1,13 @@
 package com.splash.web.db;
 
+import com.splash.web.model.Validacao;
 import com.splash.web.model.dto.VeiculoView;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,8 +46,16 @@ public class DAOVeiculo {
     Inserção de veículos
     --------------------------------------*/
 
-    public void inserir(int idCliente, String placa, String marca, String modelo, String cor)
+    /**
+     * Insere o veículo e devolve o id gerado. A placa é validada e normalizada por
+     * {@link Validacao#placa} (sem hífen, maiúsculas, formato antigo ou Mercosul); {@code cor} é
+     * opcional (null ou vazia grava NULL). Valida antes de abrir a conexão.
+     *
+     * @throws IllegalArgumentException placa inválida ou cliente inexistente/inativo
+     */
+    public int inserir(int idCliente, String placa, String marca, String modelo, String cor)
             throws SQLException {
+        String placaValida = Validacao.placa(placa);
         String sql = """
                 INSERT INTO veiculo (id_cliente, placa, marca, modelo, cor)
                 SELECT id_cliente, ?, ?, ?, ?
@@ -54,8 +64,9 @@ public class DAOVeiculo {
                   AND ativo = TRUE
                 """;
         try (Connection connection = DatabaseConnection.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, placa.trim().toUpperCase());
+                PreparedStatement statement = connection.prepareStatement(sql,
+                        Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, placaValida);
             statement.setString(2, marca.trim());
             statement.setString(3, modelo.trim());
             statement.setString(4, cor == null || cor.isBlank() ? null : cor.trim());
@@ -64,6 +75,12 @@ public class DAOVeiculo {
             if (statement.executeUpdate() != 1) {
                 throw new IllegalArgumentException(
                         "Cliente não encontrado ou inativo.");
+            }
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (!keys.next()) {
+                    throw new SQLException("Não foi possível obter o identificador do veículo.");
+                }
+                return keys.getInt(1);
             }
         }
     }
@@ -98,7 +115,7 @@ public class DAOVeiculo {
             statement.setString(1, placa);
             statement.setString(2, marca);
             statement.setString(3, modelo);
-            statement.setString(4, cor.isBlank() ? null : cor);
+            statement.setString(4, cor == null || cor.isBlank() ? null : cor);
             statement.setInt(5, idVeiculo);
             statement.setInt(6, idCliente);
 
