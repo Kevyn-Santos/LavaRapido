@@ -96,6 +96,9 @@ public class DAOHistorico {
                     a.data,
                     a.horario,
                     a.status AS status_agendamento,
+                    a.criado_por_tipo,
+                    criador.nome AS nome_criador,
+                    cliente.nome AS nome_cliente,
 
                     v.id_veiculo,
                     v.placa,
@@ -107,6 +110,8 @@ public class DAOHistorico {
                     at.status AS status_atendimento,
                     at.data_inicio,
                     at.data_fim,
+                    responsavel.nome AS nome_responsavel,
+                    COALESCE(lavadores.nomes, '') AS nomes_lavadores,
 
                     p.status_pagamento,
                     p.forma_pagamento,
@@ -116,6 +121,12 @@ public class DAOHistorico {
 
                 JOIN veiculo v
                     ON v.id_veiculo = a.id_veiculo
+
+                JOIN cliente cliente
+                    ON cliente.id_cliente = v.id_cliente
+
+                LEFT JOIN colaborador criador
+                    ON criador.id_colaborador = a.id_colaborador_criador
 
                 LEFT JOIN (
                     SELECT
@@ -134,15 +145,23 @@ public class DAOHistorico {
                 LEFT JOIN atendimento at
                     ON at.id_agendamento = a.id_agendamento
 
+                LEFT JOIN colaborador responsavel
+                    ON responsavel.id_colaborador = at.id_colaborador_responsavel
+
+                LEFT JOIN (
+                    SELECT ca.id_atendimento,
+                           GROUP_CONCAT(c.nome ORDER BY c.nome SEPARATOR ', ') AS nomes
+                    FROM colaborador_atendimento ca
+                    JOIN colaborador c ON c.id_colaborador = ca.id_colaborador
+                    GROUP BY ca.id_atendimento
+                ) lavadores ON lavadores.id_atendimento = at.id_atendimento
+
                 LEFT JOIN pagamento p
                     ON p.id_agendamento = a.id_agendamento
 
                 WHERE v.id_cliente = ?
 
-                ORDER BY
-                    a.data DESC,
-                    a.horario DESC,
-                    a.id_agendamento DESC
+                ORDER BY a.id_agendamento DESC
                 """;
 
         List<Map<String, Object>> historico = new ArrayList<>();
@@ -164,6 +183,21 @@ public class DAOHistorico {
 
                     registro.put("statusAgendamento",
                             result.getString("status_agendamento"));
+
+                    String tipoCriador = result.getString("criado_por_tipo");
+                    String nomeCriador = result.getString("nome_criador");
+                    String autoria = "Não registrado";
+                    if ("CLIENTE".equals(tipoCriador)) {
+                        autoria = "Cliente — " + result.getString("nome_cliente");
+                    } else if ("ATENDENTE".equals(tipoCriador)
+                            || "ADMINISTRADOR".equals(tipoCriador)) {
+                        String perfil = "ATENDENTE".equals(tipoCriador) ? "Atendente" : "Administrador";
+                        autoria = perfil + " — " + (nomeCriador == null ? "Não identificado" : nomeCriador);
+                    }
+                    registro.put("criadoPor", autoria);
+                    registro.put("responsavelAtendimento",
+                            result.getString("nome_responsavel"));
+                    registro.put("lavadores", result.getString("nomes_lavadores"));
 
                     registro.put("idVeiculo", result.getInt("id_veiculo"));
                     registro.put("veiculo", result.getString("veiculo"));

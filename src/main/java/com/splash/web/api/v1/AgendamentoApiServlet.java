@@ -41,7 +41,8 @@ import org.json.JSONObject;
  * </pre>
  *
  * Erros: sempre {@code {"erro": "mensagem"}} (ver {@link Json#erro}).
- * Autenticação: o cliente é o da sessão (ver {@link ApiAuthFilter}); o app não envia {@code idcliente}.
+ * Autenticação: o cliente é o da sessão (ver {@link ApiAuthFilter}); o app não
+ * envia {@code idcliente}.
  */
 @WebServlet("/api/v1/agendamentos/*")
 public class AgendamentoApiServlet extends HttpServlet {
@@ -63,7 +64,8 @@ public class AgendamentoApiServlet extends HttpServlet {
                 agendamento.put("id_servico", new JSONArray(item.getIdServico()));
                 JSONArray servicos = new JSONArray();
                 for (ServicoView servico : item.getServicos()) {
-                    // "valor" = valor praticado na época do agendamento (não o preço atual do catálogo)
+                    // "valor" = valor praticado na época do agendamento (não o preço atual do
+                    // catálogo)
                     servicos.put(new JSONObject()
                             .put("id_servico", servico.getId())
                             .put("nome", servico.getNome())
@@ -78,7 +80,8 @@ public class AgendamentoApiServlet extends HttpServlet {
                 lista.put(agendamento);
             }
 
-            // Uma única resposta com o array inteiro ([] quando o cliente não tem agendamentos)
+            // Uma única resposta com o array inteiro ([] quando o cliente não tem
+            // agendamentos)
             Json.Response_ok(response, lista.toString());
 
         } catch (SQLException e) {
@@ -113,7 +116,14 @@ public class AgendamentoApiServlet extends HttpServlet {
                 idsServicos.add(servicos.getInt(i));
             }
 
-            new DAOAgendamento().criar(idCliente, idVeiculo, data, horario, idsServicos);
+            new DAOAgendamento().criar(
+                    idCliente,
+                    idVeiculo,
+                    data,
+                    horario,
+                    idsServicos,
+                    "CLIENTE",
+                    null);
 
             Json.Response_enviar(response, HttpServletResponse.SC_CREATED,
                     new JSONObject().put("mensagem", "Agendamento criado com sucesso").toString());
@@ -133,7 +143,10 @@ public class AgendamentoApiServlet extends HttpServlet {
         }
     }
 
-    /** Formas que o cliente pode escolher no app (DINHEIRO só o atendente registra, no site). */
+    /**
+     * Formas que o cliente pode escolher no app (DINHEIRO só o atendente registra,
+     * no site).
+     */
     private static final Set<String> FORMAS_DO_APP = Set.of("PIX", "CREDITO", "DEBITO");
 
     private void pagar(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -188,7 +201,8 @@ public class AgendamentoApiServlet extends HttpServlet {
     }
 
     private void cancelar(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // O cliente vem da sessão (ApiAuthFilter); o agendamento, do path (/{id}/cancelar)
+        // O cliente vem da sessão (ApiAuthFilter); o agendamento, do path
+        // (/{id}/cancelar)
         int idCliente = ApiAuthFilter.idAutenticado(request);
         int idAgendamento;
         String[] partes = request.getPathInfo().split("/"); // "", "{id}", "cancelar"
@@ -209,7 +223,8 @@ public class AgendamentoApiServlet extends HttpServlet {
                         .put("mensagem", "Agendamento %d cancelado com sucesso".formatted(idAgendamento))
                         .toString());
             } else {
-                // Mesma resposta para id inexistente, de outro cliente ou já fora do status AGENDADO
+                // Mesma resposta para id inexistente, de outro cliente ou já fora do status
+                // AGENDADO
                 Json.erro(response, HttpServletResponse.SC_NOT_FOUND,
                         "Agendamento não encontrado ou não pode ser cancelado");
             }

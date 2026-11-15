@@ -53,9 +53,11 @@ public class DAOAtendimento {
 
     public boolean iniciarAtendimento(
             int idAtendimento,
-            List<Integer> idsColaboradores) throws SQLException {
+            List<Integer> idsColaboradores,
+            int idResponsavel) throws SQLException {
 
         if (idAtendimento <= 0
+                || idResponsavel <= 0
                 || idsColaboradores == null
                 || idsColaboradores.isEmpty()) {
             throw new IllegalArgumentException(
@@ -77,11 +79,18 @@ public class DAOAtendimento {
                     ON a.id_agendamento = at.id_agendamento
                 SET
                     at.status = 'EM_LAVAGEM',
-                    at.data_inicio = CURRENT_TIMESTAMP
+                    at.data_inicio = CURRENT_TIMESTAMP,
+                    at.id_colaborador_responsavel = ?
                 WHERE at.id_atendimento = ?
                   AND at.status = 'AGUARDANDO'
                   AND a.status = 'AGENDADO'
                   AND a.data = CURRENT_DATE()
+                  AND EXISTS (
+                      SELECT 1
+                      FROM pagamento p
+                      WHERE p.id_agendamento = a.id_agendamento
+                        AND p.status_pagamento = 'PAGO'
+                  )
                 """;
 
         String sqlValidar = """
@@ -111,7 +120,8 @@ public class DAOAtendimento {
             try {
                 try (PreparedStatement statement = connection.prepareStatement(sqlIniciar)) {
 
-                    statement.setInt(1, idAtendimento);
+                    statement.setInt(1, idResponsavel);
+                    statement.setInt(2, idAtendimento);
 
                     if (statement.executeUpdate() != 1) {
                         connection.rollback();
@@ -166,18 +176,36 @@ public class DAOAtendimento {
     Update de atendimentos
     --------------------------------------*/
 
-    public void atualizar(int idAtendimento, String status, List<Integer> idsColaboradores)
-            throws SQLException {
+    public void atualizar(int idAtendimento, String status, List<Integer> idsColaboradores,
+            int idResponsavel) throws SQLException {
+        if (idResponsavel <= 0) {
+            throw new IllegalArgumentException("Colaborador responsável inválido.");
+        }
         String select = "SELECT at.status, a.status AS status_agendamento, "
                 + "COALESCE(p.status_pagamento, 'PENDENTE') AS status_pagamento "
                 + "FROM atendimento at JOIN agendamento a ON a.id_agendamento = at.id_agendamento "
                 + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
                 + "WHERE at.id_atendimento = ? FOR UPDATE";
-        String sql = "UPDATE atendimento SET status = ?, "
-                + "data_inicio = CASE WHEN ? = 'EM_LAVAGEM' AND data_inicio IS NULL "
-                + "THEN CURRENT_TIMESTAMP ELSE data_inicio END, "
-                + "data_fim = CASE WHEN ? IN ('FINALIZADO', 'ENTREGUE') AND data_fim IS NULL "
-                + "THEN CURRENT_TIMESTAMP ELSE data_fim END WHERE id_atendimento = ?";
+        String sql = """
+                UPDATE atendimento
+                SET status = ?,
+                    data_inicio = CASE
+                        WHEN ? = 'EM_LAVAGEM' AND data_inicio IS NULL
+                        THEN CURRENT_TIMESTAMP
+                        ELSE data_inicio
+                    END,
+                    data_fim = CASE
+                        WHEN ? IN ('FINALIZADO', 'ENTREGUE') AND data_fim IS NULL
+                        THEN CURRENT_TIMESTAMP
+                        ELSE data_fim
+                    END,
+                    id_colaborador_responsavel = CASE
+                        WHEN ? = 'EM_LAVAGEM' AND id_colaborador_responsavel IS NULL
+                        THEN ?
+                        ELSE id_colaborador_responsavel
+                    END
+                WHERE id_atendimento = ?
+                """;
         try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
@@ -211,7 +239,9 @@ public class DAOAtendimento {
                     statement.setString(1, status);
                     statement.setString(2, status);
                     statement.setString(3, status);
-                    statement.setInt(4, idAtendimento);
+                    statement.setString(4, status);
+                    statement.setInt(5, idResponsavel);
+                    statement.setInt(6, idAtendimento);
                     if (statement.executeUpdate() != 1) {
                         throw new IllegalArgumentException("Atendimento não encontrado.");
                     }

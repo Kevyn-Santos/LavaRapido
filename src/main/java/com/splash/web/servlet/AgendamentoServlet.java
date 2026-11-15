@@ -72,7 +72,15 @@ public class AgendamentoServlet extends HttpServlet {
                     }
                     idsServicos.add(valor);
                 }
-                daoAgendamento.criar(clienteId, idVeiculo, data, horario.toString(), idsServicos);
+
+                daoAgendamento.criar(
+                        clienteId,
+                        idVeiculo,
+                        data,
+                        horario.toString(),
+                        idsServicos,
+                        "CLIENTE",
+                        null);
             } else {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Ação inválida.");
                 return;

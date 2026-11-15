@@ -561,8 +561,14 @@
                             Fechar
                           </button>
 
+                          <c:if test="${agendamento.statusAtendimento == 'AGUARDANDO' and not empty agendamento.idAtendimento and agendamento.statusPagamento != 'PAGO'}">
+                            <p class="agenda-lavadores-vazio" role="status">
+                              Aguardando pagamento — a lavagem só pode começar após a confirmação do pagamento.
+                            </p>
+                          </c:if>
+
                           <c:if
-                            test="${agendamento.statusAtendimento == 'AGUARDANDO' and not empty agendamento.idAtendimento}">
+                            test="${agendamento.statusAtendimento == 'AGUARDANDO' and not empty agendamento.idAtendimento and agendamento.statusPagamento == 'PAGO'}">
 
 
                             <form method="post" action="${pageContext.request.contextPath}/admin/inicio"

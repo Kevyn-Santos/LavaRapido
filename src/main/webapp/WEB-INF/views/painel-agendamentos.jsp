@@ -278,6 +278,29 @@
 
           <!-- 1. TELA DA LISTA DE AGENDAMENTOS -->
           <div id="view-list">
+
+            <c:if test="${param.sucesso == 'criado' or param.sucesso == 'cancelado'}">
+              <div class="ok" role="status" style="padding: 14px 18px;
+                margin-bottom: 20px;
+                border: 1px solid #1E7A4F;
+                border-radius: 8px;
+                background: #E8F5EC;
+                color: #145C35;
+                font-weight: 600;">
+
+                <c:choose>
+                  <c:when test="${param.sucesso == 'criado'}">
+                    Agendamento realizado com sucesso!
+                  </c:when>
+
+                  <c:otherwise>
+                    Agendamento cancelado com sucesso!
+                  </c:otherwise>
+                </c:choose>
+
+              </div>
+            </c:if>
+
             <div class="phead">
               <div>
                 <h2>Agendamentos</h2>
@@ -485,10 +508,8 @@
           <div class="fcard">
             <h2 id="form-title">Novo agendamento</h2>
             <form id="form-booking" method="post" action="${pageContext.request.contextPath}/admin/agendamentos"
-              data-tem-erro="${not empty erro}"
-              data-r-cliente="<c:out value='${rascunho.idCliente}' />"
-              data-r-veiculo="<c:out value='${rascunho.idVeiculo}' />"
-              data-r-data="<c:out value='${rascunho.data}' />"
+              data-tem-erro="${not empty erro}" data-r-cliente="<c:out value='${rascunho.idCliente}' />"
+              data-r-veiculo="<c:out value='${rascunho.idVeiculo}' />" data-r-data="<c:out value='${rascunho.data}' />"
               data-r-horario="<c:out value='${rascunho.horario}' />"
               data-r-servicos="<c:forEach var='idServico' items='${rascunho.idServicos}'><c:out value='${idServico}' />,</c:forEach>">
               <input type="hidden" id="bk-id">
@@ -578,7 +599,9 @@
               </div>
 
               <p class="tot">Total do Agendamento: <b id="bk-total">R$ 0,00</b></p>
-              <p class="err" id="form-error" role="alert" style="color: #B3261E; font-size: 0.9rem; margin-top: 8px;"><c:out value="${erro}" /></p>
+              <p class="err" id="form-error" role="alert" style="color: #B3261E; font-size: 0.9rem; margin-top: 8px;">
+                <c:out value="${erro}" />
+              </p>
 
               <div class="facts">
                 <button class="btn" type="submit">Salvar Agendamento</button>

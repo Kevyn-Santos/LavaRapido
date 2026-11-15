@@ -331,8 +331,7 @@
                                 <h2 id="historico-detalhes-titulo">Histórico do cliente #
                                     <c:out value="${idClienteSelecionado}" />
                                 </h2>
-                                <p class="small historico-detalhes-intro">Registros ordenados dos mais recentes para os
-                                    mais antigos. Apenas consulta.</p>
+                                <p class="small historico-detalhes-intro">Registros ordenados pelo ID do agendamento (maior para menor). Apenas consulta.</p>
 
                                 <c:choose>
                                     <c:when test="${empty registrosHistorico}">
@@ -373,6 +372,15 @@
                                                                 contratados</span><strong>
                                                                 <c:out value="${registro.servicos}"
                                                                     default="Não informado" />
+                                                            </strong></div>
+                                                        <div class="historico-campo"><span>Agendamento criado por</span><strong>
+                                                                <c:out value="${registro.criadoPor}" />
+                                                            </strong></div>
+                                                        <div class="historico-campo"><span>Atendimento iniciado por</span><strong>
+                                                                <c:out value="${empty registro.responsavelAtendimento ? 'Não registrado' : registro.responsavelAtendimento}" />
+                                                            </strong></div>
+                                                        <div class="historico-campo"><span>Responsáveis pela lavagem</span><strong>
+                                                                <c:out value="${empty registro.lavadores ? 'Não registrados' : registro.lavadores}" />
                                                             </strong></div>
                                                         <div class="historico-campo"><span>Atendimento</span><strong>
                                                                 <c:out

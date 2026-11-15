@@ -51,6 +51,14 @@ CREATE TABLE agendamento (
         'CANCELADO',
         'CONCLUIDO'
 	) NOT NULL DEFAULT 'AGENDADO',
+    criado_por_tipo ENUM(
+        'CLIENTE',
+        'ATENDENTE',
+        'ADMINISTRADOR'
+    ) NULL,
+
+id_colaborador_criador INT NULL,
+
     
     CONSTRAINT uq_agendamento_veiculo_data_horario
         UNIQUE (id_veiculo, data, horario),
@@ -111,6 +119,8 @@ CREATE TABLE atendimento (
 	) NOT NULL DEFAULT 'AGUARDANDO',
     data_inicio DATETIME,
     data_fim DATETIME,
+    id_colaborador_responsavel INT NULL,
+
     
 	INDEX idx_atendimento_status (status),
     
@@ -181,4 +191,17 @@ CREATE TABLE pagamento (
                 AND forma_pagamento IS NOT NULL
             )
         )
+
 );
+
+-- Identifica o colaborador que criou o agendamento
+ALTER TABLE agendamento
+ADD CONSTRAINT fk_agendamento_criador
+FOREIGN KEY (id_colaborador_criador)
+REFERENCES colaborador(id_colaborador);
+
+-- Identifica o colaborador que iniciou o atendimento
+ALTER TABLE atendimento
+ADD CONSTRAINT fk_atendimento_responsavel
+FOREIGN KEY (id_colaborador_responsavel)
+REFERENCES colaborador(id_colaborador);

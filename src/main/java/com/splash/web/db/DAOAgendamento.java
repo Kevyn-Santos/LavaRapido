@@ -370,8 +370,43 @@ public class DAOAgendamento {
     Inserção de agendamentos
     --------------------------------------*/
 
+
+    /**
+     * Compatibilidade com os fluxos existentes enquanto os servlets e a API
+     * passam a informar explicitamente a autoria do agendamento.
+     * Não inventa a origem de registros criados por chamadas antigas.
+     */
     public void criar(int idCliente, int idVeiculo, LocalDate data, String horario,
             List<Integer> idsServicos) throws SQLException {
+        criar(idCliente, idVeiculo, data, horario, idsServicos, null, null);
+    }
+
+    /**
+     * Cria o agendamento e registra a origem informada pelo fluxo autenticado.
+     * CLIENTE não possui colaborador criador; ATENDENTE e ADMINISTRADOR exigem
+     * o ID do colaborador autenticado. A identificação deve vir da sessão,
+     * nunca de um parâmetro arbitrário enviado pelo navegador.
+     */
+    public void criar(int idCliente, int idVeiculo, LocalDate data, String horario,
+            List<Integer> idsServicos, String criadoPorTipo, Integer idColaboradorCriador)
+            throws SQLException {
+        if (criadoPorTipo == null) {
+            if (idColaboradorCriador != null) {
+                throw new IllegalArgumentException("Colaborador criador sem tipo de origem.");
+            }
+        } else if ("CLIENTE".equals(criadoPorTipo)) {
+            if (idColaboradorCriador != null) {
+                throw new IllegalArgumentException("Agendamento de cliente não pode ter colaborador criador.");
+            }
+        } else if ("ATENDENTE".equals(criadoPorTipo)
+                || "ADMINISTRADOR".equals(criadoPorTipo)) {
+            if (idColaboradorCriador == null || idColaboradorCriador <= 0) {
+                throw new IllegalArgumentException("Informe o colaborador que criou o agendamento.");
+            }
+        } else {
+            throw new IllegalArgumentException("Tipo de criador do agendamento inválido.");
+        }
+
         // Regras de horário: grade, não passado e um agendamento por horário (checado na transação)
         LocalTime horarioAgendado = GradeHorarios.interpretar(horario);
         LocalDate hoje = LocalDate.now();
@@ -400,7 +435,11 @@ public class DAOAgendamento {
                 WHERE id_servico = ?
                   AND ativo = TRUE
                 """;
-        String insertAppointment = "INSERT INTO agendamento (id_veiculo, data, horario) VALUES (?, ?, ?)";
+        String insertAppointment = """
+                INSERT INTO agendamento
+                    (id_veiculo, data, horario, criado_por_tipo, id_colaborador_criador)
+                VALUES (?, ?, ?, ?, ?)
+                """;
         String insertService = "INSERT INTO agendamento_servico "
                 + "(id_agendamento, id_servico, valor_praticado) VALUES (?, ?, ?)";
         String insertAttendance = "INSERT INTO atendimento (id_agendamento) VALUES (?)";
@@ -455,6 +494,12 @@ public class DAOAgendamento {
                     statement.setInt(1, idVeiculo);
                     statement.setDate(2, Date.valueOf(data));
                     statement.setTime(3, Time.valueOf(horarioAgendado));
+                    statement.setString(4, criadoPorTipo);
+                    if (idColaboradorCriador == null) {
+                        statement.setNull(5, java.sql.Types.INTEGER);
+                    } else {
+                        statement.setInt(5, idColaboradorCriador);
+                    }
                     statement.executeUpdate();
                     try (ResultSet keys = statement.getGeneratedKeys()) {
                         if (!keys.next()) {

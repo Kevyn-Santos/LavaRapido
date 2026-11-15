@@ -130,10 +130,18 @@ public class AdminServlet extends HttpServlet {
                     idsColaboradores.add(idColaborador);
                 }
 
+                Integer idResponsavel = (Integer) request.getSession(false)
+                        .getAttribute("colaboradorId");
+                if (idResponsavel == null || idResponsavel <= 0) {
+                    throw new IllegalArgumentException(
+                            "Colaborador responsável não identificado.");
+                }
+
                 boolean iniciado = new DAOAtendimento()
                         .iniciarAtendimento(
                                 idAtendimento,
-                                idsColaboradores);
+                                idsColaboradores,
+                                idResponsavel);
 
                 if (!iniciado) {
                     throw new IllegalArgumentException(
@@ -314,7 +322,13 @@ public class AdminServlet extends HttpServlet {
                 ids.add(colaboradorId);
             }
         }
-        new DAOAtendimento().atualizar(id, status, ids);
+        Integer idResponsavel = (Integer) request.getSession(false)
+                .getAttribute("colaboradorId");
+        if (idResponsavel == null || idResponsavel <= 0) {
+            throw new IllegalArgumentException(
+                    "Colaborador responsável não identificado.");
+        }
+        new DAOAtendimento().atualizar(id, status, ids, idResponsavel);
     }
 
     private void processarPagamento(HttpServletRequest request) throws SQLException {
