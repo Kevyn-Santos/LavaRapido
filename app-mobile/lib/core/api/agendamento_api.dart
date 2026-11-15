@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:flash_splash/core/api/api_client.dart';
 import 'package:flash_splash/core/api/api_exception.dart';
-import 'package:flash_splash/core/api/model/AgendamentoModel.dart';
+import 'package:flash_splash/core/api/model/agendamento_model.dart';
+import 'package:flash_splash/core/api/model/status_enums.dart';
 
 /// Agendamentos do cliente logado (o servidor usa a sessão para saber quem é).
 class AgendamentoApi {
@@ -46,12 +47,13 @@ class AgendamentoApi {
         if (resposta.statusCode != 200) throw ApiException.deResposta(resposta);
       });
 
-  /// `POST /agendamentos/{id}/pagar` (200). [forma] é `PIX`, `CREDITO` ou `DEBITO`.
+  /// `POST /agendamentos/{id}/pagar` (200). [forma] deve ser uma de [FormaPagamento.doApp];
+  /// `dinheiro` é só do atendente e a API devolve 422.
   /// 409 = o pagamento já foi processado (ex.: o atendente marcou como pago no site, ou o
   /// agendamento foi cancelado): recarregue a lista com [listar].
-  Future<void> pagar(String idAgendamento, {required String forma}) =>
+  Future<void> pagar(String idAgendamento, {required FormaPagamento forma}) =>
       comTratamentoDeRede(() async {
-        final resposta = await apiClient.post('/agendamentos/$idAgendamento/pagar', body: {'forma': forma});
+        final resposta = await apiClient.post('/agendamentos/$idAgendamento/pagar', body: {'forma': forma.valor});
         if (resposta.statusCode != 200) throw ApiException.deResposta(resposta);
       });
 }

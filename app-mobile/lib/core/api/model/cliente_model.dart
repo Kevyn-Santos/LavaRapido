@@ -23,14 +23,4 @@ class ClienteModel {
       telefone: (json['telefone'] ?? '') as String,
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'nome': nome,
-      'email': email,
-      'cpf': cpf,
-      'telefone': telefone,
-    };
-  }
 }

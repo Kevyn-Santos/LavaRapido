@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flash_splash/core/api/api_client.dart';
 import 'package:flash_splash/core/api/api_exception.dart';
-import 'package:flash_splash/core/api/model/ServicoModel.dart';
+import 'package:flash_splash/core/api/model/servico_model.dart';
 
 /// Catálogo de serviços (`GET /servicos`, rota pública: funciona até sem login).
 class ServicoApi {
