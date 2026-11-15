@@ -1468,6 +1468,18 @@ components:
           type: array
           items:
             type: integer
+        servicos:
+          type: array
+          description: Serviços do agendamento com o `valor` praticado na época (não o preço atual do catálogo); a soma dos `valor` é `total_servico`.
+          items:
+            type: object
+            properties:
+              id_servico:
+                type: integer
+              nome:
+                type: string
+              valor:
+                type: number
         total_servico:
           type: number
         status:

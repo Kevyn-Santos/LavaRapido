@@ -15,11 +15,7 @@ Alinha o cliente HTTP do Flutter com a API depois das mudanças de `api-datas-is
 ## Pendências (não feitas)
 1. **`AgendamentoModel` sem `status` e `status_atendimento`** que o `GET /agendamentos` já devolve; criar enums no Dart. Corrigir também o resto do comentário de cabeçalho.
 2. **`VeiculoApi.cadastrar`:** o 201 já traz `id_veiculo` (ver `ajuste-veiculos-api-mobile.md`), então deve retornar `VeiculoModel` em vez de exigir `listar()` de novo; `cor` é opcional na API mas obrigatória no Dart.
-3. **`Clienteapi` (`cliente_api.dart`):**
-   - renomear para `ClienteApi`;
-   - `atualizarCliente`/`getCliente` não usam `comTratamentoDeRede`, lançam `Exception` genérica em vez de `ApiException` e recebem o endpoint por parâmetro (fixar `/usuarios`);
-   - `getCliente` espera uma lista, mas `GET /usuarios` devolve um objeto único (quebraria);
-   - o `login` duplica o tratamento de rede.
+3. ~~**`Clienteapi`**~~ **Resolvida** em `mobile-core-api-cliente-api.md` (`ClienteApi.buscar()` devolve objeto; `atualizar` por PATCH).
 4. **HTTPS e ambiente:** `APIClient` usa `Uri.http` (sem TLS), o que impede o uso no Render; `BASE_URI` fixo em `10.0.2.2:8080` (só emulador). Adicionar opção de esquema/host em `api_config.dart`.
 5. **Logout:** não há rota no servidor (fora de escopo), mas o app precisa de um ponto que chame `APIClient.limparSessao()`.
 6. **Nomes dos arquivos em `model/`** misturam PascalCase e camelCase.
