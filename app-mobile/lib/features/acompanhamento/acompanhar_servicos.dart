@@ -118,7 +118,7 @@ class _CartaoAcompanhamento extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               '${Formatadores.dataHora(agendamento.dataHora)}\n'
-              '${agendamento.veiculo.modelo} • ${agendamento.veiculo.placa}',
+              '${agendamento.veiculo.marca} ${agendamento.veiculo.modelo} • ${agendamento.veiculo.placa}',
               style: TextStyle(color: cores.onSurfaceVariant),
             ),
             const SizedBox(height: 16),

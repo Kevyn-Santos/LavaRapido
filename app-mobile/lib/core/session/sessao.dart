@@ -1,4 +1,5 @@
 import 'package:flash_splash/core/api/api_client.dart';
+import 'package:flash_splash/core/data/repositorio.dart';
 
 /// Dados da sessão do cliente logado (somente em memória).
 class Sessao {
@@ -17,5 +18,6 @@ class Sessao {
     cpf = '';
     id = '';
     APIClient.limparSessao();
+    Repositorio.limpar();
   }
 }

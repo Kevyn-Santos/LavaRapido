@@ -54,7 +54,7 @@ class MeusVeiculos extends StatelessWidget {
         return AlertDialog(
           title: const Text('Apagar veículo'),
           content: Text(
-            'Deseja apagar "${veiculo.modelo}" (${veiculo.placa})?',
+            'Deseja apagar "${veiculo.marca} ${veiculo.modelo}" (${veiculo.placa})?',
           ),
           actions: [
             TextButton(
@@ -108,7 +108,7 @@ class MeusVeiculos extends StatelessWidget {
                       Icons.directions_car,
                       color: cor,
                     ),
-                    title: Text(veiculo.modelo),
+                    title: Text('${veiculo.marca} ${veiculo.modelo}'),
                     subtitle: Text(
                       'Placa: ${veiculo.placa}\nCor: ${veiculo.cor}',
                     ),
@@ -160,6 +160,8 @@ class _VeiculoDialog extends StatefulWidget {
 
 class _VeiculoDialogState extends State<_VeiculoDialog> {
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _marca =
+      TextEditingController(text: widget.veiculo?.marca ?? '');
   late final TextEditingController _modelo =
       TextEditingController(text: widget.veiculo?.modelo ?? '');
   late final TextEditingController _placa =
@@ -173,6 +175,7 @@ class _VeiculoDialogState extends State<_VeiculoDialog> {
 
   @override
   void dispose() {
+    _marca.dispose();
     _modelo.dispose();
     _placa.dispose();
     _cor.dispose();
@@ -196,6 +199,7 @@ class _VeiculoDialogState extends State<_VeiculoDialog> {
   void _salvar() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    final marca = _marca.text.trim();
     final modelo = _modelo.text.trim();
     final placa = _placa.text.trim().toUpperCase();
     final cor = _cor.text.trim();
@@ -204,8 +208,8 @@ class _VeiculoDialogState extends State<_VeiculoDialog> {
     Navigator.pop(
       context,
       original == null
-          ? Veiculo(modelo: modelo, placa: placa, cor: cor)
-          : original.copiarCom(modelo: modelo, placa: placa, cor: cor),
+          ? Veiculo(marca: marca, modelo: modelo, placa: placa, cor: cor)
+          : original.copiarCom(marca: marca, modelo: modelo, placa: placa, cor: cor),
     );
   }
 
@@ -219,6 +223,14 @@ class _VeiculoDialogState extends State<_VeiculoDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              TextFormField(
+                controller: _marca,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                validator: _obrigatorio,
+                decoration: const InputDecoration(labelText: 'Marca'),
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _modelo,
                 textCapitalization: TextCapitalization.words,

@@ -11,7 +11,7 @@ import 'package:flash_splash/features/perfil/meus_veiculos.dart';
 import 'package:flash_splash/features/perfil/notificacoes.dart';
 import 'package:flash_splash/core/api/api_client.dart';
 import 'package:flash_splash/core/api/cliente_api.dart';
-import 'package:flash_splash/core/api/model/ClienteModel.dart';
+import 'package:flash_splash/core/api/model/cliente_model.dart';
 
 class PerfilCliente extends StatefulWidget {
   const PerfilCliente({super.key});
@@ -21,14 +21,14 @@ class PerfilCliente extends StatefulWidget {
 }
 
 class _PerfilClienteState extends State<PerfilCliente> {
-  late final Clienteapi _clienteApi;
-  late Future<List<ClienteModel>> _futuroCliente;
+  late final ClienteApi _clienteApi;
+  late Future<ClienteModel> _futuroCliente;
 
   @override
   void initState() {
     super.initState();
-    _clienteApi = Clienteapi(apiClient: APIClient());
-    _futuroCliente = _clienteApi.getCliente('/usuarios'); // o servidor identifica o cliente pela sessão
+    _clienteApi = ClienteApi(apiClient: APIClient());
+    _futuroCliente = _clienteApi.buscar(); // o servidor identifica o cliente pela sessão
   }
 
   Widget _opcao(
@@ -75,13 +75,19 @@ class _PerfilClienteState extends State<PerfilCliente> {
             ),
           ),
           const SizedBox(height: 15),
-          const Center(
-            child: Text(
-              'Cliente Fast Splash',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+          Center(
+            child: FutureBuilder<ClienteModel>(
+              future: _futuroCliente,
+              builder: (context, snapshot) {
+                final nome = snapshot.data?.nome ?? '';
+                return Text(
+                  nome.isEmpty ? 'Cliente Fast Splash' : nome,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 5),

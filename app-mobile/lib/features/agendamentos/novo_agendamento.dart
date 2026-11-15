@@ -158,7 +158,7 @@ class _NovoAgendamentoState extends State<NovoAgendamento> {
                 children: [
                   for (final veiculo in lista)
                     ChoiceChip(
-                      label: Text('${veiculo.modelo} • ${veiculo.placa}'),
+                      label: Text('${veiculo.marca} ${veiculo.modelo} • ${veiculo.placa}'),
                       selected: veiculo == _veiculo,
                       onSelected: (_) {
                         setState(() {

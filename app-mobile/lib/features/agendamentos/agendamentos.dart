@@ -95,7 +95,7 @@ class Agendamentos extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             '${Formatadores.dataHora(agendamento.dataHora)}\n'
-                            '${agendamento.veiculo.modelo} • '
+                            '${agendamento.veiculo.marca} ${agendamento.veiculo.modelo} • '
                             '${agendamento.veiculo.placa}\n'
                             '${agendamento.servico.precoFormatado}'
                             '${agendamento.pago ? ' • Pago' : ''}',

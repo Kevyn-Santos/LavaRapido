@@ -24,7 +24,7 @@ class _LoginClienteState extends State<LoginCliente> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
 
-  final Clienteapi _clienteApi = Clienteapi(apiClient: APIClient());
+  final ClienteApi _clienteApi = ClienteApi(apiClient: APIClient());
 
   bool _esconderSenha = true;
   bool _carregando = false;

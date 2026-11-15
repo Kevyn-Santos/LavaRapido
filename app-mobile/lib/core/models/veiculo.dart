@@ -1,5 +1,6 @@
 class Veiculo {
   final String id;
+  final String marca;
   final String modelo;
   final String placa;
   final String cor;
@@ -8,14 +9,16 @@ class Veiculo {
   /// fornecer o id real depois).
   Veiculo({
     String? id,
+    required this.marca,
     required this.modelo,
     required this.placa,
     required this.cor,
   }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
 
-  Veiculo copiarCom({String? modelo, String? placa, String? cor}) {
+  Veiculo copiarCom({String? marca, String? modelo, String? placa, String? cor}) {
     return Veiculo(
       id: id,
+      marca: marca ?? this.marca,
       modelo: modelo ?? this.modelo,
       placa: placa ?? this.placa,
       cor: cor ?? this.cor,

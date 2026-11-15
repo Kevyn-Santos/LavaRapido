@@ -35,7 +35,8 @@ class Repositorio {
       ValueNotifier<List<Veiculo>>([
     Veiculo(
       id: 'veiculo_exemplo',
-      modelo: 'Nissan Skyline',
+      marca: 'Nissan',
+      modelo: 'Skyline',
       placa: 'ABC-1234',
       cor: 'Azul',
     ),
@@ -43,6 +44,13 @@ class Repositorio {
 
   static final ValueNotifier<List<Agendamento>> agendamentos =
       ValueNotifier<List<Agendamento>>([]);
+
+  /// Apaga os dados do cliente (veículos e agendamentos). Chamado no logout, para o
+  /// próximo login não ver os dados de quem saiu. Os serviços (catálogo público) ficam.
+  static void limpar() {
+    veiculos.value = const [];
+    agendamentos.value = const [];
+  }
 
   static String _normalizarPlaca(String placa) =>
       placa.replaceAll('-', '').trim().toUpperCase();
