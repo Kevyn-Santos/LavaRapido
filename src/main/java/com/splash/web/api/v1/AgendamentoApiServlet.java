@@ -3,14 +3,15 @@ package com.splash.web.api.v1;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.splash.web.api.ApiAuthFilter;
 import com.splash.web.api.Json;
 import com.splash.web.db.DAOAgendamento;
+import com.splash.web.db.DAOPagamento;
 import com.splash.web.model.dto.AgendamentoView;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -23,13 +24,18 @@ import org.json.JSONObject;
 /**
  * <pre>
  * GET  /api/v1/agendamentos                -> [{id_agendamento, id_veiculo, data_agendamento, hora_agendamento,
- *                                              id_servico[], total_servico, status_pagamento, forma_pagamento}]
- * POST /api/v1/agendamentos               {idveiculo, dataAgendamento (dd/MM/yyyy),
+ *                                              id_servico[], total_servico, status, status_atendimento,
+ *                                              status_pagamento, forma_pagamento}]
+ *                                              (data em yyyy-MM-dd; status_atendimento é null se não houver)
+ * POST /api/v1/agendamentos               {idveiculo, dataAgendamento (yyyy-MM-dd),
  *                                          horarioAgendamento (HH:mm, grade 06:00-17:30 de 30 em 30 min),
  *                                          idservico[]} -> 201 {mensagem}; 422 se o horário estiver
  *                                          fora da grade, já passado ou indisponível (ver GET /horarios)
  * POST /api/v1/agendamentos/{id}/cancelar -> 200 {mensagem}; 404 se não existir, for de outro cliente
  *                                            ou não estiver AGENDADO
+ * POST /api/v1/agendamentos/{id}/pagar {forma: PIX|CREDITO|DEBITO} -> 200 {mensagem, status_pagamento, forma_pagamento};
+ *                                            422 forma inválida, 404 se não for do cliente, 409 se o pagamento
+ *                                            já foi processado (ex.: o atendente marcou como pago no site)
  * </pre>
  *
  * Erros: sempre {@code {"erro": "mensagem"}} (ver {@link Json#erro}).
@@ -44,17 +50,18 @@ public class AgendamentoApiServlet extends HttpServlet {
         int idCliente = ApiAuthFilter.idAutenticado(request);
 
         try {
-            DateTimeFormatter formatoData = DateTimeFormatter.ofPattern("yyyy/MM/dd");
             JSONArray lista = new JSONArray();
 
             for (AgendamentoView item : new DAOAgendamento().listarPorCliente(idCliente)) {
                 JSONObject agendamento = new JSONObject();
                 agendamento.put("id_agendamento", item.getIdAgendamento());
                 agendamento.put("id_veiculo", item.getidVeiculo());
-                agendamento.put("data_agendamento", item.getData().format(formatoData));
+                agendamento.put("data_agendamento", item.getData().toString()); // ISO yyyy-MM-dd
                 agendamento.put("hora_agendamento", item.getHorario());
                 agendamento.put("id_servico", new JSONArray(item.getIdServico()));
                 agendamento.put("total_servico", item.getTotal());
+                agendamento.put("status", Json.ouNulo(item.getStatus()));
+                agendamento.put("status_atendimento", Json.ouNulo(item.getStatusAtendimento()));
                 agendamento.put("status_pagamento", Json.ouNulo(item.getStatusPagamento()));
                 agendamento.put("forma_pagamento", Json.ouNulo(item.getFormaPagamento()));
                 lista.put(agendamento);
@@ -74,6 +81,8 @@ public class AgendamentoApiServlet extends HttpServlet {
         String rota = request.getPathInfo();
         if (rota != null && rota.endsWith("/cancelar")) {
             cancelar(request, response);
+        } else if (rota != null && rota.endsWith("/pagar")) {
+            pagar(request, response);
         } else {
             criar(request, response);
         }
@@ -85,8 +94,7 @@ public class AgendamentoApiServlet extends HttpServlet {
             int idCliente = ApiAuthFilter.idAutenticado(request);
             int idVeiculo = corpo.getInt("idveiculo");
             String horario = corpo.getString("horarioAgendamento");
-            LocalDate data = LocalDate.parse(corpo.getString("dataAgendamento"),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            LocalDate data = LocalDate.parse(corpo.getString("dataAgendamento"));
 
             JSONArray servicos = corpo.getJSONArray("idservico");
             List<Integer> idsServicos = new ArrayList<>();
@@ -101,7 +109,7 @@ public class AgendamentoApiServlet extends HttpServlet {
 
         } catch (DateTimeParseException e) {
             // a mensagem do Java é em inglês: texto fixo em português
-            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Data inválida. Use dd/MM/yyyy");
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Data inválida. Use yyyy-MM-dd");
         } catch (JSONException e) {
             // corpo vazio/inválido, campo ausente ou com tipo errado
             Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Requisição inválida: " + e.getMessage());
@@ -110,6 +118,60 @@ public class AgendamentoApiServlet extends HttpServlet {
             Json.erro(response, HttpServletResponse.SC_UNPROCESSABLE_CONTENT, e.getMessage());
         } catch (SQLException e) {
             getServletContext().log("Erro ao criar agendamento", e);
+            Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro no acesso ao banco");
+        }
+    }
+
+    /** Formas que o cliente pode escolher no app (DINHEIRO só o atendente registra, no site). */
+    private static final Set<String> FORMAS_DO_APP = Set.of("PIX", "CREDITO", "DEBITO");
+
+    private void pagar(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        int idCliente = ApiAuthFilter.idAutenticado(request);
+        String[] partes = request.getPathInfo().split("/"); // "", "{id}", "pagar"
+        int idAgendamento;
+        String forma;
+        try {
+            if (partes.length != 3) {
+                throw new NumberFormatException();
+            }
+            idAgendamento = Integer.parseInt(partes[1]);
+        } catch (NumberFormatException e) {
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST,
+                    "Informe o agendamento no caminho: /api/v1/agendamentos/{idAgendamento}/pagar");
+            return;
+        }
+        try {
+            forma = Json.lerCorpo(request).getString("forma");
+        } catch (JSONException e) {
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Requisição inválida: " + e.getMessage());
+            return;
+        }
+        if (!FORMAS_DO_APP.contains(forma)) {
+            Json.erro(response, HttpServletResponse.SC_UNPROCESSABLE_CONTENT,
+                    "Forma de pagamento inválida. Use PIX, CREDITO ou DEBITO");
+            return;
+        }
+
+        try {
+            DAOPagamento dao = new DAOPagamento();
+            Integer idPagamento = dao.idDoAgendamentoDoCliente(idCliente, idAgendamento);
+            if (idPagamento == null) {
+                Json.erro(response, HttpServletResponse.SC_NOT_FOUND, "Agendamento não encontrado");
+                return;
+            }
+            try {
+                dao.atualizar(idPagamento, "PAGO", forma);
+            } catch (IllegalArgumentException e) {
+                // não está PENDENTE (já pago/cancelado) ou o agendamento foi cancelado
+                Json.erro(response, HttpServletResponse.SC_CONFLICT, e.getMessage());
+                return;
+            }
+            Json.Response_ok(response, new JSONObject()
+                    .put("mensagem", "Pagamento do agendamento %d confirmado".formatted(idAgendamento))
+                    .put("status_pagamento", "PAGO")
+                    .put("forma_pagamento", forma).toString());
+        } catch (SQLException e) {
+            getServletContext().log("Erro ao pagar agendamento " + idAgendamento, e);
             Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro no acesso ao banco");
         }
     }

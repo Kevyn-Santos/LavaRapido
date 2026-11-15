@@ -5,13 +5,14 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 
 import com.splash.web.api.ApiAuthFilter;
+import com.splash.web.api.ApiServlet;
 import com.splash.web.api.Json;
 import com.splash.web.api.dto.NovoVeiculoRequest;
 import com.splash.web.db.DAOVeiculo;
 import com.splash.web.model.Validacao;
 import com.splash.web.model.dto.VeiculoView;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
@@ -22,6 +23,8 @@ import org.json.JSONObject;
  * <pre>
  * GET    /api/v1/veiculos              -> [{id_veiculo, placa, marca, modelo, cor}]
  * POST   /api/v1/veiculos              {placa, marca, modelo, cor?} -> 201 {id_veiculo, placa, marca, modelo, cor}
+ * PATCH  /api/v1/veiculos/{idVeiculo}  {placa?, marca?, modelo?, cor?} -> 200 {id_veiculo, placa, marca, modelo, cor}
+ *         (campo ausente não muda; "cor" vazia ou null apaga a cor; 404 se não for do cliente; 409 placa repetida)
  * DELETE /api/v1/veiculos/{idVeiculo}  -> 200 {mensagem}
  * </pre>
  *
@@ -29,7 +32,7 @@ import org.json.JSONObject;
  * Autenticação: o cliente é o da sessão (ver {@link ApiAuthFilter}); o app não envia {@code idcliente}.
  */
 @WebServlet("/api/v1/veiculos/*")
-public class VeiculoApiServlet extends HttpServlet {
+public class VeiculoApiServlet extends ApiServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -99,6 +102,75 @@ public class VeiculoApiServlet extends HttpServlet {
             getServletContext().log("Erro ao cadastrar veículo", e);
             Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro no acesso ao banco");
         }
+    }
+
+    @Override
+    protected void doPatch(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int idCliente = ApiAuthFilter.idAutenticado(request);
+        int idVeiculo;
+        try {
+            String rota = request.getPathInfo();
+            if (rota == null || rota.length() < 2) {
+                throw new NumberFormatException();
+            }
+            idVeiculo = Integer.parseInt(rota.substring(1));
+        } catch (NumberFormatException e) {
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST,
+                    "Informe o veículo no caminho: /api/v1/veiculos/{idVeiculo}");
+            return;
+        }
+
+        JSONObject corpo;
+        try {
+            corpo = Json.lerCorpo(request);
+        } catch (JSONException e) {
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Requisição inválida: " + e.getMessage());
+            return;
+        }
+
+        try {
+            DAOVeiculo dao = new DAOVeiculo();
+            VeiculoView atual = dao.listarPorCliente(idCliente).stream()
+                    .filter(v -> v.getId() == idVeiculo).findFirst().orElse(null);
+            if (atual == null) {
+                Json.erro(response, HttpServletResponse.SC_NOT_FOUND, "Veículo não encontrado");
+                return;
+            }
+
+            // Campo ausente (ou texto em branco) mantém o valor atual; só "cor" pode ser apagada
+            String placa = Validacao.placa(corpo.optString("placa", atual.getPlaca()));
+            String marca = textoOu(corpo, "marca", atual.getMarca());
+            String modelo = textoOu(corpo, "modelo", atual.getModelo());
+            String cor = corpo.has("cor") ? corpo.optString("cor", null) : atual.getCor();
+            cor = cor == null || cor.isBlank() ? null : cor.trim();
+
+            if (!dao.atualizar(idCliente, idVeiculo, placa, marca, modelo, cor)) {
+                Json.erro(response, HttpServletResponse.SC_NOT_FOUND, "Veículo não encontrado");
+                return;
+            }
+
+            Json.Response_ok(response, new JSONObject()
+                    .put("id_veiculo", idVeiculo)
+                    .put("placa", placa)
+                    .put("marca", marca)
+                    .put("modelo", modelo)
+                    .put("cor", Json.ouNulo(cor)).toString());
+
+        } catch (IllegalArgumentException e) {
+            // placa inválida (Validacao.placa)
+            Json.erro(response, HttpServletResponse.SC_UNPROCESSABLE_CONTENT, e.getMessage());
+        } catch (SQLIntegrityConstraintViolationException e) {
+            Json.erro(response, HttpServletResponse.SC_CONFLICT, "Placa já cadastrada");
+        } catch (SQLException e) {
+            getServletContext().log("Erro ao atualizar veículo " + idVeiculo, e);
+            Json.erro(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Houve um erro no acesso ao banco");
+        }
+    }
+
+    private static String textoOu(JSONObject corpo, String campo, String atual) {
+        String valor = corpo.optString(campo, null);
+        return valor == null || valor.isBlank() ? atual : valor.trim();
     }
 
     @Override

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 import com.splash.web.api.Json;
@@ -21,7 +20,7 @@ import org.json.JSONArray;
  * GET /api/v1/horarios?data=20/10/2026 -> ["06:00", "06:30", ...]
  * </pre>
  *
- * Horários livres da data (formato {@code dd/MM/yyyy}, o mesmo do {@code POST /agendamentos}). A grade
+ * Horários livres da data (formato ISO {@code yyyy-MM-dd}, o mesmo do {@code POST /agendamentos}). A grade
  * é de 06:00 a 17:30, de 30 em 30 minutos, com um agendamento por horário ({@link GradeHorarios}).
  * Data passada → {@code []}; hoje → só horários que ainda não passaram. Exige sessão (ApiAuthFilter).
  * Erros: 400 sem {@code data} ou com formato inválido, 500 erro de banco, sempre {@code {"erro": ...}}.
@@ -34,11 +33,10 @@ public class HorarioApiServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         LocalDate data;
         try {
-            data = LocalDate.parse(String.valueOf(request.getParameter("data")),
-                    DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+            data = LocalDate.parse(String.valueOf(request.getParameter("data")));
         } catch (DateTimeParseException e) {
             Json.erro(response, HttpServletResponse.SC_BAD_REQUEST,
-                    "Parâmetro 'data' ausente ou inválido. Use dd/MM/yyyy");
+                    "Parâmetro 'data' ausente ou inválido. Use yyyy-MM-dd");
             return;
         }
 
