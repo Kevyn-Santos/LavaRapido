@@ -682,6 +682,64 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiErro"
   /api/v1/veiculos/{idVeiculo}:
+    patch:
+      tags: [API mobile]
+      summary: Atualiza parcialmente um veículo do cliente logado
+      description: |
+        `VeiculoApiServlet`. Campo ausente mantém o valor atual; `cor` vazia ou `null` apaga a cor.
+      operationId: apiVeiculosAtualizar
+      security:
+        - sessaoCliente: []
+      parameters:
+        - name: idVeiculo
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                placa: {type: string}
+                marca: {type: string}
+                modelo: {type: string}
+                cor: {type: string, nullable: true}
+      responses:
+        "200":
+          description: Veículo atualizado (`id_veiculo`, `placa`, `marca`, `modelo`, `cor`).
+        "400":
+          description: Caminho ou corpo inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: Sem sessão de cliente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "404":
+          description: Veículo não encontrado para este cliente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "409":
+          description: Placa já cadastrada.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "422":
+          description: Placa inválida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
     delete:
       tags: [API mobile]
       summary: Exclui um veículo do cliente logado
@@ -732,7 +790,7 @@ paths:
       tags: [API mobile]
       summary: Lista os agendamentos do cliente logado
       description: |
-        `AgendamentoApiServlet`. Atenção: `data_agendamento` sai como `yyyy/MM/dd`, mas o `POST` recebe `dd/MM/yyyy`.
+        `AgendamentoApiServlet`. Datas em ISO `yyyy-MM-dd` (listagem, `POST` e `GET /horarios`). Inclui `status` do agendamento e `status_atendimento` (etapa da lavagem).
       operationId: apiAgendamentosListar
       security:
         - sessaoCliente: []
@@ -780,7 +838,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiMensagem"
         "400":
-          description: Corpo inválido, campo ausente ou data fora de `dd/MM/yyyy`.
+          description: Corpo inválido, campo ausente ou data fora de `yyyy-MM-dd`.
           content:
             application/json:
               schema:
@@ -849,6 +907,69 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiErro"
+  /api/v1/agendamentos/{idAgendamento}/pagar:
+    post:
+      tags: [API mobile]
+      summary: Cliente paga o agendamento pelo app
+      description: |
+        `AgendamentoApiServlet`. Confere que o agendamento é do cliente da sessão e chama
+        `DAOPagamento.atualizar(id, "PAGO", forma)`. O atendente também pode marcar como pago no painel
+        (`/admin/pagamentos`); os dois gravam na mesma linha de `pagamento`, então `status_pagamento` e
+        `forma_pagamento` do `GET /agendamentos` refletem qualquer um. Só o primeiro vale: o segundo recebe 409.
+      operationId: apiAgendamentosPagar
+      security:
+        - sessaoCliente: []
+      parameters:
+        - name: idAgendamento
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [forma]
+              properties:
+                forma:
+                  type: string
+                  enum: [PIX, CREDITO, DEBITO]
+                  description: "`DINHEIRO` só o atendente registra no painel."
+      responses:
+        "200":
+          description: Pago (`mensagem`, `status_pagamento` = PAGO, `forma_pagamento`).
+        "400":
+          description: Caminho ou corpo inválido.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "401":
+          description: Sem sessão de cliente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "404":
+          description: Agendamento inexistente ou de outro cliente.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "409":
+          description: Pagamento já processado (pago ou cancelado) ou agendamento cancelado.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
+        "422":
+          description: Forma de pagamento inválida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiErro"
   /api/v1/horarios:
     get:
       tags: [API mobile]
@@ -862,7 +983,7 @@ paths:
         - name: data
           in: query
           required: true
-          description: Data no formato `dd/MM/yyyy`.
+          description: Data no formato `yyyy-MM-dd`.
           schema:
             type: string
             example: 20/10/2026
@@ -1338,8 +1459,8 @@ components:
           type: integer
         data_agendamento:
           type: string
-          example: 2026/10/20
-          description: Formato `yyyy/MM/dd`.
+          example: 2026-10-20
+          description: Formato `yyyy-MM-dd`.
         hora_agendamento:
           type: string
           example: "10:00:00"
@@ -1349,6 +1470,14 @@ components:
             type: integer
         total_servico:
           type: number
+        status:
+          type: string
+          enum: [AGENDADO, CANCELADO, CONCLUIDO]
+        status_atendimento:
+          type: string
+          nullable: true
+          enum: [AGUARDANDO, EM_LAVAGEM, FINALIZADO, ENTREGUE]
+          description: Etapa da lavagem; `null` se o agendamento não tem atendimento.
         status_pagamento:
           type: string
           nullable: true
@@ -1363,8 +1492,8 @@ components:
           type: integer
         dataAgendamento:
           type: string
-          example: 20/10/2026
-          description: Formato `dd/MM/yyyy`.
+          example: 2026-10-20
+          description: Formato `yyyy-MM-dd`.
         horarioAgendamento:
           type: string
           example: "10:00"
