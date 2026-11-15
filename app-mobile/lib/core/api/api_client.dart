@@ -19,7 +19,16 @@ class APIClient {
   /// Esquece a sessão do servidor (usar no logout).
   static void limparSessao() => _cookieSessao = null;
 
-  Uri _uri(String endpoint) => Uri.http(config.APIConfig.BASE_URI, '${config.APIConfig.BASE_PATH}$endpoint');
+  /// Monta a URL. O [endpoint] pode trazer query string (`/horarios?data=2030-12-01`): ela é separada
+  /// antes, porque `Uri.http` trata o 2º argumento como caminho e codificaria o `?` como `%3F`.
+  Uri _uri(String endpoint) {
+    final destino = Uri.parse(endpoint);
+    return Uri.http(
+      config.APIConfig.BASE_URI,
+      '${config.APIConfig.BASE_PATH}${destino.path}',
+      destino.hasQuery ? destino.queryParameters : null,
+    );
+  }
 
   Map<String, String> get _headers => {
         ...config.APIConfig.HEADERS,
