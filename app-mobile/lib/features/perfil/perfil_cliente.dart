@@ -9,9 +9,27 @@ import 'package:flash_splash/features/configuracoes/configuracoes.dart';
 import 'package:flash_splash/features/pagamento/pagamento.dart';
 import 'package:flash_splash/features/perfil/meus_veiculos.dart';
 import 'package:flash_splash/features/perfil/notificacoes.dart';
+import 'package:flash_splash/core/api/api_client.dart';
+import 'package:flash_splash/core/api/cliente_api.dart';
+import 'package:flash_splash/core/api/model/ClienteModel.dart';
 
-class PerfilCliente extends StatelessWidget {
+class PerfilCliente extends StatefulWidget {
   const PerfilCliente({super.key});
+
+  @override
+  State<PerfilCliente> createState() => _PerfilClienteState();
+}
+
+class _PerfilClienteState extends State<PerfilCliente> {
+  late final Clienteapi _clienteApi;
+  late Future<List<ClienteModel>> _futuroCliente;
+
+  @override
+  void initState() {
+    super.initState();
+    _clienteApi = Clienteapi(apiClient: APIClient());
+    _futuroCliente = _clienteApi.getCliente('/usuarios'); // o servidor identifica o cliente pela sessão
+  }
 
   Widget _opcao(
     BuildContext context, {

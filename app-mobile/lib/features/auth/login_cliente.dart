@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:flash_splash/core/session/sessao.dart';
+import 'package:flash_splash/core/api/api_client.dart';
+import 'package:flash_splash/core/api/api_exception.dart';
+import 'package:flash_splash/core/api/cliente_api.dart';
 import 'package:flash_splash/core/utils/cpf.dart';
 import 'package:flash_splash/features/agendamentos/novo_agendamento.dart';
 import 'package:flash_splash/features/home/conta_cliente.dart';
@@ -17,30 +20,28 @@ class LoginCliente extends StatefulWidget {
 }
 
 class _LoginClienteState extends State<LoginCliente> {
-  // Senha de demonstração. Troque por autenticação real (backend) antes
-  // de publicar o app.
-  static const String _senhaDemo = '1234';
-
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _cpfController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
 
+  final Clienteapi _clienteApi = Clienteapi(apiClient: APIClient());
+
   bool _esconderSenha = true;
+  bool _carregando = false;
 
   @override
   void dispose() {
-    _cpfController.dispose();
+    _emailController.dispose();
     _senhaController.dispose();
     super.dispose();
   }
 
-  String? _validarCpf(String? valor) {
-    final texto = valor ?? '';
-    if (texto.trim().isEmpty) return 'Informe o CPF.';
-    if (Cpf.somenteDigitos(texto).length != 11) {
-      return 'O CPF deve ter 11 dígitos.';
+  String? _validarEmail(String? valor) {
+    final texto = (valor ?? '').trim();
+    if (texto.isEmpty) return 'Informe o e-mail.';
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(texto)) {
+      return 'E-mail inválido.';
     }
-    if (!Cpf.valido(texto)) return 'CPF inválido.';
     return null;
   }
 
@@ -49,17 +50,25 @@ class _LoginClienteState extends State<LoginCliente> {
     return null;
   }
 
-  void _entrar() {
+  Future<void> _entrar() async {
+    if (_carregando) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    if (_senhaController.text != _senhaDemo) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Senha incorreta.')),
+    setState(() => _carregando = true);
+    try {
+      final cliente = await _clienteApi.login(
+        _emailController.text.trim(),
+        _senhaController.text,
       );
+      Sessao.id = cliente.id;
+      Sessao.cpf = Cpf.somenteDigitos(cliente.cpf);
+    } on ApiException catch (e) {
+      _avisar(e.mensagem);
       return;
+    } finally {
+      if (mounted) setState(() => _carregando = false);
     }
-
-    Sessao.cpf = Cpf.somenteDigitos(_cpfController.text);
+    if (!mounted) return;
 
     final navegador = Navigator.of(context);
     navegador.pushReplacement(
@@ -74,6 +83,11 @@ class _LoginClienteState extends State<LoginCliente> {
         ),
       );
     }
+  }
+
+  void _avisar(String mensagem) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensagem)));
   }
 
   @override
@@ -116,15 +130,15 @@ class _LoginClienteState extends State<LoginCliente> {
                 ),
                 const SizedBox(height: 40),
                 TextFormField(
-                  controller: _cpfController,
-                  keyboardType: TextInputType.number,
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [CpfInputFormatter()],
-                  validator: _validarCpf,
+                  autocorrect: false,
+                  validator: _validarEmail,
                   decoration: const InputDecoration(
-                    labelText: 'CPF',
-                    hintText: '000.000.000-00',
-                    prefixIcon: Icon(Icons.person),
+                    labelText: 'E-mail',
+                    hintText: 'nome@exemplo.com',
+                    prefixIcon: Icon(Icons.email),
                   ),
                 ),
                 const SizedBox(height: 18),
@@ -157,14 +171,20 @@ class _LoginClienteState extends State<LoginCliente> {
                   width: double.infinity,
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: _entrar,
-                    child: const Text(
-                      'ENTRAR',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+                    onPressed: _carregando ? null : _entrar,
+                    child: _carregando
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text(
+                            'ENTRAR',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
                   ),
                 ),
                 const SizedBox(height: 15),
