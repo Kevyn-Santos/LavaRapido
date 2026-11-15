@@ -40,50 +40,66 @@ public class AdminAgendamentoServlet extends HttpServlet {
         }
 
         try {
+
             String acao = WebSupport.campo(request, "acao");
+
+            if ("cancelar".equals(acao)) {
+
+                Integer idAgendamento = WebSupport.inteiro(
+                        WebSupport.campo(request, "idAgendamento"));
+
+                if (idAgendamento == null || idAgendamento <= 0) {
+                    throw new IllegalArgumentException(
+                            "Agendamento inválido.");
+                }
+
+                boolean cancelado = new DAOAgendamento()
+                        .cancelarAdministrativo(idAgendamento);
+
+                if (!cancelado) {
+                    throw new IllegalArgumentException(
+                            "Agendamento não encontrado, já cancelado, concluído ou com pagamento realizado.");
+                }
+
+                response.sendRedirect(
+                        request.getContextPath()
+                                + "/painel/agendamentos?sucesso=1");
+                return;
+            }
 
             if (!"agendar".equals(acao)) {
                 throw new IllegalArgumentException(
-                    "Ação de agendamento inválida."
-                );
+                        "Ação de agendamento inválida.");
             }
 
             Integer idCliente = WebSupport.inteiro(
-                WebSupport.campo(request, "idCliente")
-            );
+                    WebSupport.campo(request, "idCliente"));
 
             Integer idVeiculo = WebSupport.inteiro(
-                WebSupport.campo(request, "idVeiculo")
-            );
+                    WebSupport.campo(request, "idVeiculo"));
 
             if (idCliente == null || idCliente <= 0
                     || idVeiculo == null || idVeiculo <= 0) {
                 throw new IllegalArgumentException(
-                    "Selecione um cliente e um veículo válidos."
-                );
+                        "Selecione um cliente e um veículo válidos.");
             }
 
             LocalDate data = LocalDate.parse(
-                WebSupport.campo(request, "data")
-            );
+                    WebSupport.campo(request, "data"));
 
             LocalTime horario = LocalTime.parse(
-                WebSupport.campo(request, "horario")
-            );
+                    WebSupport.campo(request, "horario"));
 
             if (data.isBefore(LocalDate.now())) {
                 throw new IllegalArgumentException(
-                    "Não é possível agendar uma data anterior à atual."
-                );
+                        "Não é possível agendar uma data anterior à atual.");
             }
 
-            String[] idsRecebidos =
-                request.getParameterValues("idServicos");
+            String[] idsRecebidos = request.getParameterValues("idServicos");
 
             if (idsRecebidos == null || idsRecebidos.length == 0) {
                 throw new IllegalArgumentException(
-                    "Selecione pelo menos um serviço."
-                );
+                        "Selecione pelo menos um serviço.");
             }
 
             List<Integer> idsServicos = new ArrayList<>();
@@ -94,8 +110,7 @@ public class AdminAgendamentoServlet extends HttpServlet {
 
                 if (idServico == null || idServico <= 0) {
                     throw new IllegalArgumentException(
-                        "Um dos serviços selecionados é inválido."
-                    );
+                            "Um dos serviços selecionados é inválido.");
                 }
 
                 idsServicos.add(idServico);
@@ -104,17 +119,15 @@ public class AdminAgendamentoServlet extends HttpServlet {
             DAOAgendamento dao = new DAOAgendamento();
 
             dao.criar(
-                idCliente,
-                idVeiculo,
-                data,
-                horario.toString(),
-                idsServicos
-            );
+                    idCliente,
+                    idVeiculo,
+                    data,
+                    horario.toString(),
+                    idsServicos);
 
             response.sendRedirect(
-                request.getContextPath()
-                + "/painel/agendamentos?sucesso=1"
-            );
+                    request.getContextPath()
+                            + "/painel/agendamentos?sucesso=1");
 
         } catch (DateTimeParseException exception) {
             // A mensagem do Java é em inglês: o usuário recebe texto fixo em português

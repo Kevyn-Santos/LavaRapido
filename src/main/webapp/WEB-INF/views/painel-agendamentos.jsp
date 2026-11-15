@@ -234,10 +234,15 @@
 
       <header class="top panel-page-header">
         <div class="top-in">
-          <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
+          <a class="lock" href="${pageContext.request.contextPath}/admin/inicio" aria-label="Fast Splash, início">
             <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
           </a>
-          <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
+
+          <nav>
+            <a href="${pageContext.request.contextPath}/admin/inicio">
+              Voltar ao painel
+            </a>
+          </nav>
         </div>
       </header>
 
@@ -261,8 +266,14 @@
               aria-current="page">Agendamentos</a>
             <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
             <a href="${pageContext.request.contextPath}/painel/pagamentos">Pagamentos</a>
-            <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
-            <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
+
+            <c:if test="${sessionScope.nivelAcesso == 'ADMINISTRADOR'}">
+              <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
+              <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
+            </c:if>
+
+            <a href="${pageContext.request.contextPath}/painel/historico">Histórico</a>
+
           </nav>
 
           <!-- 1. TELA DA LISTA DE AGENDAMENTOS -->
@@ -428,11 +439,28 @@
 
                           </div>
 
+
                           <div class="booking-modal-footer">
+
+                            <c:if test="${agendamento.status eq 'AGENDADO'}">
+                              <form method="post" action="${pageContext.request.contextPath}/admin/agendamentos"
+                                onsubmit="return confirm('Deseja realmente cancelar este agendamento?');">
+
+                                <input type="hidden" name="acao" value="cancelar">
+                                <input type="hidden" name="idAgendamento" value="${agendamento.id}">
+
+                                <button type="submit" class="btn danger">
+                                  Cancelar agendamento
+                                </button>
+                              </form>
+                            </c:if>
+
                             <button type="button" class="btn ghost booking-close">
                               Fechar
                             </button>
+
                           </div>
+
 
                         </dialog>
 

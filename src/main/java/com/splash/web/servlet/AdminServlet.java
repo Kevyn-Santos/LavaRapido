@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import com.splash.web.db.DAOAgendamento;
 import com.splash.web.db.DAOAtendimento;
 import com.splash.web.db.DAOColaborador;
 import com.splash.web.db.DAOPagamento;
@@ -37,8 +38,21 @@ public class AdminServlet extends HttpServlet {
             return;
         }
         try {
+
             request.setAttribute("secao", secao);
+
+            if ("inicio".equals(secao)) {
+                request.setAttribute(
+                        "agendamentosHoje",
+                        new DAOAgendamento().listarAgendamentosHoje());
+
+                request.setAttribute(
+                        "colaboradores",
+                        new DAOColaborador().listar());
+            }
+
             switch (secao) {
+
                 case "servicos" -> request.setAttribute("servicos", new DAOServico().listar());
                 case "colaboradores" -> request.setAttribute("colaboradores", new DAOColaborador().listar());
                 case "atendimentos" -> {
@@ -75,8 +89,64 @@ public class AdminServlet extends HttpServlet {
         if (WebSupport.colaboradorId(request, response, nivelNecessario) < 0) {
             return;
         }
+
         try {
+            if ("inicio".equals(secao)) {
+
+                String acao = WebSupport.campo(request, "acao");
+
+                if (!"iniciarAtendimento".equals(acao)) {
+                    throw new IllegalArgumentException(
+                            "Ação inválida para o painel inicial.");
+                }
+
+                Integer idAtendimento = WebSupport.inteiro(
+                        WebSupport.campo(request, "idAtendimento"));
+
+                if (idAtendimento == null || idAtendimento <= 0) {
+                    throw new IllegalArgumentException(
+                            "Atendimento inválido.");
+                }
+
+                String[] colaboradoresRecebidos = request.getParameterValues("idColaboradores");
+
+                if (colaboradoresRecebidos == null
+                        || colaboradoresRecebidos.length == 0) {
+                    throw new IllegalArgumentException(
+                            "Selecione pelo menos um lavador.");
+                }
+
+                List<Integer> idsColaboradores = new ArrayList<>();
+
+                for (String valor : colaboradoresRecebidos) {
+
+                    Integer idColaborador = WebSupport.inteiro(valor);
+
+                    if (idColaborador == null || idColaborador <= 0) {
+                        throw new IllegalArgumentException(
+                                "Um dos lavadores selecionados é inválido.");
+                    }
+
+                    idsColaboradores.add(idColaborador);
+                }
+
+                boolean iniciado = new DAOAtendimento()
+                        .iniciarAtendimento(
+                                idAtendimento,
+                                idsColaboradores);
+
+                if (!iniciado) {
+                    throw new IllegalArgumentException(
+                            "O atendimento não pode ser iniciado. Verifique a data e o status.");
+                }
+
+                response.sendRedirect(
+                        request.getContextPath() + "/admin/inicio?sucesso=1");
+                return;
+            }
+
             switch (secao) {
+
                 case "servicos" -> processarServico(request);
                 case "colaboradores" -> processarColaborador(request);
                 case "atendimentos" -> processarAtendimento(request);

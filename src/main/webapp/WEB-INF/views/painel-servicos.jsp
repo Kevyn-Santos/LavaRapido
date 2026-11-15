@@ -64,21 +64,19 @@
                         border-bottom: 0;
                     }
 
+
                     .servicos-tabela th:nth-child(1) {
-                        width: 9%;
+                        width: 55%;
                     }
 
                     .servicos-tabela th:nth-child(2) {
-                        width: 46%;
-                    }
-
-                    .servicos-tabela th:nth-child(3) {
                         width: 20%;
                     }
 
-                    .servicos-tabela th:nth-child(4) {
+                    .servicos-tabela th:nth-child(3) {
                         width: 25%;
                     }
+
 
                     .servico-nome {
                         display: block;
@@ -217,10 +215,15 @@
             <body class="panel-page">
                 <header class="top panel-page-header">
                     <div class="top-in">
-                        <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
+                        <a class="lock" href="${pageContext.request.contextPath}/admin/inicio" aria-label="Fast Splash, início">
                             <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
                         </a>
-                        <nav><a href="${pageContext.request.contextPath}/admin/inicio">Voltar ao início</a></nav>
+
+                        <nav>
+                            <a href="${pageContext.request.contextPath}/admin/inicio">
+                                Voltar ao painel
+                            </a>
+                        </nav>
                     </div>
                 </header>
                 <main class="page">
@@ -248,9 +251,15 @@
                             <a href="${pageContext.request.contextPath}/painel/agendamentos">Agendamentos</a>
                             <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
                             <a href="${pageContext.request.contextPath}/painel/pagamentos">Pagamentos</a>
-                            <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
-                            <a href="${pageContext.request.contextPath}/painel/servicos" class="on"
-                                aria-current="page">Serviços</a>
+
+                            <c:if test="${sessionScope.nivelAcesso == 'ADMINISTRADOR'}">
+                                <a href="${pageContext.request.contextPath}/painel/colaboradores">Colaboradores</a>
+                                <a href="${pageContext.request.contextPath}/painel/servicos" class="on"
+                                    aria-current="page">Serviços</a>
+                            </c:if>
+
+                            <a href="${pageContext.request.contextPath}/painel/historico">Histórico</a>
+
                         </nav>
                         <div class="phead">
                             <div>
@@ -280,7 +289,6 @@
                                     <table class="servicos-tabela">
                                         <thead>
                                             <tr>
-                                                <th>ID</th>
                                                 <th>Serviço</th>
                                                 <th>Preço</th>
                                                 <th>Ações</th>
@@ -290,12 +298,14 @@
                                             <c:forEach var="servico" items="${servicos}">
                                                 <tr class="linha-servico"
                                                     data-busca="<c:out value='${servico.id} ${servico.nome} ${servico.descricao}' />">
+
                                                     <td>
-                                                        <c:out value="${servico.id}" />
-                                                    </td>
-                                                    <td><span class="servico-nome">
+                                                        <span class="servico-nome">
+                                                            #
+                                                            <c:out value="${servico.id}" /> —
                                                             <c:out value="${servico.nome}" />
                                                         </span>
+
                                                         <span class="servico-descricao">
                                                             <c:out value="${servico.descricao}" />
                                                         </span>

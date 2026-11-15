@@ -42,24 +42,29 @@
           vertical-align: middle;
         }
 
-        .tabela-colaboradores th:nth-child(1) {
-          width: 7%;
+        /* Quatro colunas: ID junto do nome, cargo, nível e ações. */
+        .tabela-colaboradores th:nth-child(1),
+        .tabela-colaboradores td:nth-child(1) {
+          width: 43%;
         }
 
-        .tabela-colaboradores th:nth-child(2) {
-          width: 31%;
+        .tabela-colaboradores th:nth-child(2),
+        .tabela-colaboradores td:nth-child(2) {
+          width: 17%;
         }
 
-        .tabela-colaboradores th:nth-child(3) {
-          width: 22%;
+        .tabela-colaboradores th:nth-child(3),
+        .tabela-colaboradores td:nth-child(3) {
+          width: 20%;
         }
 
-        .tabela-colaboradores th:nth-child(4) {
-          width: 25%;
+        .tabela-colaboradores th:nth-child(4),
+        .tabela-colaboradores td:nth-child(4) {
+          width: 20%;
         }
 
-        .tabela-colaboradores th:nth-child(5) {
-          width: 15%;
+        .tabela-colaboradores td:nth-child(4) {
+          white-space: nowrap;
         }
 
         .colaborador-info {
@@ -163,14 +168,6 @@
           border-bottom: none;
         }
 
-        #collab-table-container td:nth-child(1) {
-          width: 65px;
-        }
-
-        #collab-table-container td:nth-child(4) {
-          overflow-wrap: anywhere;
-        }
-
         #collab-table-container tr.hide {
           display: none !important;
         }
@@ -181,10 +178,15 @@
 
       <header class="top panel-page-header">
         <div class="top-in">
-          <a class="lock" href="${pageContext.request.contextPath}/" aria-label="Fast Splash, início">
+          <a class="lock" href="${pageContext.request.contextPath}/admin/inicio" aria-label="Fast Splash, início">
             <span class="wm"><span class="f">fast</span> <span class="s">splash</span></span>
           </a>
-          <nav><a href="${pageContext.request.contextPath}/">Voltar ao início</a></nav>
+
+          <nav>
+            <a href="${pageContext.request.contextPath}/admin/inicio">
+              Voltar ao painel
+            </a>
+          </nav>
         </div>
       </header>
 
@@ -206,9 +208,13 @@
             <a href="${pageContext.request.contextPath}/painel/agendamentos">Agendamentos</a>
             <a href="${pageContext.request.contextPath}/painel/atendimentos">Atendimentos</a>
             <a href="${pageContext.request.contextPath}/painel/pagamentos">Pagamentos</a>
-            <a href="${pageContext.request.contextPath}/painel/colaboradores" class="on"
-              aria-current="page">Colaboradores</a>
-            <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
+            <c:if test="${sessionScope.nivelAcesso == 'ADMINISTRADOR'}">
+              <a href="${pageContext.request.contextPath}/painel/colaboradores" class="on"
+                aria-current="page">Colaboradores</a>
+              <a href="${pageContext.request.contextPath}/painel/servicos">Serviços</a>
+            </c:if>
+            <a href="${pageContext.request.contextPath}/painel/historico">Histórico</a>
+
           </nav>
 
           <c:if test="${not empty erro}">
@@ -265,7 +271,6 @@
                     <table class="tabela-colaboradores">
                       <thead>
                         <tr>
-                          <th>ID</th>
                           <th>Colaborador</th>
                           <th>Cargo</th>
                           <th>Nível de acesso</th>
@@ -280,14 +285,13 @@
                             data-nivel="${colaborador.nivelAcesso}">
 
                             <td>
-                              <c:out value="${colaborador.id}" />
-                            </td>
-
-                            <td>
                               <div class="colaborador-info">
-                                <strong>
+
+                                <strong>#
+                                  <c:out value="${colaborador.id}" /> —
                                   <c:out value="${colaborador.nome}" />
                                 </strong>
+
 
                                 <span class="colaborador-email">
                                   <c:out value="${colaborador.email}" />
@@ -310,19 +314,19 @@
                                 data-email="<c:out value='${colaborador.email}' />"
                                 data-nivel="${colaborador.nivelAcesso}">
                                 Editar
-                                <form method="post" action="${pageContext.request.contextPath}/admin/colaboradores"
-                                  class="form-remover-colaborador">
-
-                                  <input type="hidden" name="acao" value="remover">
-
-                                  <input type="hidden" name="idColaborador" value="${colaborador.id}">
-
-                                  <button type="submit" class="btn sm ghost btn-remover-colaborador">
-                                    Remover
-                                  </button>
-
-                                </form>
                               </button>
+                              <form method="post" action="${pageContext.request.contextPath}/admin/colaboradores"
+                                class="form-remover-colaborador">
+
+                                <input type="hidden" name="acao" value="remover">
+
+                                <input type="hidden" name="idColaborador" value="${colaborador.id}">
+
+                                <button type="submit" class="btn sm ghost btn-remover-colaborador">
+                                  Remover
+                                </button>
+
+                              </form>
                             </td>
 
                           </tr>
