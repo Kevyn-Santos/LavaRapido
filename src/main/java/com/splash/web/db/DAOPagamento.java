@@ -52,6 +52,11 @@ public class DAOPagamento {
     Update de pagamentos
     --------------------------------------*/
 
+    /**
+     * Só altera pagamentos {@code PENDENTE} (veja o WHERE): um pagamento {@code PAGO} não volta a
+     * pendente nem é cancelado, o que mantém a regra "lavagem só com pagamento confirmado" de
+     * {@code DAOAtendimento.atualizar} consistente depois que a lavagem começa.
+     */
     public void atualizar(int idPagamento, String status, String forma)
             throws SQLException {
 

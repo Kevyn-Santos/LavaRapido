@@ -7,8 +7,8 @@ import java.time.LocalDate;
  * colaboradores (GROUP_CONCAT). Só carrega dados: nunca é usado para gravar.
  */
 public record AtendimentoView(int id, int idAgendamento, String cliente, String placa, LocalDate data,
-        String horario, String status, String statusAgendamento, String colaboradores,
-        String idsColaboradores) {
+        String horario, String status, String statusAgendamento, String statusPagamento,
+        String colaboradores, String idsColaboradores) {
     // Getters no padrão JavaBean para a EL das JSPs (${atendimento.cliente})
     public int getId() { return id; }
     public int getIdAgendamento() { return idAgendamento; }
@@ -18,6 +18,7 @@ public record AtendimentoView(int id, int idAgendamento, String cliente, String 
     public String getHorario() { return horario; }
     public String getStatus() { return status; }
     public String getStatusAgendamento() { return statusAgendamento; }
+    public String getStatusPagamento() { return statusPagamento; }
     public String getColaboradores() { return colaboradores; }
     public String getIdsColaboradores() { return idsColaboradores; }
 }

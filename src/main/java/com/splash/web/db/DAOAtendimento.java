@@ -23,11 +23,13 @@ public class DAOAtendimento {
     public List<AtendimentoView> listar() throws SQLException {
         String sql = "SELECT at.id_atendimento, a.id_agendamento, c.nome AS cliente, v.placa, "
                 + "a.data, a.horario, at.status, a.status AS status_agendamento, "
+                + "COALESCE(MAX(p.status_pagamento), 'PENDENTE') AS status_pagamento, "
                 + "COALESCE(GROUP_CONCAT(col.nome ORDER BY col.nome SEPARATOR ', '), '') AS colaboradores, "
                 + "COALESCE(GROUP_CONCAT(ca.id_colaborador ORDER BY ca.id_colaborador), '') AS ids_colaboradores "
                 + "FROM atendimento at JOIN agendamento a ON a.id_agendamento = at.id_agendamento "
                 + "JOIN veiculo v ON v.id_veiculo = a.id_veiculo "
                 + "JOIN cliente c ON c.id_cliente = v.id_cliente "
+                + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
                 + "LEFT JOIN colaborador_atendimento ca ON ca.id_atendimento = at.id_atendimento "
                 + "LEFT JOIN colaborador col ON col.id_colaborador = ca.id_colaborador "
                 + "GROUP BY at.id_atendimento ORDER BY a.data, a.horario";
@@ -40,7 +42,7 @@ public class DAOAtendimento {
                         result.getInt("id_agendamento"), result.getString("cliente"),
                         result.getString("placa"), result.getDate("data").toLocalDate(),
                         result.getString("horario"), result.getString("status"),
-                        result.getString("status_agendamento"),
+                        result.getString("status_agendamento"), result.getString("status_pagamento"),
                         result.getString("colaboradores"), result.getString("ids_colaboradores")));
             }
         }
@@ -59,8 +61,10 @@ public class DAOAtendimento {
 
     public void atualizar(int idAtendimento, String status, List<Integer> idsColaboradores)
             throws SQLException {
-        String select = "SELECT at.status, a.status AS status_agendamento "
+        String select = "SELECT at.status, a.status AS status_agendamento, "
+                + "COALESCE(p.status_pagamento, 'PENDENTE') AS status_pagamento "
                 + "FROM atendimento at JOIN agendamento a ON a.id_agendamento = at.id_agendamento "
+                + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
                 + "WHERE at.id_atendimento = ? FOR UPDATE";
         String sql = "UPDATE atendimento SET status = ?, "
                 + "data_inicio = CASE WHEN ? = 'EM_LAVAGEM' AND data_inicio IS NULL "
@@ -84,6 +88,15 @@ public class DAOAtendimento {
                         if ("CANCELADO".equals(statusAgendamento) || (atual != proximo && !atual.podeIrPara(proximo))) {
                             throw new IllegalArgumentException(
                                     "Atendimento cancelado ou transição de status não permitida.");
+                        }
+                        // A lavagem só começa com o pagamento confirmado. A checagem usa a mesma
+                        // transação (FOR UPDATE) da mudança de status. Quitar a lavagem depois não é
+                        // revertido: DAOPagamento.atualizar só altera pagamentos PENDENTE.
+                        if (atual == StatusAtendimento.AGUARDANDO && proximo == StatusAtendimento.EM_LAVAGEM
+                                && !"PAGO".equals(result.getString("status_pagamento"))) {
+                            throw new IllegalArgumentException(
+                                    "Pagamento ainda não confirmado: peça ao atendente para registrar o pagamento "
+                                            + "antes de iniciar a lavagem.");
                         }
                     }
                 }
