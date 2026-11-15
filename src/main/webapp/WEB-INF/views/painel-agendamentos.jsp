@@ -456,7 +456,13 @@
         <div id="view-form" class="hide">
           <div class="fcard">
             <h2 id="form-title">Novo agendamento</h2>
-            <form id="form-booking" method="post" action="${pageContext.request.contextPath}/admin/agendamentos">
+            <form id="form-booking" method="post" action="${pageContext.request.contextPath}/admin/agendamentos"
+              data-tem-erro="${not empty erro}"
+              data-r-cliente="<c:out value='${rascunho.idCliente}' />"
+              data-r-veiculo="<c:out value='${rascunho.idVeiculo}' />"
+              data-r-data="<c:out value='${rascunho.data}' />"
+              data-r-horario="<c:out value='${rascunho.horario}' />"
+              data-r-servicos="<c:forEach var='idServico' items='${rascunho.idServicos}'><c:out value='${idServico}' />,</c:forEach>">
               <input type="hidden" id="bk-id">
 
               <input type="hidden" name="acao" value="agendar">
@@ -538,22 +544,13 @@
                 <div class="field">
                   <label for="bk-slot">Horário</label>
                   <select id="bk-slot" name="horario" required>
-                    <option value="08:00">08:00</option>
-                    <option value="09:00">09:00</option>
-                    <option value="10:00">10:00</option>
-                    <option value="11:00">11:00</option>
-                    <option value="13:00">13:00</option>
-                    <option value="14:00">14:00</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:00">16:00</option>
-                    <option value="17:00">17:00</option>
+                    <option value="">Escolha a data primeiro</option>
                   </select>
                 </div>
               </div>
 
               <p class="tot">Total do Agendamento: <b id="bk-total">R$ 0,00</b></p>
-              <p class="err" id="form-error" role="alert" style="color: #B3261E; font-size: 0.9rem; margin-top: 8px;">
-              </p>
+              <p class="err" id="form-error" role="alert" style="color: #B3261E; font-size: 0.9rem; margin-top: 8px;"><c:out value="${erro}" /></p>
 
               <div class="facts">
                 <button class="btn" type="submit">Salvar Agendamento</button>
@@ -727,6 +724,106 @@
           .addEventListener("click", calcularTotalAgendamento);
 
         calcularTotalAgendamento();
+      </script>
+
+      <script>
+        // Data e horários do novo agendamento: horários livres vêm de GET /admin/horarios
+        (function () {
+          const form = document.getElementById("form-booking");
+          const campoData = document.getElementById("bk-date");
+          const campoHorario = document.getElementById("bk-slot");
+          const mensagem = document.getElementById("form-error");
+          const urlHorarios = "${pageContext.request.contextPath}/admin/horarios";
+          let consulta = 0;
+
+          const hoje = new Date();
+          const hojeLocal = new Date(hoje.getTime() - hoje.getTimezoneOffset() * 60000)
+            .toISOString().slice(0, 10);
+          campoData.min = hojeLocal;
+
+          function opcoes(texto, valores, selecionado) {
+            campoHorario.replaceChildren();
+            const primeira = document.createElement("option");
+            primeira.value = "";
+            primeira.textContent = texto;
+            campoHorario.appendChild(primeira);
+            (valores || []).forEach(horario => {
+              const opcao = document.createElement("option");
+              opcao.value = horario;
+              opcao.textContent = horario;
+              campoHorario.appendChild(opcao);
+            });
+            if (selecionado && (valores || []).includes(selecionado)) {
+              campoHorario.value = selecionado;
+            }
+          }
+
+          function avisar(texto) {
+            mensagem.textContent = texto || "";
+          }
+
+          async function carregarHorarios(data, selecionado) {
+            const atual = ++consulta;
+            if (!data) {
+              opcoes("Escolha a data primeiro");
+              return;
+            }
+            if (data < hojeLocal) {
+              opcoes("Data inválida");
+              return;
+            }
+            opcoes("Carregando horários...");
+            try {
+              const resposta = await fetch(urlHorarios + "?data=" + encodeURIComponent(data),
+                { headers: { Accept: "application/json" }, credentials: "same-origin" });
+              const horarios = await resposta.json();
+              if (atual !== consulta) return; // resposta de uma data já trocada
+              if (!resposta.ok) {
+                opcoes("Horários indisponíveis");
+                avisar(horarios.erro || "Não foi possível consultar os horários.");
+                return;
+              }
+              if (horarios.length === 0) {
+                opcoes("Sem horários livres nesta data");
+                return;
+              }
+              opcoes("Selecione um horário", horarios, selecionado);
+            } catch (erro) {
+              if (atual !== consulta) return;
+              opcoes("Horários indisponíveis");
+              avisar("Não foi possível consultar os horários. Recarregue a página e tente de novo.");
+            }
+          }
+
+          campoData.addEventListener("change", () => {
+            const passada = campoData.value && campoData.value < hojeLocal;
+            campoData.setCustomValidity(passada ? "Escolha hoje ou uma data futura." : "");
+            avisar(passada ? "Escolha hoje ou uma data futura." : "");
+            carregarHorarios(campoData.value);
+          });
+
+          // "Novo agendamento" limpa o formulário (painel.js): volta o select ao estado inicial
+          document.getElementById("btn-add-booking").addEventListener("click", () => {
+            campoData.setCustomValidity("");
+            carregarHorarios("");
+          });
+
+          // Erro vindo do servidor: reabre o formulário com o que foi digitado
+          if (form.dataset.temErro === "true") {
+            document.getElementById("view-list").classList.add("hide");
+            document.getElementById("view-form").classList.remove("hide");
+            campoClienteAgendamento.value = form.dataset.rCliente;
+            atualizarVeiculosAgendamento();
+            campoVeiculoAgendamento.value = form.dataset.rVeiculo;
+            campoData.value = form.dataset.rData;
+            const marcados = form.dataset.rServicos.split(",").filter(Boolean);
+            checkboxesServicos.forEach(c => { c.checked = marcados.includes(c.value); });
+            calcularTotalAgendamento();
+            carregarHorarios(campoData.value, form.dataset.rHorario);
+          } else {
+            carregarHorarios("");
+          }
+        })();
       </script>
 
     </body>

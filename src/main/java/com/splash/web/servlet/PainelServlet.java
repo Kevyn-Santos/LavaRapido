@@ -17,6 +17,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @WebServlet("/painel/*")
 public class PainelServlet extends HttpServlet {
@@ -75,6 +76,14 @@ public class PainelServlet extends HttpServlet {
                 }
 
                 case "agendamentos" -> {
+                    // Erro do POST /admin/agendamentos (flash na sessão): mostrado uma vez só
+                    HttpSession sessao = request.getSession(false);
+                    if (sessao != null && sessao.getAttribute(AdminAgendamentoServlet.ERRO_FLASH) != null) {
+                        request.setAttribute("erro", sessao.getAttribute(AdminAgendamentoServlet.ERRO_FLASH));
+                        request.setAttribute("rascunho", sessao.getAttribute(AdminAgendamentoServlet.RASCUNHO_FLASH));
+                        sessao.removeAttribute(AdminAgendamentoServlet.ERRO_FLASH);
+                        sessao.removeAttribute(AdminAgendamentoServlet.RASCUNHO_FLASH);
+                    }
 
                     request.setAttribute(
                             "agendamentos",

@@ -7,7 +7,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.splash.web.db.DAOAgendamento;
 
@@ -16,9 +18,14 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @WebServlet("/admin/agendamentos")
 public class AdminAgendamentoServlet extends HttpServlet {
+
+    /** Atributos de sessão lidos (e removidos) por {@code PainelServlet}. */
+    static final String ERRO_FLASH = "erroAgendamento";
+    static final String RASCUNHO_FLASH = "rascunhoAgendamento";
 
     @Override
     protected void doPost(HttpServletRequest request,
@@ -111,29 +118,41 @@ public class AdminAgendamentoServlet extends HttpServlet {
 
         } catch (DateTimeParseException exception) {
             // A mensagem do Java é em inglês: o usuário recebe texto fixo em português
-            response.sendError(
-                HttpServletResponse.SC_BAD_REQUEST,
-                "Informe uma data e um horário válidos."
-            );
+            voltarComErro(request, response, "Informe uma data e um horário válidos.");
         } catch (IllegalArgumentException exception) {
-            response.sendError(
-                HttpServletResponse.SC_BAD_REQUEST,
-                exception.getMessage()
-            );
+            voltarComErro(request, response, exception.getMessage());
         } catch (SQLException exception) {
 
             if (exception.getSQLState() != null
                     && exception.getSQLState().startsWith("23")) {
 
-                response.sendError(
-                    HttpServletResponse.SC_CONFLICT,
+                voltarComErro(request, response,
                     "Conflito ao cadastrar o agendamento. "
-                    + "Verifique a disponibilidade do veículo e horário."
-                );
+                    + "Verifique a disponibilidade do veículo e horário.");
                 return;
             }
 
             WebSupport.erroBanco(request, response, exception);
         }
+    }
+
+    /**
+     * Guarda a mensagem e o que foi digitado na sessão (flash) e volta para a tela de agendamentos,
+     * que mostra o erro no próprio formulário e preenche os campos de novo. Evita a página de erro
+     * do servidor. {@code PainelServlet} lê e remove os atributos.
+     */
+    private void voltarComErro(HttpServletRequest request, HttpServletResponse response, String mensagem)
+            throws IOException {
+        Map<String, Object> rascunho = new HashMap<>();
+        for (String campo : new String[] { "idCliente", "idVeiculo", "data", "horario" }) {
+            rascunho.put(campo, WebSupport.campo(request, campo));
+        }
+        String[] servicos = request.getParameterValues("idServicos");
+        rascunho.put("idServicos", servicos == null ? List.of() : List.of(servicos));
+
+        HttpSession session = request.getSession();
+        session.setAttribute(ERRO_FLASH, mensagem);
+        session.setAttribute(RASCUNHO_FLASH, rascunho);
+        response.sendRedirect(request.getContextPath() + "/painel/agendamentos");
     }
 }

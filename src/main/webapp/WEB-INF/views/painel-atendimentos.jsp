@@ -321,9 +321,15 @@
                                         <select name="status" required>
 
                                           <c:choose>
-                                            <c:when test="${atendimento.status == 'AGUARDANDO'}">
+                                            <c:when test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento == 'PAGO'}">
                                               <option value="EM_LAVAGEM">
                                                 Iniciar lavagem
+                                              </option>
+                                            </c:when>
+
+                                            <c:when test="${atendimento.status == 'AGUARDANDO'}">
+                                              <option value="AGUARDANDO">
+                                                Aguardando pagamento (lavagem bloqueada)
                                               </option>
                                             </c:when>
 
