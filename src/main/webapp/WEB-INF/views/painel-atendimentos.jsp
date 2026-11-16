@@ -342,97 +342,109 @@
                                             value="${empty atendimento.colaboradores ? 'Nenhum' : atendimento.colaboradores}" />
                                         </p>
                                       </div>
-                                      <form method="post"
-                                        action="${pageContext.request.contextPath}/admin/atendimentos">
+                                      <c:choose>
+                                        <c:when
+                                          test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento != 'PAGO'}">
+                                          <p class="small" role="status">
+                                            Aguardando pagamento — a lavagem só pode começar após a confirmação do
+                                            pagamento.
+                                          </p>
+                                        </c:when>
 
-                                        <input type="hidden" name="idAtendimento" value="${atendimento.id}" />
+                                        <c:when test="${atendimento.status != 'FINALIZADO'}">
+                                          <form method="post"
+                                            action="${pageContext.request.contextPath}/admin/atendimentos">
 
-                                        <div class="field">
-                                          <label>Proximo status</label>
+                                            <input type="hidden" name="idAtendimento" value="${atendimento.id}" />
 
-                                          <select name="status" required>
+                                            <div class="field">
+                                              <label>Proximo status</label>
 
-                                            <c:choose>
-                                              <c:when
-                                                test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento == 'PAGO'}">
-                                                <option value="EM_LAVAGEM">
-                                                  Iniciar lavagem
-                                                </option>
-                                              </c:when>
+                                              <select name="status" required>
 
-                                              <c:when test="${atendimento.status == 'AGUARDANDO'}">
-                                                <option value="AGUARDANDO">
-                                                  Aguardando pagamento (lavagem bloqueada)
-                                                </option>
-                                              </c:when>
+                                                <c:choose>
+                                                  <c:when
+                                                    test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento == 'PAGO'}">
+                                                    <option value="EM_LAVAGEM">
+                                                      Iniciar lavagem
+                                                    </option>
+                                                  </c:when>
 
-                                              <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
-                                                <option value="FINALIZADO">
-                                                  Finalizar
-                                                </option>
-                                              </c:when>
+                                                  <c:when test="${atendimento.status == 'AGUARDANDO'}">
+                                                    <option value="AGUARDANDO">
+                                                      Aguardando pagamento (lavagem bloqueada)
+                                                    </option>
+                                                  </c:when>
 
-                                              <c:when test="${atendimento.status == 'FINALIZADO'}">
-                                                <option value="FINALIZADO">
-                                                  Finalizado
-                                                </option>
-                                              </c:when>
+                                                  <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
+                                                    <option value="FINALIZADO">
+                                                      Finalizar
+                                                    </option>
+                                                  </c:when>
 
-                                            </c:choose>
+                                                  <c:when test="${atendimento.status == 'FINALIZADO'}">
+                                                    <option value="FINALIZADO">
+                                                      Finalizado
+                                                    </option>
+                                                  </c:when>
 
-                                          </select>
-                                        </div>
+                                                </c:choose>
+
+                                              </select>
+                                            </div>
 
 
-                                        <div class="field">
-                                          <label>Colaboradores</label>
+                                            <div class="field">
+                                              <label>Colaboradores</label>
 
-                                          <c:forEach var="colaborador" items="${colaboradores}">
+                                              <c:forEach var="colaborador" items="${colaboradores}">
 
-                                            <c:if test="${colaborador.nivelAcesso == 'OPERACIONAL'}">
+                                                <c:if test="${colaborador.nivelAcesso == 'OPERACIONAL'}">
 
-                                              <c:set var="colaboradorSelecionado" value="false" />
+                                                  <c:set var="colaboradorSelecionado" value="false" />
 
-                                              <c:forTokens items="${atendimento.idsColaboradores}" delims=","
-                                                var="idSelecionado">
+                                                  <c:forTokens items="${atendimento.idsColaboradores}" delims=","
+                                                    var="idSelecionado">
 
-                                                <c:if test="${idSelecionado == colaborador.id}">
-                                                  <c:set var="colaboradorSelecionado" value="true" />
+                                                    <c:if test="${idSelecionado == colaborador.id}">
+                                                      <c:set var="colaboradorSelecionado" value="true" />
+                                                    </c:if>
+
+                                                  </c:forTokens>
+
+                                                  <label style="display:block;">
+
+                                                    <input type="checkbox" name="idColaboradores"
+                                                      value="${colaborador.id}" ${colaboradorSelecionado ? 'checked'
+                                                      : '' } ${atendimento.status !='AGUARDANDO' ? 'disabled' : '' } />
+
+                                                    <c:out value="${colaborador.nome}" />
+
+                                                  </label>
+
                                                 </c:if>
 
-                                              </c:forTokens>
-
-                                              <label style="display:block;">
-
-                                                <input type="checkbox" name="idColaboradores" value="${colaborador.id}"
-                                                  ${colaboradorSelecionado ? 'checked' : '' } ${atendimento.status
-                                                  !='AGUARDANDO' ? 'disabled' : '' } />
-
-                                                <c:out value="${colaborador.nome}" />
-
-                                              </label>
-
-                                            </c:if>
-
-                                          </c:forEach>
-                                        </div>
+                                              </c:forEach>
+                                            </div>
 
 
-                                        <c:choose>
-                                          <c:when test="${atendimento.status == 'FINALIZADO'}"> <button class="btn sm"
-                                              type="submit">
-                                              Salvar colaboradores
-                                            </button>
-                                          </c:when>
+                                            <c:choose>
+                                              <c:when test="${atendimento.status == 'FINALIZADO'}"> <button
+                                                  class="btn sm" type="submit">
+                                                  Salvar colaboradores
+                                                </button>
+                                              </c:when>
 
-                                          <c:otherwise>
-                                            <button class="btn sm" type="submit">
-                                              Atualizar
-                                            </button>
-                                          </c:otherwise>
-                                        </c:choose>
+                                              <c:otherwise>
+                                                <button class="btn sm" type="submit">
+                                                  Atualizar
+                                                </button>
+                                              </c:otherwise>
+                                            </c:choose>
 
-                                      </form>
+                                          </form>
+                                        </c:when>
+                                      </c:choose>
 
                                       <button type="button" class="btn ghost fechar-atendimento">
                                         Fechar
