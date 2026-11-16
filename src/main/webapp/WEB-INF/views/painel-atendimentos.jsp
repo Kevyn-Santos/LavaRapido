@@ -191,9 +191,9 @@
               <select id="filtro-status-atendimento" aria-label="Filtrar por status">
 
                 <option value="">Todos os status</option>
-                <option value="AGUARDANDO">Aguardando</option>
-                <option value="EM_LAVAGEM">Em lavagem</option>
-                <option value="FINALIZADO">Finalizados</option>
+                <option value="AGUARDANDO">Aguardando início</option>
+                <option value="EM_LAVAGEM">Lavagem em andamento</option>
+                <option value="FINALIZADO">Lavagem concluída</option>
 
               </select>
 
@@ -240,6 +240,18 @@
                         <c:forEach var="atendimento" items="${atendimentos}">
                           <c:if test="${atendimento.statusAgendamento != 'CANCELADO'}">
 
+                            <c:choose>
+                              <c:when test="${atendimento.status == 'AGUARDANDO'}">
+                                <c:set var="statusExibicao" value="Aguardando início" />
+                              </c:when>
+                              <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
+                                <c:set var="statusExibicao" value="Lavagem em andamento" />
+                              </c:when>
+                              <c:otherwise>
+                                <c:set var="statusExibicao" value="Lavagem concluída" />
+                              </c:otherwise>
+                            </c:choose>
+
                             <tr class="linha-atendimento" data-cliente="<c:out value='${atendimento.cliente}' />"
                               data-placa="<c:out value='${atendimento.placa}' />" data-status="${atendimento.status}">
 
@@ -252,7 +264,10 @@
                               </td>
 
                               <td>
-                                <c:out value="${atendimento.data}" />
+
+                                <c:out value="${fn:substring(atendimento.data, 8, 10)}" />-
+                                <c:out value="${fn:substring(atendimento.data, 5, 7)}" />-
+                                <c:out value="${fn:substring(atendimento.data, 0, 4)}" />
                               </td>
 
                               <td>
@@ -260,11 +275,11 @@
                               </td>
 
                               <td>
-                                <c:out value="${atendimento.horario}" />
+                                <c:out value="${fn:substring(atendimento.horario, 0, 5)}" />
                               </td>
 
                               <td>
-                                <c:out value="${atendimento.status}" />
+                                <c:out value="${statusExibicao}" />
                               </td>
 
                               <td>
@@ -276,10 +291,6 @@
 
                                   <c:when test="${atendimento.statusAgendamento == 'CANCELADO'}">
                                     Agendamento cancelado
-                                  </c:when>
-
-                                  <c:when test="${atendimento.status == 'ENTREGUE'}">
-                                    Atendimento encerrado (histórico)
                                   </c:when>
 
                                   <c:otherwise>
@@ -312,15 +323,18 @@
                                         </p>
 
                                         <p><strong>Data:</strong>
-                                          <c:out value="${atendimento.data}" />
+
+                                          <c:out value="${fn:substring(atendimento.data, 8, 10)}" />-
+                                          <c:out value="${fn:substring(atendimento.data, 5, 7)}" />-
+                                          <c:out value="${fn:substring(atendimento.data, 0, 4)}" />
                                         </p>
 
                                         <p><strong>Horário:</strong>
-                                          <c:out value="${atendimento.horario}" />
+                                          <c:out value="${fn:substring(atendimento.horario, 0, 5)}" />
                                         </p>
 
                                         <p><strong>Status atual:</strong>
-                                          <c:out value="${atendimento.status}" />
+                                          <c:out value="${statusExibicao}" />
                                         </p>
 
                                         <p><strong>Colaboradores vinculados:</strong>
@@ -338,18 +352,19 @@
 
                                           <select name="status" required>
 
-                                          <c:choose>
-                                            <c:when test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento == 'PAGO'}">
-                                              <option value="EM_LAVAGEM">
-                                                Iniciar lavagem
-                                              </option>
-                                            </c:when>
+                                            <c:choose>
+                                              <c:when
+                                                test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento == 'PAGO'}">
+                                                <option value="EM_LAVAGEM">
+                                                  Iniciar lavagem
+                                                </option>
+                                              </c:when>
 
-                                            <c:when test="${atendimento.status == 'AGUARDANDO'}">
-                                              <option value="AGUARDANDO">
-                                                Aguardando pagamento (lavagem bloqueada)
-                                              </option>
-                                            </c:when>
+                                              <c:when test="${atendimento.status == 'AGUARDANDO'}">
+                                                <option value="AGUARDANDO">
+                                                  Aguardando pagamento (lavagem bloqueada)
+                                                </option>
+                                              </c:when>
 
                                               <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
                                                 <option value="FINALIZADO">
@@ -363,11 +378,6 @@
                                                 </option>
                                               </c:when>
 
-                                              <c:otherwise>
-                                                <option value="ENTREGUE">
-                                                  Entregue
-                                                </option>
-                                              </c:otherwise>
                                             </c:choose>
 
                                           </select>
@@ -395,7 +405,8 @@
                                               <label style="display:block;">
 
                                                 <input type="checkbox" name="idColaboradores" value="${colaborador.id}"
-                                                  ${colaboradorSelecionado ? 'checked' : '' } />
+                                                  ${colaboradorSelecionado ? 'checked' : '' } ${atendimento.status
+                                                  !='AGUARDANDO' ? 'disabled' : '' } />
 
                                                 <c:out value="${colaborador.nome}" />
 

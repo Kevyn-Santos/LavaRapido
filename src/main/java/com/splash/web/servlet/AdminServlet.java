@@ -21,7 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet("/admin/*")
 public class AdminServlet extends HttpServlet {
 
-    private static final Set<String> STATUS_ATENDIMENTO = Set.of("AGUARDANDO", "EM_LAVAGEM", "FINALIZADO", "ENTREGUE");
+    private static final Set<String> STATUS_ATENDIMENTO = Set.of("AGUARDANDO", "EM_LAVAGEM", "FINALIZADO");
     private static final Set<String> FORMAS_PAGAMENTO = Set.of("DINHEIRO", "PIX", "CREDITO", "DEBITO");
 
     @Override
