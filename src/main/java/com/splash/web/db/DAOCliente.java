@@ -238,19 +238,20 @@ public class DAOCliente {
      * contra o hash BCrypt do banco. O hash tem salt aleatório, então a comparação não pode ser
      * feita no SQL ({@code WHERE senha_hash = ?}); ela é feita por {@link Passwords#matches}.
      *
-     * @return O {@link Cliente} (com cpf e telefone) ou {@code null} se e-mail/senha não conferem.
+     * @return O {@link Cliente} (com cpf e telefone) ou {@code null} se CPF/senha não conferem.
      */
-    public Cliente autenticarPorEmail(String email, String senha) throws SQLException {
+    public Cliente autenticarPorCpf(String cpf, String senha) throws SQLException {
         String sql = """
                 SELECT id_cliente, nome, cpf, telefone, email, senha_hash
                 FROM cliente
-                WHERE email = ?
+                WHERE cpf = ?
                   AND ativo = TRUE
                 LIMIT 1
                 """;
         try (Connection conn = DatabaseConnection.getConnection();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, email.trim().toLowerCase());
+            String cpfNormalizado = cpf == null ? "" : cpf.replaceAll("\\D", "");
+            stmt.setString(1, cpfNormalizado);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next() && Passwords.matches(senha, rs.getString("senha_hash"))) {
                     return mapearCliente(rs);

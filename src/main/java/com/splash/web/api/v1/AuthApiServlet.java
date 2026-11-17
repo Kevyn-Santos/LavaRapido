@@ -20,7 +20,7 @@ import org.json.JSONObject;
  * o cadastro de clientes existe apenas na web ({@code /cadastro}).
  *
  * <pre>
- * POST /api/v1/auth/login {email, senha} -> {cliente}  (abre a sessão; o cookie JSESSIONID vem no Set-Cookie)
+ * POST /api/v1/auth/login {cpf, senha} -> {cliente}  (abre a sessão; o cookie JSESSIONID vem no Set-Cookie)
  * </pre>
  */
 @WebServlet("/api/v1/auth/*")
@@ -37,26 +37,26 @@ public class AuthApiServlet extends HttpServlet {
     }
 
     private void login(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String email;
+        String cpf;
         String senha;
         try {
             JSONObject corpo = Json.lerCorpo(request);
-            email = corpo.getString("email");
+            cpf = corpo.getString("cpf");
             senha = corpo.getString("senha");
         } catch (JSONException e) {
             Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "Requisição inválida: " + e.getMessage());
             return;
         }
-        if (email.isBlank() || senha.isEmpty()) {
-            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "E-mail e senha são obrigatórios");
+        if (cpf.isBlank() || senha.isEmpty()) {
+            Json.erro(response, HttpServletResponse.SC_BAD_REQUEST, "CPF e senha são obrigatórios");
             return;
         }
 
         try {
-            Cliente cliente = new DAOCliente().autenticarPorEmail(email, senha);
+            Cliente cliente = new DAOCliente().autenticarPorCpf(cpf, senha);
             if (cliente == null) {
-                // Mensagem única: não revela se o e-mail existe
-                Json.erro(response, HttpServletResponse.SC_UNAUTHORIZED, "E-mail ou senha inválidos");
+                // Mensagem única: não revela se o CPF existe
+                Json.erro(response, HttpServletResponse.SC_UNAUTHORIZED, "CPF ou senha inválidos");
                 return;
             }
 

@@ -11,17 +11,29 @@ class ClienteApi {
 
   ClienteApi({required this.apiClient});
 
-  /// `POST /auth/login {email, senha}`. O servidor abre a HttpSession e devolve
+  /// `POST /auth/login {cpf, senha}`. O servidor abre a HttpSession e devolve
   /// `{cliente:{...}}`; o cookie da sessão é guardado pelo [APIClient].
   /// Lança [ApiException] com a mensagem do servidor em caso de falha (401 = credenciais inválidas).
-  Future<ClienteModel> login(String email, String senha) => comTratamentoDeRede(() async {
-        final resposta = await apiClient.post('/auth/login', body: {'email': email, 'senha': senha});
-        if (resposta.statusCode != 200) throw ApiException.deResposta(resposta);
-        final corpo = jsonDecode(utf8.decode(resposta.bodyBytes));
-        if (corpo is Map<String, dynamic> && corpo['cliente'] is Map<String, dynamic>) {
-          return ClienteModel.fromJson(corpo['cliente'] as Map<String, dynamic>);
+  Future<ClienteModel> login(String cpf, String senha) =>
+      comTratamentoDeRede(() async {
+        final resposta = await apiClient.post(
+          '/auth/login',
+          body: {'cpf': cpf, 'senha': senha},
+        );
+        if (resposta.statusCode != 200) {
+          throw ApiException.deResposta(resposta);
         }
-        throw ApiException('Resposta inesperada do servidor.', statusCode: resposta.statusCode);
+        final corpo = jsonDecode(utf8.decode(resposta.bodyBytes));
+        if (corpo is Map<String, dynamic> &&
+            corpo['cliente'] is Map<String, dynamic>) {
+          return ClienteModel.fromJson(
+            corpo['cliente'] as Map<String, dynamic>,
+          );
+        }
+        throw ApiException(
+          'Resposta inesperada do servidor.',
+          statusCode: resposta.statusCode,
+        );
       });
 
   /// `GET /usuarios` (200) -> UM objeto `{id, nome, cpf, telefone, email}` (não é lista).
