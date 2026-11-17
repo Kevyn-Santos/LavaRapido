@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flash_splash/core/session/sessao.dart';
+import 'package:flash_splash/core/data/repositorio.dart';
 import 'package:flash_splash/core/api/api_client.dart';
 import 'package:flash_splash/core/api/api_exception.dart';
 import 'package:flash_splash/core/api/cliente_api.dart';
@@ -21,7 +22,7 @@ class LoginCliente extends StatefulWidget {
 
 class _LoginClienteState extends State<LoginCliente> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _cpfController = TextEditingController();
   final TextEditingController _senhaController = TextEditingController();
 
   final ClienteApi _clienteApi = ClienteApi(apiClient: APIClient());
@@ -31,17 +32,15 @@ class _LoginClienteState extends State<LoginCliente> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _cpfController.dispose();
     _senhaController.dispose();
     super.dispose();
   }
 
-  String? _validarEmail(String? valor) {
-    final texto = (valor ?? '').trim();
-    if (texto.isEmpty) return 'Informe o e-mail.';
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(texto)) {
-      return 'E-mail inválido.';
-    }
+  String? _validarCpf(String? valor) {
+    final cpf = Cpf.somenteDigitos(valor ?? '');
+    if (cpf.isEmpty) return 'Informe o CPF.';
+    if (!Cpf.valido(cpf)) return 'CPF inválido.';
     return null;
   }
 
@@ -57,11 +56,17 @@ class _LoginClienteState extends State<LoginCliente> {
     setState(() => _carregando = true);
     try {
       final cliente = await _clienteApi.login(
-        _emailController.text.trim(),
+        Cpf.somenteDigitos(_cpfController.text),
         _senhaController.text,
       );
       Sessao.id = cliente.id;
       Sessao.cpf = Cpf.somenteDigitos(cliente.cpf);
+      try {
+        await Repositorio.carregarCatalogo();
+        await Repositorio.carregarDadosCliente();
+      } on ApiException catch (e) {
+        _avisar('Login realizado, mas não foi possível carregar seus dados: ${e.mensagem}');
+      }
     } on ApiException catch (e) {
       _avisar(e.mensagem);
       return;
@@ -130,15 +135,16 @@ class _LoginClienteState extends State<LoginCliente> {
                 ),
                 const SizedBox(height: 40),
                 TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
+                  controller: _cpfController,
+                  keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
                   autocorrect: false,
-                  validator: _validarEmail,
+                  inputFormatters: [CpfInputFormatter()],
+                  validator: _validarCpf,
                   decoration: const InputDecoration(
-                    labelText: 'E-mail',
-                    hintText: 'nome@exemplo.com',
-                    prefixIcon: Icon(Icons.email),
+                    labelText: 'CPF',
+                    hintText: '000.000.000-00',
+                    prefixIcon: Icon(Icons.badge),
                   ),
                 ),
                 const SizedBox(height: 18),
