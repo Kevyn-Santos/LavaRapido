@@ -19,10 +19,9 @@ class AcompanharServicos extends StatelessWidget {
       body: ValueListenableBuilder<List<Agendamento>>(
         valueListenable: Repositorio.agendamentos,
         builder: (context, lista, _) {
-          final ativos =
-              lista.where((a) => a.status != StatusServico.concluido).toList();
-          final concluidos =
-              lista.where((a) => a.status == StatusServico.concluido).toList();
+          final ativos = lista.where((a) => a.status == StatusServico.pendente || a.status == StatusServico.emAndamento).toList();
+          final concluidos = lista.where((a) => a.status == StatusServico.concluido).toList();
+          final cancelados = lista.where((a) => a.status == StatusServico.cancelado).toList();
 
           return ListView(
             padding: const EdgeInsets.all(18),
@@ -44,8 +43,11 @@ class AcompanharServicos extends StatelessWidget {
               ],
               if (concluidos.isNotEmpty) ...[
                 const _Titulo('Concluídos'),
-                for (final a in concluidos)
-                  _CartaoAcompanhamento(agendamento: a),
+                for (final a in concluidos) _CartaoAcompanhamento(agendamento: a),
+              ],
+              if (cancelados.isNotEmpty) ...[
+                const _Titulo('Cancelados'),
+                for (final a in cancelados) _CartaoAcompanhamento(agendamento: a),
               ],
             ],
           );
@@ -84,6 +86,7 @@ class _CartaoAcompanhamento extends StatelessWidget {
       case StatusServico.emAndamento:
         return StatusServico.concluido;
       case StatusServico.concluido:
+      case StatusServico.cancelado:
         return null;
     }
   }
@@ -105,7 +108,7 @@ class _CartaoAcompanhamento extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    agendamento.servico.nome,
+                    agendamento.servicos.map((s) => s.nome).join(', '),
                     style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.bold,
@@ -122,21 +125,10 @@ class _CartaoAcompanhamento extends StatelessWidget {
               style: TextStyle(color: cores.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
-            _Etapas(status: agendamento.status),
-            if (proxima != null) ...[
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                // Demonstração: no app final, quem muda a etapa é o
-                // funcionário/back-end. Remover este botão na integração.
-                child: TextButton.icon(
-                  onPressed: () =>
-                      Repositorio.atualizarStatus(agendamento, proxima),
-                  icon: const Icon(Icons.skip_next, size: 18),
-                  label: Text('Avançar para "${proxima.rotulo}" (demo)'),
-                ),
-              ),
-            ],
+            if (agendamento.status == StatusServico.cancelado)
+              const Text('Este agendamento foi cancelado.')
+            else
+              _Etapas(status: agendamento.status),
           ],
         ),
       ),
@@ -159,7 +151,7 @@ class _Etapas extends StatelessWidget {
       children: [
         Row(
           children: [
-            for (var i = 0; i < etapas.length; i++) ...[
+            for (var i = 0; i < 3; i++) ...[
               if (i > 0)
                 Expanded(
                   child: Container(
@@ -177,7 +169,7 @@ class _Etapas extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            for (final e in etapas)
+            for (final e in etapas.take(3))
               Text(
                 e.rotulo,
                 style: TextStyle(
