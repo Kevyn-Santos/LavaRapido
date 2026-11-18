@@ -10,6 +10,7 @@ import 'package:flash_splash/features/pagamento/pagamento.dart';
 import 'package:flash_splash/features/perfil/meus_veiculos.dart';
 import 'package:flash_splash/features/perfil/notificacoes.dart';
 import 'package:flash_splash/core/api/api_client.dart';
+import 'package:flash_splash/core/api/api_exception.dart';
 import 'package:flash_splash/core/api/cliente_api.dart';
 import 'package:flash_splash/core/api/model/cliente_model.dart';
 
@@ -29,6 +30,19 @@ class _PerfilClienteState extends State<PerfilCliente> {
     super.initState();
     _clienteApi = ClienteApi(apiClient: APIClient());
     _futuroCliente = _clienteApi.buscar(); // o servidor identifica o cliente pela sessão
+  }
+
+  Future<void> _editarPerfil(ClienteModel cliente) async {
+    final atualizado = await showDialog<ClienteModel>(
+      context: context,
+      builder: (_) => _EditarPerfilDialog(cliente: cliente, api: _clienteApi),
+    );
+    if (atualizado != null && mounted) {
+      setState(() => _futuroCliente = Future.value(atualizado));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dados atualizados com sucesso.')),
+      );
+    }
   }
 
   Widget _opcao(
@@ -79,13 +93,21 @@ class _PerfilClienteState extends State<PerfilCliente> {
             child: FutureBuilder<ClienteModel>(
               future: _futuroCliente,
               builder: (context, snapshot) {
-                final nome = snapshot.data?.nome ?? '';
-                return Text(
-                  nome.isEmpty ? 'Cliente Fast Splash' : nome,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                final cliente = snapshot.data;
+                final nome = cliente?.nome ?? '';
+                return Column(
+                  children: [
+                    Text(
+                      nome.isEmpty ? 'Cliente Fast Splash' : nome,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    if (cliente != null)
+                      TextButton.icon(
+                        onPressed: () => _editarPerfil(cliente),
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: const Text('Editar meus dados'),
+                      ),
+                  ],
                 );
               },
             ),
@@ -153,4 +175,68 @@ class _PerfilClienteState extends State<PerfilCliente> {
       ),
     );
   }
+}
+
+
+class _EditarPerfilDialog extends StatefulWidget {
+  final ClienteModel cliente;
+  final ClienteApi api;
+  const _EditarPerfilDialog({required this.cliente, required this.api});
+
+  @override
+  State<_EditarPerfilDialog> createState() => _EditarPerfilDialogState();
+}
+
+class _EditarPerfilDialogState extends State<_EditarPerfilDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late final _nome = TextEditingController(text: widget.cliente.nome);
+  late final _telefone = TextEditingController(text: widget.cliente.telefone);
+  late final _email = TextEditingController(text: widget.cliente.email);
+  bool _salvando = false;
+
+  @override
+  void dispose() {
+    _nome.dispose();
+    _telefone.dispose();
+    _email.dispose();
+    super.dispose();
+  }
+
+  Future<void> _salvar() async {
+    if (!(_formKey.currentState?.validate() ?? false) || _salvando) return;
+    setState(() => _salvando = true);
+    try {
+      final atualizado = await widget.api.atualizar(
+        nome: _nome.text.trim(),
+        telefone: _telefone.text.trim(),
+        email: _email.text.trim(),
+      );
+      if (mounted) Navigator.pop(context, atualizado);
+    } on ApiException catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.mensagem)));
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Editar meus dados'),
+    content: SingleChildScrollView(
+      child: Form(
+        key: _formKey,
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextFormField(controller: _nome, decoration: const InputDecoration(labelText: 'Nome'), validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe seu nome.' : null),
+          TextFormField(controller: _telefone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Telefone')),
+          TextFormField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'E-mail'), validator: (v) => (v == null || !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v.trim())) ? 'Informe um e-mail válido.' : null),
+          const SizedBox(height: 8),
+          const Text('O CPF não pode ser alterado por esta tela.'),
+        ]),
+      ),
+    ),
+    actions: [
+      TextButton(onPressed: _salvando ? null : () => Navigator.pop(context), child: const Text('Cancelar')),
+      FilledButton(onPressed: _salvando ? null : _salvar, child: _salvando ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Salvar')),
+    ],
+  );
 }

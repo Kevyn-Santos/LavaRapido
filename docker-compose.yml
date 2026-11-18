@@ -1,0 +1,13 @@
+services:
+  backend:
+    container_name: fast-splash-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8080:10000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

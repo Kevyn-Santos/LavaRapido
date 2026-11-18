@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:flash_splash/core/data/repositorio.dart';
+import 'package:flash_splash/core/api/api_exception.dart';
+import 'package:flash_splash/core/api/model/status_enums.dart';
 import 'package:flash_splash/core/models/agendamento.dart';
 import 'package:flash_splash/core/utils/formatadores.dart';
 
@@ -34,35 +36,26 @@ class _PagamentoState extends State<Pagamento> {
 
   Future<void> _confirmar() async {
     final agendamento = widget.agendamento;
-
-    final mensagem = agendamento == null
-        ? 'Forma de pagamento escolhida: $_formaSelecionada.'
-        : '${agendamento.servico.nome} '
-            '(${agendamento.servico.precoFormatado}) '
-            'por $_formaSelecionada.';
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Pagamento'),
-          content: Text(
-            '$mensagem\n\nEsta é uma demonstração do aplicativo.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (!mounted) return;
-    if (agendamento != null) {
-      Repositorio.marcarComoPago(agendamento);
+    if (agendamento == null) {
+      await showDialog<void>(context: context, builder: (ctx) => AlertDialog(
+        title: const Text('Formas de pagamento'),
+        content: const Text('A forma de pagamento será selecionada ao pagar um agendamento.'),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+      ));
+      return;
+    }
+    final forma = switch (_formaSelecionada) {
+      'Cartão de crédito' => FormaPagamento.credito,
+      'Cartão de débito' => FormaPagamento.debito,
+      _ => FormaPagamento.pix,
+    };
+    try {
+      await Repositorio.pagarAgendamento(agendamento, forma);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pagamento registrado com sucesso.')));
       Navigator.pop(context);
+    } on ApiException catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.mensagem)));
     }
   }
 
@@ -92,7 +85,7 @@ class _PagamentoState extends State<Pagamento> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      agendamento.servico.nome,
+                      agendamento.servicos.map((s) => s.nome).join(', '),
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -100,7 +93,7 @@ class _PagamentoState extends State<Pagamento> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Valor: ${agendamento.servico.precoFormatado}',
+                      'Valor: R\$ ${agendamento.valorTotal.toStringAsFixed(2).replaceAll('.', ',')}',
                       style: const TextStyle(fontSize: 18),
                     ),
                     const SizedBox(height: 6),
@@ -147,7 +140,7 @@ class _PagamentoState extends State<Pagamento> {
               onPressed: _confirmar,
               child: Text(
                 agendamento == null
-                    ? 'SALVAR FORMA DE PAGAMENTO'
+                    ? 'ESCOLHA UM AGENDAMENTO NA AGENDA'
                     : 'CONFIRMAR PAGAMENTO',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),

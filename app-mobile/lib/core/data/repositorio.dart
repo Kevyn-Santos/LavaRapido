@@ -1,142 +1,158 @@
 import 'package:flutter/material.dart';
 
+import 'package:flash_splash/core/api/api_client.dart';
+import 'package:flash_splash/core/api/api_exception.dart';
+import 'package:flash_splash/core/api/agendamento_api.dart';
+import 'package:flash_splash/core/api/horario_api.dart';
+import 'package:flash_splash/core/api/model/agendamento_model.dart';
+import 'package:flash_splash/core/api/model/status_enums.dart';
+import 'package:flash_splash/core/api/servico_api.dart';
+import 'package:flash_splash/core/api/veiculo_api.dart';
 import 'package:flash_splash/core/models/agendamento.dart';
 import 'package:flash_splash/core/models/servico.dart';
 import 'package:flash_splash/core/models/veiculo.dart';
 
-/// Dados do app guardados em memória (somem ao fechar o app).
-/// Quando houver backend, é aqui que a troca acontece.
+/// Estado em memória alimentado exclusivamente pela API. Não mantém mais
+/// serviços, veículos ou agendamentos fictícios.
 class Repositorio {
   Repositorio._();
 
-  // ---------------------------------------------------------------------
-  // SERVIÇOS
-  // Espaço reservado para a integração back x banco x mobile: o back vai
-  // fornecer os 4 tipos de serviço. Enquanto isso, 4 itens numerados com
-  // preços diferentes. Para integrar, chame [definirServicos] com a lista
-  // que vier da API (os nomes, preços e ids virão de lá).
-  // ---------------------------------------------------------------------
-  static final ValueNotifier<List<Servico>> servicos =
-      ValueNotifier<List<Servico>>(const [
-    Servico(id: 'servico_1', nome: 'Serviço 1', preco: 30),
-    Servico(id: 'servico_2', nome: 'Serviço 2', preco: 50),
-    Servico(id: 'servico_3', nome: 'Serviço 3', preco: 80),
-    Servico(id: 'servico_4', nome: 'Serviço 4', preco: 120),
-  ]);
+  static final APIClient _client = APIClient();
+  static final ServicoApi _servicoApi = ServicoApi(apiClient: _client);
+  static final VeiculoApi _veiculoApi = VeiculoApi(apiClient: _client);
+  static final AgendamentoApi _agendamentoApi = AgendamentoApi(apiClient: _client);
+  static final HorarioApi _horarioApi = HorarioApi(apiClient: _client);
 
-  static void definirServicos(List<Servico> novos) {
-    servicos.value = List.unmodifiable(novos);
+  static final ValueNotifier<List<Servico>> servicos = ValueNotifier(const []);
+  static final ValueNotifier<List<Veiculo>> veiculos = ValueNotifier(const []);
+  static final ValueNotifier<List<Agendamento>> agendamentos = ValueNotifier(const []);
+
+  static String? erroCatalogo;
+  static bool carregandoCatalogo = false;
+
+  static Future<void> carregarCatalogo() async {
+    carregandoCatalogo = true;
+    try {
+      final dados = await _servicoApi.listar();
+      servicos.value = List.unmodifiable(dados.map((s) => Servico(
+        id: s.id, nome: s.nome, descricao: s.descricao, preco: s.preco,
+      )));
+      erroCatalogo = null;
+    } on ApiException catch (e) {
+      erroCatalogo = e.mensagem;
+      rethrow;
+    } finally {
+      carregandoCatalogo = false;
+    }
   }
 
-  // ---------------------------------------------------------------------
-  // VEÍCULOS
-  // ---------------------------------------------------------------------
-  static final ValueNotifier<List<Veiculo>> veiculos =
-      ValueNotifier<List<Veiculo>>([
-    Veiculo(
-      id: 'veiculo_exemplo',
-      marca: 'Nissan',
-      modelo: 'Skyline',
-      placa: 'ABC-1234',
-      cor: 'Azul',
-    ),
-  ]);
+  static Future<void> carregarDadosCliente() async {
+    final veiculosApi = await _veiculoApi.listar();
+    final agendamentosApi = await _agendamentoApi.listar();
+    final novosVeiculos = veiculosApi.map((v) => Veiculo(
+      id: v.id, marca: v.marca, modelo: v.modelo, placa: v.placa, cor: v.cor,
+    )).toList();
+    veiculos.value = List.unmodifiable(novosVeiculos);
+    agendamentos.value = List.unmodifiable(agendamentosApi.map((a) => _converterAgendamento(a, novosVeiculos)));
+  }
 
-  static final ValueNotifier<List<Agendamento>> agendamentos =
-      ValueNotifier<List<Agendamento>>([]);
+  static Agendamento _converterAgendamento(AgendamentoModel a, List<Veiculo> listaVeiculos) {
+    final encontrados = listaVeiculos.where((v) => v.id == a.idVeiculo).toList();
+    final veiculo = encontrados.isNotEmpty ? encontrados.first :
+        Veiculo(id: a.idVeiculo, marca: 'Veículo', modelo: 'não identificado', placa: '', cor: '');
+    final servicosDoAgendamento = a.servicos.map((s) => Servico(
+      id: s.id, nome: s.nome, preco: s.valor,
+    )).toList();
+    Servico servicoPrincipal;
+    if (servicosDoAgendamento.isNotEmpty) {
+      servicoPrincipal = servicosDoAgendamento.first;
+    } else {
+      final encontradosServicos = servicos.value.where((s) => a.idServicos.contains(s.id)).toList();
+      servicoPrincipal = encontradosServicos.isNotEmpty ? encontradosServicos.first :
+          Servico(id: a.idServicos.isNotEmpty ? a.idServicos.first : '', nome: 'Serviço', preco: a.total);
+    }
+    final status = a.status == StatusAgendamento.cancelado
+        ? StatusServico.cancelado
+        : switch (a.statusAtendimento) {
+            StatusAtendimento.emLavagem => StatusServico.emAndamento,
+            StatusAtendimento.finalizado => StatusServico.concluido,
+            StatusAtendimento.entregue => StatusServico.concluido,
+            _ => a.status == StatusAgendamento.concluido ? StatusServico.concluido : StatusServico.pendente,
+          };
+    return Agendamento(
+      id: a.id,
+      servico: servicoPrincipal,
+      servicos: servicosDoAgendamento.isEmpty ? [servicoPrincipal] : servicosDoAgendamento,
+      veiculo: veiculo,
+      dataHora: DateTime(a.data.year, a.data.month, a.data.day,
+        int.parse(a.horario.split(':')[0]), int.parse(a.horario.split(':')[1])),
+      status: status,
+      pago: a.statusPagamento == StatusPagamento.pago,
+    );
+  }
 
-  /// Apaga os dados do cliente (veículos e agendamentos). Chamado no logout, para o
-  /// próximo login não ver os dados de quem saiu. Os serviços (catálogo público) ficam.
+  static Future<List<String>> horariosLivres(DateTime data) => _horarioApi.livres(data);
+
+  static Future<void> criarAgendamento({required Veiculo veiculo, required List<Servico> servicosSelecionados,
+    required DateTime dataHora}) async {
+    await _agendamentoApi.criar(
+      idVeiculo: veiculo.id,
+      data: dataHora,
+      horario: '${dataHora.hour.toString().padLeft(2, '0')}:${dataHora.minute.toString().padLeft(2, '0')}',
+      idServicos: servicosSelecionados.map((s) => s.id).toList(),
+    );
+    await carregarDadosCliente();
+  }
+
+  static Future<void> cancelarAgendamento(Agendamento agendamento) async {
+    await _agendamentoApi.cancelar(agendamento.id);
+    await carregarDadosCliente();
+  }
+
+  static Future<void> pagarAgendamento(Agendamento agendamento, FormaPagamento forma) async {
+    await _agendamentoApi.pagar(agendamento.id, forma: forma);
+    await carregarDadosCliente();
+  }
+
+  static Future<void> adicionarVeiculo(Veiculo veiculo) async {
+    await _veiculoApi.cadastrar(placa: veiculo.placa, marca: veiculo.marca,
+      modelo: veiculo.modelo, cor: veiculo.cor);
+    await carregarDadosCliente();
+  }
+
+  static Future<void> atualizarVeiculo(Veiculo veiculo) async {
+    await _veiculoApi.atualizar(veiculo.id, placa: veiculo.placa, marca: veiculo.marca,
+      modelo: veiculo.modelo, cor: veiculo.cor);
+    await carregarDadosCliente();
+  }
+
+  static Future<void> removerVeiculo(Veiculo veiculo) async {
+    await _veiculoApi.excluir(veiculo.id);
+    await carregarDadosCliente();
+  }
+
+  static bool placaExiste(String placa, {String? ignorarId}) {
+    final alvo = placa.replaceAll('-', '').trim().toUpperCase();
+    return veiculos.value.any((v) => v.id != ignorarId &&
+      v.placa.replaceAll('-', '').trim().toUpperCase() == alvo);
+  }
+
+  static bool veiculoEmUso(Veiculo veiculo) => agendamentos.value.any((a) =>
+    a.veiculo.id == veiculo.id && a.status != StatusServico.concluido && a.status != StatusServico.cancelado);
+
+  static Agendamento? proximoAgendamento() {
+    final lista = agendamentos.value.where((a) => a.status != StatusServico.concluido && a.status != StatusServico.cancelado).toList();
+    return lista.isEmpty ? null : lista.first;
+  }
+
+  static Agendamento? proximoAPagar() {
+    final lista = agendamentos.value.where((a) => !a.pago && a.status != StatusServico.cancelado).toList();
+    return lista.isEmpty ? null : lista.first;
+  }
+
   static void limpar() {
     veiculos.value = const [];
     agendamentos.value = const [];
-  }
-
-  static String _normalizarPlaca(String placa) =>
-      placa.replaceAll('-', '').trim().toUpperCase();
-
-  /// Já existe outro veículo com essa placa? ([ignorarId] = o que está
-  /// sendo editado.)
-  static bool placaExiste(String placa, {String? ignorarId}) {
-    final alvo = _normalizarPlaca(placa);
-    return veiculos.value.any(
-      (v) => v.id != ignorarId && _normalizarPlaca(v.placa) == alvo,
-    );
-  }
-
-  static void adicionarVeiculo(Veiculo veiculo) {
-    veiculos.value = [...veiculos.value, veiculo];
-  }
-
-  /// Atualiza o veículo (mesmo id) e os agendamentos que o usam.
-  static void atualizarVeiculo(Veiculo atualizado) {
-    veiculos.value = [
-      for (final v in veiculos.value) v.id == atualizado.id ? atualizado : v,
-    ];
-    agendamentos.value = [
-      for (final a in agendamentos.value)
-        a.veiculo.id == atualizado.id ? a.copiarCom(veiculo: atualizado) : a,
-    ];
-  }
-
-  /// Veículo com serviço ainda não concluído não pode ser apagado.
-  static bool veiculoEmUso(Veiculo veiculo) {
-    return agendamentos.value.any(
-      (a) => a.veiculo.id == veiculo.id && a.status != StatusServico.concluido,
-    );
-  }
-
-  static void removerVeiculo(Veiculo veiculo) {
-    veiculos.value = veiculos.value.where((v) => v != veiculo).toList();
-  }
-
-  // ---------------------------------------------------------------------
-  // AGENDAMENTOS
-  // ---------------------------------------------------------------------
-  static void adicionarAgendamento(Agendamento agendamento) {
-    final lista = [...agendamentos.value, agendamento]
-      ..sort((a, b) => a.dataHora.compareTo(b.dataHora));
-    agendamentos.value = lista;
-  }
-
-  static void cancelarAgendamento(Agendamento agendamento) {
-    agendamentos.value =
-        agendamentos.value.where((a) => a != agendamento).toList();
-  }
-
-  static void _alterarAgendamento(
-    Agendamento alvo,
-    Agendamento Function(Agendamento) alterar,
-  ) {
-    agendamentos.value = [
-      for (final a in agendamentos.value) a == alvo ? alterar(a) : a,
-    ];
-  }
-
-  static void marcarComoPago(Agendamento agendamento) {
-    _alterarAgendamento(agendamento, (a) => a.copiarCom(pago: true));
-  }
-
-  /// Muda a etapa do serviço. Quem usa isso é o back/funcionário; no app
-  /// há um botão de demonstração na tela "Acompanhar".
-  static void atualizarStatus(Agendamento agendamento, StatusServico status) {
-    _alterarAgendamento(agendamento, (a) => a.copiarCom(status: status));
-  }
-
-  /// Primeiro agendamento ainda não concluído, ou null.
-  static Agendamento? proximoAgendamento() {
-    for (final agendamento in agendamentos.value) {
-      if (agendamento.status != StatusServico.concluido) return agendamento;
-    }
-    return null;
-  }
-
-  /// Primeiro agendamento ainda não pago, ou null.
-  /// O pagamento só existe quando há um agendamento.
-  static Agendamento? proximoAPagar() {
-    for (final agendamento in agendamentos.value) {
-      if (!agendamento.pago) return agendamento;
-    }
-    return null;
+    APIClient.limparSessao();
   }
 }

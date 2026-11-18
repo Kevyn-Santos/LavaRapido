@@ -331,8 +331,7 @@
                                 <h2 id="historico-detalhes-titulo">Histórico do cliente #
                                     <c:out value="${idClienteSelecionado}" />
                                 </h2>
-                                <p class="small historico-detalhes-intro">Registros ordenados pelo ID do agendamento
-                                    (maior para menor). Apenas consulta.</p>
+                                <p class="small historico-detalhes-intro">Registros ordenados pelo ID do agendamento (maior para menor). Apenas consulta.</p>
 
                                 <c:choose>
                                     <c:when test="${empty registrosHistorico}">
@@ -351,7 +350,7 @@
                                                                 <fmt:formatDate value="${registro.data}"
                                                                     pattern="dd/MM/yyyy" />
                                                                 ·
-                                                                <c:out value="${registro.horario.substring(0,5)}" />
+                                                                <c:out value="${registro.horario}" />
                                                             </p>
                                                         </div>
                                                         <span class="historico-registro-status">
@@ -374,40 +373,18 @@
                                                                 <c:out value="${registro.servicos}"
                                                                     default="Não informado" />
                                                             </strong></div>
-                                                        <div class="historico-campo"><span>Agendamento criado
-                                                                por</span><strong>
+                                                        <div class="historico-campo"><span>Agendamento criado por</span><strong>
                                                                 <c:out value="${registro.criadoPor}" />
                                                             </strong></div>
-                                                        <div class="historico-campo"><span>Atendimento iniciado
-                                                                por</span><strong>
-                                                                <c:out
-                                                                    value="${empty registro.responsavelAtendimento ? 'Não registrado' : registro.responsavelAtendimento}" />
+                                                        <div class="historico-campo"><span>Atendimento iniciado por</span><strong>
+                                                                <c:out value="${empty registro.responsavelAtendimento ? 'Não registrado' : registro.responsavelAtendimento}" />
                                                             </strong></div>
-                                                        <div class="historico-campo"><span>Responsáveis pela
-                                                                lavagem</span><strong>
-                                                                <c:out
-                                                                    value="${empty registro.lavadores ? 'Não registrados' : registro.lavadores}" />
+                                                        <div class="historico-campo"><span>Responsáveis pela lavagem</span><strong>
+                                                                <c:out value="${empty registro.lavadores ? 'Não registrados' : registro.lavadores}" />
                                                             </strong></div>
                                                         <div class="historico-campo"><span>Atendimento</span><strong>
-
-                                                                <c:choose>
-                                                                    <c:when
-                                                                        test="${registro.statusAtendimento == 'AGUARDANDO'}">
-                                                                        Aguardando início
-                                                                    </c:when>
-                                                                    <c:when
-                                                                        test="${registro.statusAtendimento == 'EM_LAVAGEM'}">
-                                                                        Lavagem em andamento
-                                                                    </c:when>
-                                                                    <c:when
-                                                                        test="${registro.statusAtendimento == 'FINALIZADO'}">
-                                                                        Lavagem concluída
-                                                                    </c:when>
-                                                                    <c:otherwise>
-                                                                        Não informado
-                                                                    </c:otherwise>
-                                                                </c:choose>
-
+                                                                <c:out
+                                                                    value="${empty registro.statusAtendimento ? 'Não informado' : registro.statusAtendimento}" />
                                                             </strong></div>
                                                         <div class="historico-campo"><span>Pagamento</span><strong>
                                                                 <c:out

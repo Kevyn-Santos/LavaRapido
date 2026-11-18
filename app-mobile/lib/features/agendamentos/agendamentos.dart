@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flash_splash/core/data/repositorio.dart';
+import 'package:flash_splash/core/api/api_exception.dart';
 import 'package:flash_splash/core/models/agendamento.dart';
 import 'package:flash_splash/core/utils/formatadores.dart';
 import 'package:flash_splash/features/acompanhamento/status_chip.dart';
@@ -38,7 +39,12 @@ class Agendamentos extends StatelessWidget {
     );
 
     if (confirmar == true) {
-      Repositorio.cancelarAgendamento(agendamento);
+      try {
+        await Repositorio.cancelarAgendamento(agendamento);
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Agendamento cancelado.')));
+      } on ApiException catch (e) {
+        if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.mensagem)));
+      }
     }
   }
 
@@ -82,7 +88,7 @@ class Agendamentos extends StatelessWidget {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  agendamento.servico.nome,
+                                  agendamento.servicos.map((s) => s.nome).join(', '),
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -97,13 +103,13 @@ class Agendamentos extends StatelessWidget {
                             '${Formatadores.dataHora(agendamento.dataHora)}\n'
                             '${agendamento.veiculo.marca} ${agendamento.veiculo.modelo} • '
                             '${agendamento.veiculo.placa}\n'
-                            '${agendamento.servico.precoFormatado}'
+                            'R\$ ${agendamento.valorTotal.toStringAsFixed(2).replaceAll('.', ',')}'
                             '${agendamento.pago ? ' • Pago' : ''}',
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              if (!agendamento.pago)
+                              if (!agendamento.pago && agendamento.status != StatusServico.cancelado)
                                 TextButton.icon(
                                   onPressed: () {
                                     Navigator.push(

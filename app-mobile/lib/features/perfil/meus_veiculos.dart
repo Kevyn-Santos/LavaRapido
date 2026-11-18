@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flash_splash/core/data/repositorio.dart';
+import 'package:flash_splash/core/api/api_exception.dart';
 import 'package:flash_splash/core/models/veiculo.dart';
 
 class MeusVeiculos extends StatelessWidget {
@@ -21,15 +22,15 @@ class MeusVeiculos extends StatelessWidget {
     if (resultado == null) return;
 
     if (veiculo == null) {
-      Repositorio.adicionarVeiculo(resultado);
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Veículo adicionado.')),
-      );
+      try {
+        await Repositorio.adicionarVeiculo(resultado);
+        messenger.showSnackBar(const SnackBar(content: Text('Veículo adicionado.')));
+      } on ApiException catch (e) { messenger.showSnackBar(SnackBar(content: Text(e.mensagem))); }
     } else {
-      Repositorio.atualizarVeiculo(resultado);
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Veículo atualizado.')),
-      );
+      try {
+        await Repositorio.atualizarVeiculo(resultado);
+        messenger.showSnackBar(const SnackBar(content: Text('Veículo atualizado.')));
+      } on ApiException catch (e) { messenger.showSnackBar(SnackBar(content: Text(e.mensagem))); }
     }
   }
 
@@ -72,10 +73,10 @@ class MeusVeiculos extends StatelessWidget {
 
     if (confirmar != true) return;
 
-    Repositorio.removerVeiculo(veiculo);
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Veículo apagado.')),
-    );
+    try {
+      await Repositorio.removerVeiculo(veiculo);
+      messenger.showSnackBar(const SnackBar(content: Text('Veículo apagado.')));
+    } on ApiException catch (e) { messenger.showSnackBar(SnackBar(content: Text(e.mensagem))); }
   }
 
   @override

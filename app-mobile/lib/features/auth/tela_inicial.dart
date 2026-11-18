@@ -29,6 +29,12 @@ class TelaInicial extends StatefulWidget {
 }
 
 class _TelaInicialState extends State<TelaInicial> {
+  @override
+  void initState() {
+    super.initState();
+    Repositorio.carregarCatalogo().catchError((_) {});
+  }
+
   final GlobalKey _chaveServicos = GlobalKey();
 
   /// Abre uma tela e, ao voltar, atualiza esta (ex.: "Entrar" vira

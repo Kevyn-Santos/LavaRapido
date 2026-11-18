@@ -20,13 +20,13 @@ class APIClient {
   static void limparSessao() => _cookieSessao = null;
 
   /// Monta a URL. O [endpoint] pode trazer query string (`/horarios?data=2030-12-01`): ela é separada
-  /// antes, porque `Uri.http` trata o 2º argumento como caminho e codificaria o `?` como `%3F`.
+  /// antes, para preservar a query string ao montar a URL a partir da base configurável.
   Uri _uri(String endpoint) {
     final destino = Uri.parse(endpoint);
-    return Uri.http(
-      config.APIConfig.BASE_URI,
-      '${config.APIConfig.BASE_PATH}${destino.path}',
-      destino.hasQuery ? destino.queryParameters : null,
+    final base = Uri.parse(config.APIConfig.BASE_URL);
+    return base.replace(
+      path: '${base.path.replaceFirst(RegExp(r'/$'), '')}${destino.path}',
+      queryParameters: destino.hasQuery ? destino.queryParameters : null,
     );
   }
 

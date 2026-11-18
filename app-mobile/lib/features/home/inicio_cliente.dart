@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:flash_splash/core/data/repositorio.dart';
+import 'package:flash_splash/core/api/api_client.dart';
+import 'package:flash_splash/core/api/cliente_api.dart';
+import 'package:flash_splash/core/api/model/cliente_model.dart';
 import 'package:flash_splash/core/models/agendamento.dart';
 import 'package:flash_splash/core/models/servico.dart';
 import 'package:flash_splash/core/utils/formatadores.dart';
@@ -8,8 +11,20 @@ import 'package:flash_splash/features/agendamentos/novo_agendamento.dart';
 import 'package:flash_splash/features/home/servico_card.dart';
 import 'package:flash_splash/features/pagamento/pagamento.dart';
 
-class InicioCliente extends StatelessWidget {
+class InicioCliente extends StatefulWidget {
   const InicioCliente({super.key});
+  @override
+  State<InicioCliente> createState() => _InicioClienteState();
+}
+
+class _InicioClienteState extends State<InicioCliente> {
+  late Future<ClienteModel> _cliente;
+
+  @override
+  void initState() {
+    super.initState();
+    _cliente = ClienteApi(apiClient: APIClient()).buscar();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +43,11 @@ class InicioCliente extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Olá, cliente! 👋',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
+            FutureBuilder<ClienteModel>(
+              future: _cliente,
+              builder: (context, snapshot) => Text(
+                'Olá, ${snapshot.data?.nome.split(' ').first ?? 'cliente'}! 👋',
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 5),
@@ -75,7 +90,7 @@ class InicioCliente extends StatelessWidget {
                               Text(
                                 proximo == null
                                     ? 'Nenhum agendamento'
-                                    : '${proximo.servico.nome}\n'
+                                    : '${proximo.servicos.map((s) => s.nome).join(', ')}\n'
                                         '${Formatadores.dataHora(proximo.dataHora)}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -112,6 +127,9 @@ class InicioCliente extends StatelessWidget {
             ValueListenableBuilder<List<Servico>>(
               valueListenable: Repositorio.servicos,
               builder: (context, lista, _) {
+                if (lista.isEmpty) {
+                  return const Text('Não foi possível carregar os serviços. Verifique se a API está ligada.');
+                }
                 return Column(
                   children: [
                     for (final servico in lista)

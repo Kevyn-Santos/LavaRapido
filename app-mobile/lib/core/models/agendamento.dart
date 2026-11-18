@@ -1,11 +1,11 @@
 import 'package:flash_splash/core/models/servico.dart';
 import 'package:flash_splash/core/models/veiculo.dart';
 
-/// Etapas do acompanhamento de um serviço.
 enum StatusServico {
-  pendente('Pendente'),
+  pendente('Agendado'),
   emAndamento('Em andamento'),
-  concluido('Concluído');
+  concluido('Concluído'),
+  cancelado('Cancelado');
 
   final String rotulo;
   const StatusServico(this.rotulo);
@@ -13,25 +13,31 @@ enum StatusServico {
 
 class Agendamento {
   final String id;
-  final Servico servico;
+  final List<Servico> servicos;
   final Veiculo veiculo;
   final DateTime dataHora;
   final StatusServico status;
   final bool pago;
 
+  Servico get servico => servicos.first;
+  double get valorTotal => servicos.fold(0, (total, item) => total + item.preco);
+
   Agendamento({
     String? id,
-    required this.servico,
+    required Servico servico,
+    List<Servico>? servicos,
     required this.veiculo,
     required this.dataHora,
     this.status = StatusServico.pendente,
     this.pago = false,
-  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString();
+  }) : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+       servicos = List.unmodifiable(servicos ?? [servico]);
 
   Agendamento copiarCom({Veiculo? veiculo, StatusServico? status, bool? pago}) {
     return Agendamento(
       id: id,
       servico: servico,
+      servicos: servicos,
       veiculo: veiculo ?? this.veiculo,
       dataHora: dataHora,
       status: status ?? this.status,

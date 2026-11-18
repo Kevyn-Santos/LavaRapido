@@ -17,7 +17,7 @@ import org.json.JSONArray;
 
 /**
  * <pre>
- * GET /api/v1/horarios?data=20/10/2026 -> ["06:00", "06:30", ...]
+ * GET /api/v1/horarios?data=2026-10-20 -> ["06:00", "06:30", ...]
  * </pre>
  *
  * Horários livres da data (formato ISO {@code yyyy-MM-dd}, o mesmo do {@code POST /agendamentos}). A grade

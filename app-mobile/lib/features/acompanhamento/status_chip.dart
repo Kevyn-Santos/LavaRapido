@@ -17,6 +17,8 @@ class StatusChip extends StatelessWidget {
         return AppTheme.andamentoFundo;
       case StatusServico.concluido:
         return AppTheme.concluidoFundo;
+      case StatusServico.cancelado:
+        return AppTheme.pendenteFundo;
     }
   }
 
@@ -28,6 +30,8 @@ class StatusChip extends StatelessWidget {
         return AppTheme.andamentoTexto;
       case StatusServico.concluido:
         return AppTheme.concluidoTexto;
+      case StatusServico.cancelado:
+        return AppTheme.pendenteTexto;
     }
   }
 

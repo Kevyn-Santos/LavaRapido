@@ -12,7 +12,7 @@ COPY src ./src
 RUN mvn -B clean package -DskipTests
 
 # ---------- Estágio 2: runtime ----------
-FROM tomcat:10.1-jre25-temurin-noble
+FROM tomcat:11.0-jre25-temurin-noble
 
 # Remove apps padrão, faz o Tomcat ler a porta de uma propriedade
 # (o Render injeta a variável PORT) e cria um usuário sem privilégios
@@ -20,8 +20,8 @@ RUN rm -rf /usr/local/tomcat/webapps/* \
  && sed -i 's/port="8080"/port="${port.http}"/' /usr/local/tomcat/conf/server.xml \
  && groupadd -r app && useradd -r -g app app
 
-# Publica o WAR como ROOT.war para a aplicação responder em "/"
-COPY --from=build /build/target/*.war /usr/local/tomcat/webapps/ROOT.war
+# Publica como FastSplash.war; o contexto fica /FastSplash, igual ao Flutter
+COPY --from=build /build/target/FastSplash.war /usr/local/tomcat/webapps/FastSplash.war
 
 # O Tomcat precisa escrever nestas pastas
 RUN chown -R app:app /usr/local/tomcat/logs /usr/local/tomcat/temp \

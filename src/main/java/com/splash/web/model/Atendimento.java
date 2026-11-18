@@ -18,20 +18,15 @@ public class Atendimento extends EntidadeBase {
     private final List<Colaborador> colaboradores = new ArrayList<>();
     private Pagamento pagamento;
 
-    /*
-     * Novo atendimento só pode ser aberto para um agendamento AGENDADO e nasce
-     * AGUARDANDO.
-     */
+    /* Novo atendimento só pode ser aberto para um agendamento AGENDADO e nasce AGUARDANDO. */
     public Atendimento(Agendamento agendamento) {
         this(exigirAgendamentoAtivo(agendamento), StatusAtendimento.AGUARDANDO, null, null, List.of(), null);
     }
 
-    /**
-     * Construtor completo usado pelo DAO ao reconstruir um atendimento do banco.
-     */
+    /** Construtor completo usado pelo DAO ao reconstruir um atendimento do banco. */
     public Atendimento(Agendamento agendamento, StatusAtendimento status,
-            LocalDateTime dataInicio, LocalDateTime dataFim,
-            List<Colaborador> colaboradores, Pagamento pagamento) {
+                       LocalDateTime dataInicio, LocalDateTime dataFim,
+                       List<Colaborador> colaboradores, Pagamento pagamento) {
         this.agendamento = Validacao.obrigatorio(agendamento, "Agendamento");
         this.status = Validacao.obrigatorio(status, "Status do atendimento");
         if (dataInicio != null && dataFim != null && dataFim.isBefore(dataInicio)) {
@@ -43,7 +38,7 @@ public class Atendimento extends EntidadeBase {
         this.pagamento = pagamento;
     }
 
-    // consultas
+    //consultas 
 
     public Agendamento getAgendamento() {
         return agendamento;
@@ -65,7 +60,7 @@ public class Atendimento extends EntidadeBase {
         return Collections.unmodifiableList(colaboradores);
     }
 
-    /** Nulo enquanto nenhum pagamento foi gerado. */
+    /**Nulo enquanto nenhum pagamento foi gerado. */
     public Pagamento getPagamento() {
         return pagamento;
     }
@@ -77,9 +72,8 @@ public class Atendimento extends EntidadeBase {
     // comportamento
 
     public void atribuirColaborador(Colaborador colaborador) {
-        if (status == StatusAtendimento.FINALIZADO) {
-            throw new IllegalStateException(
-                    "Não é possível atribuir colaboradores a um atendimento finalizado.");
+        if (status == StatusAtendimento.ENTREGUE) {
+            throw new IllegalStateException("Não é possível atribuir colaboradores a um atendimento já ENTREGUE.");
         }
         incluirColaborador(colaborador);
     }
@@ -92,24 +86,22 @@ public class Atendimento extends EntidadeBase {
 
     public void finalizar(LocalDateTime agora) {
         Validacao.obrigatorio(agora, "Momento da finalização");
-
         if (dataInicio != null && agora.isBefore(dataInicio)) {
-            throw new IllegalArgumentException(
-                    "A finalização não pode ser anterior ao início da lavagem.");
+            throw new IllegalArgumentException("A finalização não pode ser anterior ao início da lavagem.");
         }
-
         mudarStatus(StatusAtendimento.FINALIZADO);
         this.dataFim = agora;
+    }
 
+    /** Ao entregar o veícul o agendamento correspondente é concluído. */
+    public void entregar() {
+        mudarStatus(StatusAtendimento.ENTREGUE);
         if (agendamento.getStatus() == StatusAgendamento.AGENDADO) {
             agendamento.concluir();
         }
     }
 
-    /**
-     * Gera o pagamento PENDENTE com o total do agendamento Só pode existir um por
-     * atendimento.
-     */
+    /** Gera o pagamento PENDENTE com o total do agendamento Só pode existir um por atendimento. */
     public Pagamento gerarPagamento(FormaPagamento forma) {
         if (pagamento != null) {
             throw new IllegalStateException("Este atendimento já possui pagamento.");
@@ -118,7 +110,7 @@ public class Atendimento extends EntidadeBase {
         return pagamento;
     }
 
-    // internos
+    // internos 
 
     private void incluirColaborador(Colaborador colaborador) {
         Validacao.obrigatorio(colaborador, "Colaborador");
@@ -143,8 +135,7 @@ public class Atendimento extends EntidadeBase {
     private static Agendamento exigirAgendamentoAtivo(Agendamento agendamento) {
         Validacao.obrigatorio(agendamento, "Agendamento");
         if (agendamento.getStatus() != StatusAgendamento.AGENDADO) {
-            throw new IllegalStateException(
-                    "Só é possível abrir um atendimento para um agendamento com status AGENDADO.");
+            throw new IllegalStateException("Só é possível abrir um atendimento para um agendamento com status AGENDADO.");
         }
         return agendamento;
     }

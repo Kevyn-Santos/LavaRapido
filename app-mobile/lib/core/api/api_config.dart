@@ -1,14 +1,17 @@
+/// Configuração do servidor da API.
+///
+/// Emulador Android (padrão): http://10.0.2.2:8080/FastSplash/api/v1
+/// Celular físico: informe o IP do computador na mesma rede usando
+/// --dart-define=API_BASE_URL=http://192.168.0.10:8080/FastSplash/api/v1
+/// Servidor HTTPS: --dart-define=API_BASE_URL=https://seu-dominio/FastSplash/api/v1
 class APIConfig {
-  /// Host:porta do Tomcat. No emulador Android troque por "10.0.2.2:8080";
-  /// em celular físico use o IP da máquina na rede (ex.: "192.168.0.10:8080").
-  static const String BASE_URI = "10.0.2.2:8080";
-
-  /// Prefixo de todas as rotas da API (contexto do Tomcat + /api/v1).
-  static const String BASE_PATH = "/SplashFast/api/v1";
-
-  // timeout (30Seg)
+  static const String BASE_URL = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8080/FastSplash/api/v1',
+  );
   static const Duration TIMEOUT = Duration(seconds: 30);
-
-  // Headers (map<String, string>)
-  static const Map<String, String> HEADERS = {"Content-Type": "application/json"};
+  static const Map<String, String> HEADERS = {
+    'Content-Type': 'application/json; charset=UTF-8',
+    'Accept': 'application/json',
+  };
 }
