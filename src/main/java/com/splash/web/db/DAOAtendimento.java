@@ -32,7 +32,7 @@ public class DAOAtendimento {
                 + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
                 + "LEFT JOIN colaborador_atendimento ca ON ca.id_atendimento = at.id_atendimento "
                 + "LEFT JOIN colaborador col ON col.id_colaborador = ca.id_colaborador "
-                + "WHERE at.status IN ('AGUARDANDO', 'EM_LAVAGEM') "
+                + "WHERE at.status IN ('AGUARDANDO', 'EM_LAVAGEM', 'FINALIZADO') "
                 + "AND a.status <> 'CANCELADO' "
                 + "GROUP BY at.id_atendimento ORDER BY at.id_atendimento DESC";
         List<AtendimentoView> atendimentos = new ArrayList<>();
