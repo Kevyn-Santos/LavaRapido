@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Configurar administrador inicial</title>
+    <link rel="icon" href="Assets/Img/favicon.ico">
+
 </head>
 <body>
     <h1>Configuração inicial</h1>
