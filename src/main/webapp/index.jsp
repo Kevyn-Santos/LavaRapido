@@ -12,12 +12,11 @@
           content="Fast Splash — Agendamento e acompanhamento em tempo real para serviços de lava-rápido.">
         <title>Fast Splash — Lava-rápido</title>
 
-        <!-- Fontes do Google -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Serif:ital@0;1&display=swap"
-          rel="stylesheet">
+  <!-- Fontes do Google -->
+  <link rel="icon" href="Assets/Img/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
         <!-- Estilo Externo -->
         <link rel="stylesheet" href="Assets/CSS/style.css">
@@ -120,7 +119,7 @@
             </svg>
           </div>
 
-         
+
 
           <!-- Seção de Serviços -->
           <section class="svc" id="servicos">
