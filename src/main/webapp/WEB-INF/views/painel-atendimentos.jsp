@@ -193,9 +193,9 @@
               <select id="filtro-status-atendimento" aria-label="Filtrar por status">
 
                 <option value="">Todos os status</option>
-                <option value="AGUARDANDO">Aguardando início</option>
-                <option value="EM_LAVAGEM">Lavagem em andamento</option>
-                <option value="FINALIZADO">Lavagem concluída</option>
+                <option value="AGUARDANDO">Aguardando</option>
+                <option value="EM_LAVAGEM">Em lavagem</option>
+                <option value="FINALIZADO">Finalizados</option>
 
               </select>
 
@@ -242,18 +242,6 @@
                         <c:forEach var="atendimento" items="${atendimentos}">
                           <c:if test="${atendimento.statusAgendamento != 'CANCELADO'}">
 
-                            <c:choose>
-                              <c:when test="${atendimento.status == 'AGUARDANDO'}">
-                                <c:set var="statusExibicao" value="Aguardando início" />
-                              </c:when>
-                              <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
-                                <c:set var="statusExibicao" value="Lavagem em andamento" />
-                              </c:when>
-                              <c:otherwise>
-                                <c:set var="statusExibicao" value="Lavagem concluída" />
-                              </c:otherwise>
-                            </c:choose>
-
                             <tr class="linha-atendimento" data-cliente="<c:out value='${atendimento.cliente}' />"
                               data-placa="<c:out value='${atendimento.placa}' />" data-status="${atendimento.status}">
 
@@ -266,10 +254,7 @@
                               </td>
 
                               <td>
-
-                                <c:out value="${fn:substring(atendimento.data, 8, 10)}" />-
-                                <c:out value="${fn:substring(atendimento.data, 5, 7)}" />-
-                                <c:out value="${fn:substring(atendimento.data, 0, 4)}" />
+                                <c:out value="${atendimento.data}" />
                               </td>
 
                               <td>
@@ -277,11 +262,11 @@
                               </td>
 
                               <td>
-                                <c:out value="${fn:substring(atendimento.horario, 0, 5)}" />
+                                <c:out value="${atendimento.horario}" />
                               </td>
 
                               <td>
-                                <c:out value="${statusExibicao}" />
+                                <c:out value="${atendimento.status}" />
                               </td>
 
                               <td>
@@ -293,6 +278,10 @@
 
                                   <c:when test="${atendimento.statusAgendamento == 'CANCELADO'}">
                                     Agendamento cancelado
+                                  </c:when>
+
+                                  <c:when test="${atendimento.status == 'ENTREGUE'}">
+                                    Atendimento encerrado (histórico)
                                   </c:when>
 
                                   <c:otherwise>
@@ -325,18 +314,15 @@
                                         </p>
 
                                         <p><strong>Data:</strong>
-
-                                          <c:out value="${fn:substring(atendimento.data, 8, 10)}" />-
-                                          <c:out value="${fn:substring(atendimento.data, 5, 7)}" />-
-                                          <c:out value="${fn:substring(atendimento.data, 0, 4)}" />
+                                          <c:out value="${atendimento.data}" />
                                         </p>
 
                                         <p><strong>Horário:</strong>
-                                          <c:out value="${fn:substring(atendimento.horario, 0, 5)}" />
+                                          <c:out value="${atendimento.horario}" />
                                         </p>
 
                                         <p><strong>Status atual:</strong>
-                                          <c:out value="${statusExibicao}" />
+                                          <c:out value="${atendimento.status}" />
                                         </p>
 
                                         <p><strong>Colaboradores vinculados:</strong>
@@ -344,109 +330,100 @@
                                             value="${empty atendimento.colaboradores ? 'Nenhum' : atendimento.colaboradores}" />
                                         </p>
                                       </div>
-                                      <c:choose>
-                                        <c:when
-                                          test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento != 'PAGO'}">
-                                          <p class="small" role="status">
-                                            Aguardando pagamento — a lavagem só pode começar após a confirmação do
-                                            pagamento.
-                                          </p>
-                                        </c:when>
+                                      <form method="post"
+                                        action="${pageContext.request.contextPath}/admin/atendimentos">
 
-                                        <c:when test="${atendimento.status != 'FINALIZADO'}">
-                                          <form method="post"
-                                            action="${pageContext.request.contextPath}/admin/atendimentos">
+                                        <input type="hidden" name="idAtendimento" value="${atendimento.id}" />
 
-                                            <input type="hidden" name="idAtendimento" value="${atendimento.id}" />
+                                        <div class="field">
+                                          <label>Proximo status</label>
 
-                                            <div class="field">
-                                              <label>Proximo status</label>
+                                          <select name="status" required>
 
-                                              <select name="status" required>
+                                          <c:choose>
+                                            <c:when test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento == 'PAGO'}">
+                                              <option value="EM_LAVAGEM">
+                                                Iniciar lavagem
+                                              </option>
+                                            </c:when>
 
-                                                <c:choose>
-                                                  <c:when
-                                                    test="${atendimento.status == 'AGUARDANDO' and atendimento.statusPagamento == 'PAGO'}">
-                                                    <option value="EM_LAVAGEM">
-                                                      Iniciar lavagem
-                                                    </option>
-                                                  </c:when>
+                                            <c:when test="${atendimento.status == 'AGUARDANDO'}">
+                                              <option value="AGUARDANDO">
+                                                Aguardando pagamento (lavagem bloqueada)
+                                              </option>
+                                            </c:when>
 
-                                                  <c:when test="${atendimento.status == 'AGUARDANDO'}">
-                                                    <option value="AGUARDANDO">
-                                                      Aguardando pagamento (lavagem bloqueada)
-                                                    </option>
-                                                  </c:when>
+                                              <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
+                                                <option value="FINALIZADO">
+                                                  Finalizar
+                                                </option>
+                                              </c:when>
 
-                                                  <c:when test="${atendimento.status == 'EM_LAVAGEM'}">
-                                                    <option value="FINALIZADO">
-                                                      Finalizar
-                                                    </option>
-                                                  </c:when>
-
-                                                  <c:when test="${atendimento.status == 'FINALIZADO'}">
-                                                    <option value="FINALIZADO">
-                                                      Finalizado
-                                                    </option>
-                                                  </c:when>
-
-                                                </c:choose>
-
-                                              </select>
-                                            </div>
-
-
-                                            <div class="field">
-                                              <label>Colaboradores</label>
-
-                                              <c:forEach var="colaborador" items="${colaboradores}">
-
-                                                <c:if test="${colaborador.nivelAcesso == 'OPERACIONAL'}">
-
-                                                  <c:set var="colaboradorSelecionado" value="false" />
-
-                                                  <c:forTokens items="${atendimento.idsColaboradores}" delims=","
-                                                    var="idSelecionado">
-
-                                                    <c:if test="${idSelecionado == colaborador.id}">
-                                                      <c:set var="colaboradorSelecionado" value="true" />
-                                                    </c:if>
-
-                                                  </c:forTokens>
-
-                                                  <label style="display:block;">
-
-                                                    <input type="checkbox" name="idColaboradores"
-                                                      value="${colaborador.id}" ${colaboradorSelecionado ? 'checked'
-                                                      : '' } ${atendimento.status !='AGUARDANDO' ? 'disabled' : '' } />
-
-                                                    <c:out value="${colaborador.nome}" />
-
-                                                  </label>
-
-                                                </c:if>
-
-                                              </c:forEach>
-                                            </div>
-
-
-                                            <c:choose>
-                                              <c:when test="${atendimento.status == 'FINALIZADO'}"> <button
-                                                  class="btn sm" type="submit">
-                                                  Salvar colaboradores
-                                                </button>
+                                              <c:when test="${atendimento.status == 'FINALIZADO'}">
+                                                <option value="FINALIZADO">
+                                                  Finalizado
+                                                </option>
                                               </c:when>
 
                                               <c:otherwise>
-                                                <button class="btn sm" type="submit">
-                                                  Atualizar
-                                                </button>
+                                                <option value="ENTREGUE">
+                                                  Entregue
+                                                </option>
                                               </c:otherwise>
                                             </c:choose>
 
-                                          </form>
-                                        </c:when>
-                                      </c:choose>
+                                          </select>
+                                        </div>
+
+
+                                        <div class="field">
+                                          <label>Colaboradores</label>
+
+                                          <c:forEach var="colaborador" items="${colaboradores}">
+
+                                            <c:if test="${colaborador.nivelAcesso == 'OPERACIONAL'}">
+
+                                              <c:set var="colaboradorSelecionado" value="false" />
+
+                                              <c:forTokens items="${atendimento.idsColaboradores}" delims=","
+                                                var="idSelecionado">
+
+                                                <c:if test="${idSelecionado == colaborador.id}">
+                                                  <c:set var="colaboradorSelecionado" value="true" />
+                                                </c:if>
+
+                                              </c:forTokens>
+
+                                              <label style="display:block;">
+
+                                                <input type="checkbox" name="idColaboradores" value="${colaborador.id}"
+                                                  ${colaboradorSelecionado ? 'checked' : '' } />
+
+                                                <c:out value="${colaborador.nome}" />
+
+                                              </label>
+
+                                            </c:if>
+
+                                          </c:forEach>
+                                        </div>
+
+
+                                        <c:choose>
+                                          <c:when test="${atendimento.status == 'FINALIZADO'}"> <button class="btn sm"
+                                              type="submit">
+                                              Salvar colaboradores
+                                            </button>
+                                          </c:when>
+
+                                          <c:otherwise>
+                                            <button class="btn sm" type="submit">
+                                              Atualizar
+                                            </button>
+                                          </c:otherwise>
+                                        </c:choose>
+
+                                      </form>
 
                                       <button type="button" class="btn ghost fechar-atendimento">
                                         Fechar

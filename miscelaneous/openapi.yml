@@ -3,7 +3,7 @@ info:
   title: SplashFast
   version: "1.2"
   description: |
-    Documentação das rotas HTTP da aplicação web SplashFast (Jakarta Servlets + JSP, Tomcat 10).
+    Documentação das rotas HTTP da aplicação web SplashFast (Jakarta Servlets + JSP, Tomcat 11).
 
     Observações gerais:
     - Não há `web.xml`; todas as rotas vêm de `@WebServlet` e de JSPs públicas (fora de `WEB-INF`).
@@ -25,15 +25,15 @@ info:
       Erros não tratados (`RuntimeException`) resultam na página de erro padrão do Tomcat (HTTP 500).
 servers:
   - url: http://{host}:{port}/{contextPath}
-    description: Tomcat local (copiar target/SplashFast.war para /var/lib/tomcat10/webapps; em Docker/Render o WAR é ROOT.war e o contexto é vazio)
+    description: Tomcat local (copiar target/FastSplash.war para /var/lib/tomcat11/webapps; em Docker/Render o WAR é ROOT.war e o contexto é vazio)
     variables:
       host:
         default: localhost
       port:
         default: "8080"
       contextPath:
-        default: SplashFast
-        description: Nome do WAR implantado (finalName `SplashFast` no pom.xml).
+        default: FastSplash
+        description: Nome do WAR implantado (finalName `FastSplash` no pom.xml).
 security:
   - {}
 tags:

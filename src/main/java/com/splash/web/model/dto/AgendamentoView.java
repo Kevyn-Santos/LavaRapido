@@ -25,7 +25,7 @@ public record AgendamentoView(int id_agendamento, int id_veiculo, List<Integer> 
     public BigDecimal getTotal() { return total; }
     public String getStatusPagamento() { return statusPagamento; }
     public String getFormaPagamento() { return formaPagamento; }
-    /** Etapa da lavagem (AGUARDANDO, EM_LAVAGEM, FINALIZADO); null se o agendamento não tem atendimento. */
+    /** Etapa da lavagem (AGUARDANDO, EM_LAVAGEM, FINALIZADO, ENTREGUE); null se o agendamento não tem atendimento. */
     public String getStatusAtendimento() { return statusAtendimento; }
     /** Serviços do agendamento (id, nome e valor praticado); lista vazia se não houver. */
     public List<ServicoView> getServicos() { return servicos; }

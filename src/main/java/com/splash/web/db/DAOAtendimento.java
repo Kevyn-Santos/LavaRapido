@@ -32,7 +32,7 @@ public class DAOAtendimento {
                 + "LEFT JOIN pagamento p ON p.id_agendamento = a.id_agendamento "
                 + "LEFT JOIN colaborador_atendimento ca ON ca.id_atendimento = at.id_atendimento "
                 + "LEFT JOIN colaborador col ON col.id_colaborador = ca.id_colaborador "
-                + "WHERE at.status IN ('AGUARDANDO', 'EM_LAVAGEM', 'FINALIZADO') "
+                + "WHERE at.status IN ('AGUARDANDO', 'EM_LAVAGEM') "
                 + "AND a.status <> 'CANCELADO' "
                 + "GROUP BY at.id_atendimento ORDER BY at.id_atendimento DESC";
         List<AtendimentoView> atendimentos = new ArrayList<>();
@@ -195,7 +195,7 @@ public class DAOAtendimento {
                         ELSE data_inicio
                     END,
                     data_fim = CASE
-                        WHEN ? = 'FINALIZADO' AND data_fim IS NULL
+                        WHEN ? IN ('FINALIZADO', 'ENTREGUE') AND data_fim IS NULL
                         THEN CURRENT_TIMESTAMP
                         ELSE data_fim
                     END,
@@ -209,7 +209,6 @@ public class DAOAtendimento {
         try (Connection connection = DatabaseConnection.getConnection()) {
             connection.setAutoCommit(false);
             try {
-                boolean podeVincularColaboradores = false;
                 try (PreparedStatement statement = connection.prepareStatement(select)) {
                     statement.setInt(1, idAtendimento);
                     try (ResultSet result = statement.executeQuery()) {
@@ -219,7 +218,8 @@ public class DAOAtendimento {
                         StatusAtendimento atual = StatusAtendimento.valueOf(result.getString("status"));
                         StatusAtendimento proximo = StatusAtendimento.valueOf(status);
                         String statusAgendamento = result.getString("status_agendamento");
-                        // Manter o mesmo status não permite alterar colaboradores após o início.
+                        // Manter o mesmo status é permitido: o admin usa isso para trocar só os
+                        // colaboradores
                         if ("CANCELADO".equals(statusAgendamento) || (atual != proximo && !atual.podeIrPara(proximo))) {
                             throw new IllegalArgumentException(
                                     "Atendimento cancelado ou transição de status não permitida.");
@@ -233,8 +233,6 @@ public class DAOAtendimento {
                                     "Pagamento ainda não confirmado: peça ao atendente para registrar o pagamento "
                                             + "antes de iniciar a lavagem.");
                         }
-                        podeVincularColaboradores = atual == StatusAtendimento.AGUARDANDO
-                                && proximo == StatusAtendimento.EM_LAVAGEM;
                     }
                 }
                 try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -248,7 +246,7 @@ public class DAOAtendimento {
                         throw new IllegalArgumentException("Atendimento não encontrado.");
                     }
                 }
-                if ("FINALIZADO".equals(status)) {
+                if ("FINALIZADO".equals(status) || "ENTREGUE".equals(status)) {
                     try (PreparedStatement statement = connection.prepareStatement(
                             "UPDATE agendamento SET status = 'CONCLUIDO' WHERE id_agendamento = "
                                     + "(SELECT id_agendamento FROM atendimento WHERE id_atendimento = ?)")) {
@@ -256,8 +254,7 @@ public class DAOAtendimento {
                         statement.executeUpdate();
                     }
                 }
-                if (podeVincularColaboradores) {
-                    String inserirColaborador = """
+                String inserirColaborador = """
                             INSERT INTO colaborador_atendimento
                                 (id_colaborador, id_atendimento)
                             SELECT c.id_colaborador, ?
@@ -273,13 +270,15 @@ public class DAOAtendimento {
                         )
                         """;
 
-                    try (PreparedStatement statement = connection.prepareStatement(inserirColaborador)) {
-                        for (int idColaborador : new LinkedHashSet<>(idsColaboradores)) {
-                            statement.setInt(1, idAtendimento);
-                            statement.setInt(2, idColaborador);
-                            statement.setInt(3, idAtendimento);
-                            statement.executeUpdate();
-                        }
+                try (PreparedStatement statement = connection.prepareStatement(inserirColaborador)) {
+
+                    for (int idColaborador : new LinkedHashSet<>(idsColaboradores)) {
+
+                        statement.setInt(1, idAtendimento);
+                        statement.setInt(2, idColaborador);
+                        statement.setInt(3, idAtendimento);
+
+                        statement.executeUpdate();
                     }
                 }
                 connection.commit();
@@ -292,4 +291,17 @@ public class DAOAtendimento {
         }
     }
 
+    /*--------------------------------------
+    Remoção de atendimentos
+    --------------------------------------*/
+    public void remover(int idAtendimento) throws SQLException {
+        String sql = "DELETE FROM atendimento WHERE id_atendimento = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, idAtendimento);
+            if (statement.executeUpdate() != 1) {
+                throw new IllegalArgumentException("Atendimento não encontrado.");
+            }
+        }
+    }
 }

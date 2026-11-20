@@ -194,8 +194,12 @@ Note que esses caminhos podem mudar dependendo da instalação, então na dúvid
 ```shell
 
 # Linux Debian / Ubuntu
-sudo cp target/SplashFast-1.0.war /var/lib/tomcat10/webapps
+sudo cp target/FastSplash.war /var/lib/tomcat11/webapps
 
 # Windows. Rodando o CMD como admin 
-xcopy "target/SplashFast-1.0.war" "C:\Program Files\Apache Software Foundation\Tomcat 10.x\webapps\" /E /H /C /I
+xcopy "target/FastSplash.war" "C:\Program Files\Apache Software Foundation\Tomcat 11.x\webapps\" /E /H /C /I
 ```
+
+## Aplicativo mobile
+
+O aplicativo Flutter integrado à API está em `app-mobile/`. Para iniciar a API em Docker (Tomcat 11) ligada ao MySQL local e executar o aplicativo no Android Studio, siga [`INTEGRACAO_MOBILE.md`](INTEGRACAO_MOBILE.md).
