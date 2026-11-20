@@ -5,6 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Erro</title>
+
+    <link rel="icon" href="../Assets/Img/favicon.ico">
 </head>
 <body>
     <h1>Não foi possível concluir a solicitação</h1>

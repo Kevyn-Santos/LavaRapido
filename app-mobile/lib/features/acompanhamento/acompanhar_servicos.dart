@@ -79,22 +79,9 @@ class _CartaoAcompanhamento extends StatelessWidget {
 
   const _CartaoAcompanhamento({required this.agendamento});
 
-  StatusServico? _proximaEtapa() {
-    switch (agendamento.status) {
-      case StatusServico.pendente:
-        return StatusServico.emAndamento;
-      case StatusServico.emAndamento:
-        return StatusServico.concluido;
-      case StatusServico.concluido:
-      case StatusServico.cancelado:
-        return null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final cores = Theme.of(context).colorScheme;
-    final proxima = _proximaEtapa();
 
     return Card(
       child: Padding(

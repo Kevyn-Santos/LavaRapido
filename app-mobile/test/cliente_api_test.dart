@@ -62,7 +62,7 @@ void main() {
 
   test('login devolve o cliente em 200', () async {
     final api = _api((r) async {
-      expect(jsonDecode(r.body), {'email': 'j@x.com', 'senha': 'abc'});
+      expect(jsonDecode(r.body), {'cpf': 'j@x.com', 'senha': 'abc'});
       return _json({'cliente': _cliente}, 200);
     });
 

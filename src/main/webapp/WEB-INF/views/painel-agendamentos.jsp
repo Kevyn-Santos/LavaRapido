@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-  <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+    <%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
+    <%@ taglib prefix="c" uri="jakarta.tags.core" %>
     <!doctype html>
     <html lang="pt-BR">
 
@@ -7,6 +8,8 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <title>Agendamentos — Fast Splash</title>
+      
+      <link rel="icon" href="../Assets/Img/favicon.ico">
       <link rel="stylesheet" href="${pageContext.request.contextPath}/Assets/CSS/painel.css">
       <style>
         .hide {

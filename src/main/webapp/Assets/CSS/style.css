@@ -939,3 +939,78 @@ footer.ft p { max-width: 46ch; font-size: .88rem; color: #9FBACB; margin-top: 8p
 .delay-2 { transition-delay: 0.2s; }
 .delay-3 { transition-delay: 0.3s; }
 .delay-4 { transition-delay: 0.4s; }
+
+/* ==================================================== */
+/* SEÇÃO SOBRE O FASTSPLASH                             */
+/* ==================================================== */
+
+.about-fast {
+  background: #0E6BAA;
+  color: #FFFFFF;
+  padding: 90px 0 70px;
+}
+
+.about-fast .wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.about-label {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #B9E4FA;
+  margin-bottom: 20px;
+}
+
+.about-fast h2 {
+  max-width: 750px;
+  font-size: clamp(32px, 5vw, 54px);
+  line-height: 1.1;
+  margin: 0 0 24px;
+}
+
+.about-description {
+  max-width: 700px;
+  font-size: 17px;
+  line-height: 1.8;
+  color: #E5F3FC;
+  margin-bottom: 48px;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.about-item {
+  padding: 24px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+}
+
+.about-item h3 {
+  font-size: 19px;
+  margin: 0 0 12px;
+}
+
+.about-item p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #E5F3FC;
+  margin: 0;
+}
+
+@media (max-width: 700px) {
+  .about-fast {
+    padding: 60px 0;
+  }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+}
