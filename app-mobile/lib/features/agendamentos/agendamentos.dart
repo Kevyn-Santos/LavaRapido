@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flash_splash/core/utils/atualizacao_pagina.dart';
 
 import 'package:flash_splash/core/data/repositorio.dart';
 import 'package:flash_splash/core/api/api_exception.dart';
@@ -53,12 +54,22 @@ class Agendamentos extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus agendamentos'),
+        actions: [
+          IconButton(
+            tooltip: 'Atualizar',
+            icon: const Icon(Icons.refresh),
+            onPressed: () => AtualizacaoPagina.dadosCliente(context),
+          ),
+        ],
       ),
-      body: ValueListenableBuilder<List<Agendamento>>(
+      body: RefreshIndicator(
+        onRefresh: () => AtualizacaoPagina.dadosCliente(context),
+        child: ValueListenableBuilder<List<Agendamento>>(
         valueListenable: Repositorio.agendamentos,
         builder: (context, lista, _) {
           final cor = Theme.of(context).colorScheme.primary;
           return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(18),
             children: [
               if (lista.isEmpty)
@@ -161,6 +172,7 @@ class Agendamentos extends StatelessWidget {
             ],
           );
         },
+        ),
       ),
     );
   }

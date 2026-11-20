@@ -32,6 +32,20 @@ class _PerfilClienteState extends State<PerfilCliente> {
     _futuroCliente = _clienteApi.buscar(); // o servidor identifica o cliente pela sessão
   }
 
+  Future<void> _atualizar() async {
+    final futuro = _clienteApi.buscar();
+    setState(() => _futuroCliente = futuro);
+    try {
+      await futuro;
+    } on ApiException catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.mensagem)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível atualizar o perfil.')),
+      );
+    }
+  }
+
   Future<void> _editarPerfil(ClienteModel cliente) async {
     final atualizado = await showDialog<ClienteModel>(
       context: context,
@@ -74,8 +88,14 @@ class _PerfilClienteState extends State<PerfilCliente> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meu perfil'),
+        actions: [
+          IconButton(tooltip: 'Atualizar', icon: const Icon(Icons.refresh), onPressed: _atualizar),
+        ],
       ),
-      body: ListView(
+      body: RefreshIndicator(
+        onRefresh: _atualizar,
+        child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(18),
         children: [
           const SizedBox(height: 15),
@@ -172,6 +192,7 @@ class _PerfilClienteState extends State<PerfilCliente> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

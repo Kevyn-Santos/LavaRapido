@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flash_splash/core/utils/atualizacao_pagina.dart';
+import 'package:flash_splash/core/api/api_exception.dart';
 
 import 'package:flash_splash/core/data/repositorio.dart';
 import 'package:flash_splash/core/api/api_client.dart';
@@ -26,6 +28,21 @@ class _InicioClienteState extends State<InicioCliente> {
     _cliente = ClienteApi(apiClient: APIClient()).buscar();
   }
 
+  Future<void> _atualizar() async {
+    final futuroCliente = ClienteApi(apiClient: APIClient()).buscar();
+    setState(() => _cliente = futuroCliente);
+    await AtualizacaoPagina.dadosCliente(context, catalogo: true);
+    try {
+      await futuroCliente;
+    } on ApiException catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.mensagem)));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Não foi possível atualizar o perfil.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
@@ -37,8 +54,14 @@ class _InicioClienteState extends State<InicioCliente> {
           'FAST SPLASH',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(tooltip: 'Atualizar', icon: const Icon(Icons.refresh), onPressed: _atualizar),
+        ],
       ),
-      body: SingleChildScrollView(
+      body: RefreshIndicator(
+        onRefresh: _atualizar,
+        child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,6 +213,7 @@ class _InicioClienteState extends State<InicioCliente> {
               },
             ),
           ],
+        ),
         ),
       ),
     );

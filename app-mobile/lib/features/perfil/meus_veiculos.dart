@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flash_splash/core/utils/atualizacao_pagina.dart';
 
 import 'package:flash_splash/core/data/repositorio.dart';
 import 'package:flash_splash/core/api/api_exception.dart';
@@ -84,12 +85,22 @@ class MeusVeiculos extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Meus veículos'),
+        actions: [
+          IconButton(
+            tooltip: 'Atualizar',
+            icon: const Icon(Icons.refresh),
+            onPressed: () => AtualizacaoPagina.dadosCliente(context),
+          ),
+        ],
       ),
-      body: ValueListenableBuilder<List<Veiculo>>(
+      body: RefreshIndicator(
+        onRefresh: () => AtualizacaoPagina.dadosCliente(context),
+        child: ValueListenableBuilder<List<Veiculo>>(
         valueListenable: Repositorio.veiculos,
         builder: (context, lista, _) {
           final cor = Theme.of(context).colorScheme.primary;
           return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(18),
             children: [
               if (lista.isEmpty)
@@ -144,6 +155,7 @@ class MeusVeiculos extends StatelessWidget {
             ],
           );
         },
+        ),
       ),
     );
   }

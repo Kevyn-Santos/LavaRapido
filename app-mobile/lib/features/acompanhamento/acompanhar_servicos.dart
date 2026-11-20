@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flash_splash/core/utils/atualizacao_pagina.dart';
 
 import 'package:flash_splash/core/data/repositorio.dart';
 import 'package:flash_splash/core/models/agendamento.dart';
@@ -15,8 +16,17 @@ class AcompanharServicos extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Acompanhar serviços'),
+        actions: [
+          IconButton(
+            tooltip: 'Atualizar',
+            icon: const Icon(Icons.refresh),
+            onPressed: () => AtualizacaoPagina.dadosCliente(context),
+          ),
+        ],
       ),
-      body: ValueListenableBuilder<List<Agendamento>>(
+      body: RefreshIndicator(
+        onRefresh: () => AtualizacaoPagina.dadosCliente(context),
+        child: ValueListenableBuilder<List<Agendamento>>(
         valueListenable: Repositorio.agendamentos,
         builder: (context, lista, _) {
           final ativos = lista.where((a) => a.status == StatusServico.pendente || a.status == StatusServico.emAndamento).toList();
@@ -24,6 +34,7 @@ class AcompanharServicos extends StatelessWidget {
           final cancelados = lista.where((a) => a.status == StatusServico.cancelado).toList();
 
           return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(18),
             children: [
               if (lista.isEmpty)
@@ -52,6 +63,7 @@ class AcompanharServicos extends StatelessWidget {
             ],
           );
         },
+        ),
       ),
     );
   }
